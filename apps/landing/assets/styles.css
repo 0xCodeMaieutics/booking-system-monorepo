@@ -240,29 +240,21 @@ h3 {
 .hero-art {
   position: relative;
   aspect-ratio: 4 / 5;
-  border-radius: 999px 999px var(--radius) var(--radius);
-  background:
-    radial-gradient(circle at 30% 25%, #f3d9cc 0%, transparent 55%),
-    radial-gradient(circle at 75% 70%, #d9b5a4 0%, transparent 60%),
-    linear-gradient(160deg, var(--sand), var(--rose));
-  box-shadow: 0 40px 80px -40px rgba(91, 55, 40, 0.45);
 }
 
-.hero-art::after {
-  content: "F";
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-family: var(--serif);
-  font-size: clamp(140px, 18vw, 240px);
-  color: rgba(255, 253, 251, 0.55);
+.hero-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 32px;
+  background: var(--sand);
+  box-shadow: 0 40px 80px -40px rgba(91, 55, 40, 0.45);
 }
 
 .hero-badge {
   position: absolute;
   left: -32px;
-  bottom: 40px;
+  bottom: -24px;
   background: var(--white);
   border-radius: 16px;
   padding: 16px 20px;
