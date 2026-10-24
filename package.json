@@ -1,0 +1,8 @@
+{
+  "name": "face-aesthetic-centre",
+  "private": true,
+  "packageManager": "pnpm@9.4.0",
+  "scripts": {
+    "dev:landing": "pnpm --filter @face/landing dev"
+  }
+}
