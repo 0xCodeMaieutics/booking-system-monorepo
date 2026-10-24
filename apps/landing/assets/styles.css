@@ -332,15 +332,18 @@ section {
 
 .practitioner-avatar {
   flex: none;
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
+  overflow: hidden;
   background: var(--rose);
-  color: var(--white);
-  font-family: var(--serif);
-  font-size: 20px;
+  box-shadow: 0 0 0 3px var(--white), 0 0 0 4px var(--sand);
+}
+
+.practitioner-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .practitioner strong {
