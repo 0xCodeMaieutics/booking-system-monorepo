@@ -3,7 +3,8 @@ import { appointmentsNeedingAttention } from "@tsami/booking";
 import { and, asc, eq, gt, isNull, or, schema } from "@tsami/db";
 import { z } from "zod";
 
-import { adminProcedure, router } from "./trpc";
+import { deletePhotos, isPendingPhotoKey, savedPhotoKey } from "./photos";
+import { type PhotoStore, adminProcedure, router } from "./trpc";
 
 const { practitioner, practitionerTreatment, scheduleRange, timeOff, treatment } = schema;
 
@@ -60,6 +61,8 @@ export const treatmentsRouter = router({
   }),
 });
 
+const photoUrl = (photos: PhotoStore, key: string | null) => (key ? photos.publicUrl(key) : null);
+
 export const practitionersRouter = router({
   list: adminProcedure.query(async ({ ctx }) => {
     const [rows, links] = await Promise.all([
@@ -68,6 +71,7 @@ export const practitionersRouter = router({
     ]);
     return rows.map((p) => ({
       ...p,
+      photoUrl: photoUrl(ctx.photos, p.photoKey),
       treatmentIds: links.filter((l) => l.practitionerId === p.id).map((l) => l.treatmentId),
     }));
   }),
@@ -83,7 +87,12 @@ export const practitionersRouter = router({
         .where(eq(scheduleRange.practitionerId, p.id))
         .orderBy(asc(scheduleRange.weekday), asc(scheduleRange.startMinute)),
     ]);
-    return { ...p, treatmentIds: links.map((l) => l.treatmentId), ranges };
+    return {
+      ...p,
+      photoUrl: photoUrl(ctx.photos, p.photoKey),
+      treatmentIds: links.map((l) => l.treatmentId),
+      ranges,
+    };
   }),
 
   create: adminProcedure.input(practitionerInput).mutation(async ({ ctx, input }) => {
@@ -99,12 +108,34 @@ export const practitionersRouter = router({
     });
   }),
 
+  /**
+   * `photoKey` is the current key to keep it, a `pending/` key from an upload to replace it,
+   * or null to remove it. Replaced and removed photos are deleted from storage.
+   */
   update: adminProcedure
-    .input(practitionerInput.extend({ id: z.uuid() }))
+    .input(practitionerInput.extend({ id: z.uuid(), photoKey: z.string().max(200).nullable() }))
     .mutation(async ({ ctx, input }) => {
-      const { id, treatmentIds, ...values } = input;
+      const { id, treatmentIds, photoKey: requestedPhotoKey, ...values } = input;
+      const [current] = await ctx.db
+        .select({ photoKey: practitioner.photoKey })
+        .from(practitioner)
+        .where(eq(practitioner.id, id));
+      if (!current) throw new TRPCError({ code: "NOT_FOUND" });
+
+      let photoKey = requestedPhotoKey;
+      if (photoKey && photoKey !== current.photoKey) {
+        if (!isPendingPhotoKey(photoKey)) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Unknown photo" });
+        }
+        photoKey = savedPhotoKey(id, photoKey);
+        await ctx.photos.copy(requestedPhotoKey!, photoKey);
+      }
+
       await ctx.db.transaction(async (tx) => {
-        await tx.update(practitioner).set(values).where(eq(practitioner.id, id));
+        await tx
+          .update(practitioner)
+          .set({ ...values, photoKey })
+          .where(eq(practitioner.id, id));
         await tx.delete(practitionerTreatment).where(eq(practitionerTreatment.practitionerId, id));
         if (treatmentIds.length > 0) {
           await tx
@@ -112,6 +143,13 @@ export const practitionersRouter = router({
             .values(treatmentIds.map((treatmentId) => ({ practitionerId: id, treatmentId })));
         }
       });
+
+      const unused = [
+        photoKey !== requestedPhotoKey ? requestedPhotoKey : null,
+        current.photoKey !== photoKey ? current.photoKey : null,
+      ].filter((key) => key !== null);
+      await deletePhotos(ctx.photos, unused);
+      return { photoKey };
     }),
 
   /** Replaces the Practitioner's whole Weekly Schedule. */

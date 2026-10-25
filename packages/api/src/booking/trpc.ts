@@ -10,6 +10,8 @@ export type BookingContext = {
   ipAddress: string | null;
   /** Public origin of the Booking Site, used in Manage Links. */
   siteUrl: string;
+  /** Public base URL of the photo bucket (ADR 0006). */
+  photosUrl: string;
   now: () => Date;
 };
 

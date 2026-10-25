@@ -16,5 +16,38 @@ services:
       timeout: 3s
       retries: 15
 
+  # S3-compatible stand-in for the Cloudflare R2 photo bucket (ADR 0006).
+  # The anonymous identity gives public reads on the bucket, like the production bucket.
+  storage:
+    image: chrislusf/seaweedfs:4.50
+    command: mini -dir=/data -bucket=tsami-photos -s3.config=/etc/seaweedfs/s3.json
+    configs:
+      - source: s3-identities
+        target: /etc/seaweedfs/s3.json
+    ports:
+      - "127.0.0.1:8333:8333"
+    volumes:
+      - storage-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8333/healthz"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+configs:
+  s3-identities:
+    content: |
+      {
+        "identities": [
+          {
+            "name": "tsami",
+            "credentials": [{ "accessKey": "tsami", "secretKey": "tsami-dev-secret" }],
+            "actions": ["Admin", "Read", "List", "Tagging", "Write"]
+          },
+          { "name": "anonymous", "actions": ["Read:tsami-photos"] }
+        ]
+      }
+
 volumes:
   db-data:
+  storage-data:

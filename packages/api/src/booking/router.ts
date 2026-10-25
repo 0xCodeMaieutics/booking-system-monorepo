@@ -64,7 +64,9 @@ export const bookingRouter = router({
     });
     const withSlots = new Set(slots.map((s) => s.practitionerId));
     const all = await practitionersForTreatment(ctx.db, input.treatmentId);
-    return all.filter((p) => withSlots.has(p.id));
+    return all
+      .filter((p) => withSlots.has(p.id))
+      .map(({ photoKey, ...p }) => ({ ...p, photoUrl: photoKey ? `${ctx.photosUrl}/${photoKey}` : null }));
   }),
 
   /** Available start times. Without a Practitioner, times are combined across everyone (Any Practitioner). */

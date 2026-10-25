@@ -66,5 +66,6 @@ export const adminRouter = router({
 });
 
 export type AdminRouter = typeof adminRouter;
-export type { AdminAccounts, AdminContext, SignedInAdmin } from "./trpc";
+export type { AdminAccounts, AdminContext, PhotoStore, SignedInAdmin } from "./trpc";
+export { type PhotoContentType, pendingPhotoKey } from "./photos";
 export const createAdminCaller = createCallerFactory(adminRouter);

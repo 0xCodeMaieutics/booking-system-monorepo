@@ -1,4 +1,5 @@
 export { cn } from "./lib/utils";
+export { Avatar } from "./components/avatar";
 export { Button, buttonVariants } from "./components/button";
 export {
   Card,

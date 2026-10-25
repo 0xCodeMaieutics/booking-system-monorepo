@@ -13,6 +13,7 @@ export function createBookingContext(headers: Headers): BookingContext {
     sms,
     ipAddress: forwarded || headers.get("x-real-ip") || null,
     siteUrl: process.env.BOOKING_SITE_URL ?? "http://localhost:3000",
+    photosUrl: process.env.PHOTOS_URL ?? "http://localhost:8333/tsami-photos",
     now: () => new Date(),
   };
 }
