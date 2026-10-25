@@ -37,25 +37,25 @@ const when = (a: AppointmentSummary, locale: Locale) =>
 
 export const smsText = {
   verificationCode: (code: string, locale: Locale) =>
-    locale === "ka" ? `ფეისი: თქვენი კოდია ${code}` : `Face: your code is ${code}`,
+    locale === "ka" ? `წამი: თქვენი კოდია ${code}` : `Tsami: your code is ${code}`,
 
   confirmation: (a: AppointmentSummary, manageUrl: string, locale: Locale) =>
     locale === "ka"
-      ? `ფეისი: ჩაწერილი ხართ — ${a.treatmentName}, ${when(a, locale)}, ${a.practitionerName}. ვიზიტის მართვა: ${manageUrl}`
-      : `Face: you're booked for ${a.treatmentName}, ${when(a, locale)}, with ${a.practitionerName}. Manage: ${manageUrl}`,
+      ? `წამი: ჩაწერილი ხართ — ${a.treatmentName}, ${when(a, locale)}, ${a.practitionerName}. ვიზიტის მართვა: ${manageUrl}`
+      : `Tsami: you're booked for ${a.treatmentName}, ${when(a, locale)}, with ${a.practitionerName}. Manage: ${manageUrl}`,
 
   reminder: (a: AppointmentSummary, clinicPhone: string, locale: Locale) =>
     locale === "ka"
-      ? `ფეისი: შეხსენება — ${a.treatmentName}, ${when(a, locale)}, ${a.practitionerName}. კითხვები: ${clinicPhone}`
-      : `Face: reminder — ${a.treatmentName} with ${a.practitionerName}, ${when(a, locale)}. Questions: ${clinicPhone}`,
+      ? `წამი: შეხსენება — ${a.treatmentName}, ${when(a, locale)}, ${a.practitionerName}. კითხვები: ${clinicPhone}`
+      : `Tsami: reminder — ${a.treatmentName} with ${a.practitionerName}, ${when(a, locale)}. Questions: ${clinicPhone}`,
 
   cancelledByClinic: (a: AppointmentSummary, clinicPhone: string, locale: Locale) =>
     locale === "ka"
-      ? `ფეისი: თქვენი ვიზიტი (${a.treatmentName}, ${when(a, locale)}) გაუქმდა. დაგვიკავშირდით: ${clinicPhone}`
-      : `Face: your appointment (${a.treatmentName}, ${when(a, locale)}) has been cancelled. Please call us: ${clinicPhone}`,
+      ? `წამი: თქვენი ვიზიტი (${a.treatmentName}, ${when(a, locale)}) გაუქმდა. დაგვიკავშირდით: ${clinicPhone}`
+      : `Tsami: your appointment (${a.treatmentName}, ${when(a, locale)}) has been cancelled. Please call us: ${clinicPhone}`,
 
   moved: (a: AppointmentSummary, clinicPhone: string, locale: Locale) =>
     locale === "ka"
-      ? `ფეისი: თქვენი ვიზიტი გადატანილია — ${a.treatmentName}, ${when(a, locale)}, ${a.practitionerName}. კითხვები: ${clinicPhone}`
-      : `Face: your appointment has moved to ${when(a, locale)}, ${a.treatmentName} with ${a.practitionerName}. Questions: ${clinicPhone}`,
+      ? `წამი: თქვენი ვიზიტი გადატანილია — ${a.treatmentName}, ${when(a, locale)}, ${a.practitionerName}. კითხვები: ${clinicPhone}`
+      : `Tsami: your appointment has moved to ${when(a, locale)}, ${a.treatmentName} with ${a.practitionerName}. Questions: ${clinicPhone}`,
 };
