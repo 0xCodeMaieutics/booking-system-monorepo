@@ -138,7 +138,7 @@ export function BookingFlow({
                 key={x.id}
                 type="button"
                 onClick={() => setTreatmentId(x.id)}
-                className="flex flex-col gap-1 rounded-card border border-ink/10 bg-paper p-5 text-left transition-colors hover:border-brand"
+                className="flex flex-col gap-1 rounded-2xl border border-ink/10 bg-paper p-5 text-left transition-colors hover:border-brand"
               >
                 <span className="text-lg font-medium">{name(x)}</span>
                 <span className="text-sm text-ink-soft">
@@ -271,7 +271,7 @@ function Choice({ title, hint, onClick }: { title: string; hint?: string; onClic
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col gap-1 rounded-card border border-ink/10 bg-paper p-5 text-left transition-colors hover:border-brand"
+      className="flex flex-col gap-1 rounded-2xl border border-ink/10 bg-paper p-5 text-left transition-colors hover:border-brand"
     >
       <span className="text-lg font-medium">{title}</span>
       {hint && <span className="text-sm text-ink-soft">{hint}</span>}

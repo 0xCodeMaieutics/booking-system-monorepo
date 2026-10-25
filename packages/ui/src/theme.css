@@ -19,8 +19,6 @@
   --color-success: #2e6b4f;
 
   --font-sans: var(--font-noto-sans), system-ui, -apple-system, sans-serif;
-
-  --radius-card: 20px;
 }
 
 @layer base {
