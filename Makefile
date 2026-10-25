@@ -5,6 +5,7 @@ setup: .env
 	$(MAKE) db-up
 	pnpm db:migrate
 	pnpm db:seed
+	pnpm admin:create-dev
 
 .env:
 	cp .env.example .env
@@ -20,3 +21,4 @@ db-reset:
 	$(MAKE) db-up
 	pnpm db:migrate
 	pnpm db:seed
+	pnpm admin:create-dev
