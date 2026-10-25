@@ -58,7 +58,10 @@ export default async function LocaleLayout({
           <Providers>{children}</Providers>
         </main>
         <footer className="mx-auto flex max-w-3xl items-center gap-1.5 px-6 pb-8 text-xs text-ink-soft">
-          {t.poweredBy} <Wordmark />
+          {t.poweredBy}{" "}
+          <a href="https://tsami.ge" className="hover:underline">
+            <Wordmark />
+          </a>
         </footer>
       </body>
     </html>
