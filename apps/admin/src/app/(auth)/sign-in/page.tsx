@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Card, Field, Input } from "@face/ui";
+import { Button, Card, Field, Input } from "@visita/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";

@@ -1,5 +1,5 @@
-import { BookingError, type BookingErrorCode, isLocalDate } from "@face/booking";
 import { TRPCError, type TRPC_ERROR_CODE_KEY } from "@trpc/server";
+import { BookingError, type BookingErrorCode, isLocalDate } from "@visita/booking";
 import superjson from "superjson";
 import { z } from "zod";
 

@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 
-import type { AdminAccounts } from "@face/api/admin";
-import { eq, getDb, schema } from "@face/db";
+import type { AdminAccounts } from "@visita/api/admin";
+import { eq, getDb, schema } from "@visita/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
@@ -45,7 +45,7 @@ export const auth = betterAuth({
     async sendResetPassword({ user, url }) {
       await sendEmail({
         to: user.email,
-        subject: "ფეისი — პაროლის დაყენება",
+        subject: "ვიზიტა — პაროლის დაყენება",
         html:
           `<p>გამარჯობა, ${escape(user.name)}!</p>` +
           `<p>ადმინისტრატორის პანელისთვის პაროლის დასაყენებლად გადადით ბმულზე (მოქმედებს 72 საათი):</p>` +

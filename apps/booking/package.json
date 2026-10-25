@@ -1,5 +1,5 @@
 {
-  "name": "@face/booking",
+  "name": "@visita/booking-site",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,14 +9,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@face/api": "workspace:*",
-    "@face/booking": "workspace:*",
-    "@face/db": "workspace:*",
-    "@face/ui": "workspace:*",
     "@tanstack/react-query": "^5.104.5",
     "@trpc/client": "^11.19.0",
     "@trpc/server": "^11.19.0",
     "@trpc/tanstack-react-query": "^11.19.0",
+    "@visita/api": "workspace:*",
+    "@visita/booking": "workspace:*",
+    "@visita/db": "workspace:*",
+    "@visita/ui": "workspace:*",
     "next": "^16.4.3",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

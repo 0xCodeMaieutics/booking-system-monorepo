@@ -14,7 +14,7 @@ export async function sendEmail(email: Email): Promise<void> {
   }
   resend ??= new Resend(key);
   const { error } = await resend.emails.send({
-    from: process.env.ADMIN_EMAIL_FROM ?? "Face Aesthetic Centre <no-reply@example.com>",
+    from: process.env.ADMIN_EMAIL_FROM ?? "Visita <no-reply@example.com>",
     ...email,
   });
   if (error) throw new Error(`Resend failed: ${error.message}`);

@@ -1,8 +1,15 @@
 "use client";
 
-import { addDays, formatDate, formatTime, localInstant, parseMinute, toLocalDate } from "@face/booking/time";
-import { Button, Field, Input, Select } from "@face/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  addDays,
+  formatDate,
+  formatTime,
+  localInstant,
+  parseMinute,
+  toLocalDate,
+} from "@visita/booking/time";
+import { Button, Field, Input, Select } from "@visita/ui";
 import { type FormEvent, useState } from "react";
 
 import { useTRPC } from "@/trpc/client";
@@ -69,7 +76,7 @@ export function TimeOffManager({ practitionerId }: { practitionerId?: string }) 
         {list.data?.map(({ timeOff: t, practitioner }) => (
           <li
             key={t.id}
-            className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-sand/50 px-3 py-2"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-mist/50 px-3 py-2"
           >
             <span>
               {describe(t.startsAt, t.endsAt)} · {practitioner?.nameKa ?? "მთელი კლინიკა"}

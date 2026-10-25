@@ -1,13 +1,19 @@
-# Face Aesthetic Centre
+# Visita
 
-The online presence and Appointment Booking for Face Aesthetic Centre, an aesthetic medicine clinic in Kutaisi, Georgia.
+Visita, an Appointment Booking product for clinics in Georgia, and the Landing Page of its first Clinic, Face Aesthetic Centre in Kutaisi.
 
 ## Language
+
+### The product
+
+**Visita**:
+The Appointment Booking product (ვიზიტა): the Booking Site and Admin Dashboard. It has its own name and styling, separate from any Clinic's brand, and serves clinics in Georgia only. Patients meet the Clinic's name first (on the Booking Site and in every SMS), with Visita in the background; Admins meet Visita first.
+_Avoid_: The booking system, the platform, the app
 
 ### The Clinic and its people
 
 **Clinic**:
-Face Aesthetic Centre (ესთეტიკის ცენტრი ფეისი) — the business and physical location at Tamar Mepe #38, Kutaisi. The Clinic is the public-facing brand.
+Face Aesthetic Centre (ესთეტიკის ცენტრი ფეისი) — the business and physical location at Tamar Mepe #38, Kutaisi. The Clinic's brand is what Patients recognise; it is Visita's first customer.
 _Avoid_: Salon, studio, centre (on its own), practice
 
 **Practitioner**:
@@ -79,15 +85,15 @@ _Avoid_: Magic link, booking link, token
 ### Surfaces
 
 **Landing Page**:
-The Clinic's public website that introduces the Clinic and its Practitioners and directs visitors to the Booking Site.
+The Clinic's own public website, in the Clinic's brand, that introduces the Clinic and its Practitioners and directs visitors to the Booking Site. It is not part of Visita.
 _Avoid_: Homepage, site, website (when the landing page specifically is meant)
 
 **Booking Site**:
-The public site where Patients make and manage Appointments, at booking.example.com. No sign-in.
+Visita's public site where Patients make and manage Appointments with a Clinic, at booking.example.com. It is in Visita's styling but headed by the Clinic's name. No sign-in.
 _Avoid_: User booking interface, booking app, portal
 
 **Admin Dashboard**:
-The signed-in site where Admins manage Practitioners, Treatments, Weekly Schedules, Time Off and Appointments, at admin.example.com.
+Visita's signed-in site where Admins manage Practitioners, Treatments, Weekly Schedules, Time Off and Appointments, at admin.example.com.
 _Avoid_: Admin panel, back office, CMS
 
 **Locale**:

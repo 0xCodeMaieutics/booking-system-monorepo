@@ -1,8 +1,8 @@
 "use client";
 
-import { addDays, formatDate, formatTime, toLocalDate } from "@face/booking/time";
-import { Button, Card, Field, Input, Textarea, cn } from "@face/ui";
 import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
+import { addDays, formatDate, formatTime, toLocalDate } from "@visita/booking/time";
+import { Button, Card, Field, Input, Textarea, cn } from "@visita/ui";
 import Link from "next/link";
 import { type FormEvent, useMemo, useState } from "react";
 
@@ -102,7 +102,7 @@ export function BookingFlow({
   return (
     <div className="flex flex-col gap-8">
       {treatment && (
-        <Card className="flex flex-col gap-2 bg-sand/50 p-5 text-sm">
+        <Card className="flex flex-col gap-2 bg-mist/50 p-5 text-sm">
           <span className="text-xs tracking-widest text-ink-soft uppercase">{t.summary}</span>
           <SummaryRow
             label={t.steps.treatment}
@@ -138,9 +138,9 @@ export function BookingFlow({
                 key={x.id}
                 type="button"
                 onClick={() => setTreatmentId(x.id)}
-                className="flex flex-col gap-1 rounded-card border border-ink/10 bg-paper p-5 text-left transition-colors hover:border-rose-deep"
+                className="flex flex-col gap-1 rounded-card border border-ink/10 bg-paper p-5 text-left transition-colors hover:border-accent"
               >
-                <span className="font-serif text-lg">{name(x)}</span>
+                <span className="text-lg font-medium">{name(x)}</span>
                 <span className="text-sm text-ink-soft">
                   {x.durationMinutes} {t.treatment.minutes}
                   {x.priceFromGel !== null && ` · ${t.treatment.price(x.priceFromGel)}`}
@@ -201,7 +201,7 @@ export function BookingFlow({
                       onClick={() => setDate(d)}
                       className={cn(
                         "shrink-0 rounded-xl border px-4 py-2 text-sm whitespace-nowrap",
-                        d === date ? "border-rose-deep bg-rose-deep text-paper" : "border-ink/15 bg-paper",
+                        d === date ? "border-accent bg-accent text-paper" : "border-ink/15 bg-paper",
                       )}
                     >
                       {formatDate(first, locale)}
@@ -271,9 +271,9 @@ function Choice({ title, hint, onClick }: { title: string; hint?: string; onClic
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col gap-1 rounded-card border border-ink/10 bg-paper p-5 text-left transition-colors hover:border-rose-deep"
+      className="flex flex-col gap-1 rounded-card border border-ink/10 bg-paper p-5 text-left transition-colors hover:border-accent"
     >
-      <span className="font-serif text-lg">{title}</span>
+      <span className="text-lg font-medium">{title}</span>
       {hint && <span className="text-sm text-ink-soft">{hint}</span>}
     </button>
   );

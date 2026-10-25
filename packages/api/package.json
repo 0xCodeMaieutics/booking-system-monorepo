@@ -1,5 +1,5 @@
 {
-  "name": "@face/api",
+  "name": "@visita/api",
   "private": true,
   "type": "module",
   "exports": {
@@ -10,9 +10,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@face/booking": "workspace:*",
-    "@face/db": "workspace:*",
     "@trpc/server": "^11.19.0",
+    "@visita/booking": "workspace:*",
+    "@visita/db": "workspace:*",
     "superjson": "^2.2.6",
     "zod": "^4.6.7"
   },

@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, Card, Field, Input } from "@face/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, Card, Field, Input } from "@visita/ui";
 import { type FormEvent, useState } from "react";
 
 import { errorMessage } from "@/components/errors";

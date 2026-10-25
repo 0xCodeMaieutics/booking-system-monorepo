@@ -20,18 +20,6 @@ importers:
 
   apps/admin:
     dependencies:
-      '@face/api':
-        specifier: workspace:*
-        version: link:../../packages/api
-      '@face/booking':
-        specifier: workspace:*
-        version: link:../../packages/booking
-      '@face/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@face/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
       '@tanstack/react-query':
         specifier: ^5.104.5
         version: 5.104.5(@types/react@19.3.0)(react@19.3.1)
@@ -44,6 +32,18 @@ importers:
       '@trpc/tanstack-react-query':
         specifier: ^11.19.0
         version: 11.19.0(@tanstack/react-query@5.104.5(@types/react@19.3.0)(react@19.3.1))(@trpc/client@11.19.0(@trpc/server@11.19.0(typescript@6.0.3))(typescript@6.0.3))(@trpc/server@11.19.0(typescript@6.0.3))(react@19.3.1)(typescript@6.0.3)
+      '@visita/api':
+        specifier: workspace:*
+        version: link:../../packages/api
+      '@visita/booking':
+        specifier: workspace:*
+        version: link:../../packages/booking
+      '@visita/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@visita/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       better-auth:
         specifier: ^1.7.12
         version: 1.7.12(drizzle-kit@0.31.11)(drizzle-orm@0.45.4(kysely@0.29.7))(next@16.4.3(@types/node@26.6.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(vitest@5.0.5(@types/node@26.6.5))
@@ -87,18 +87,6 @@ importers:
 
   apps/booking:
     dependencies:
-      '@face/api':
-        specifier: workspace:*
-        version: link:../../packages/api
-      '@face/booking':
-        specifier: workspace:*
-        version: link:../../packages/booking
-      '@face/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@face/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
       '@tanstack/react-query':
         specifier: ^5.104.5
         version: 5.104.5(@types/react@19.3.0)(react@19.3.1)
@@ -111,6 +99,18 @@ importers:
       '@trpc/tanstack-react-query':
         specifier: ^11.19.0
         version: 11.19.0(@tanstack/react-query@5.104.5(@types/react@19.3.0)(react@19.3.1))(@trpc/client@11.19.0(@trpc/server@11.19.0(typescript@6.0.3))(typescript@6.0.3))(@trpc/server@11.19.0(typescript@6.0.3))(react@19.3.1)(typescript@6.0.3)
+      '@visita/api':
+        specifier: workspace:*
+        version: link:../../packages/api
+      '@visita/booking':
+        specifier: workspace:*
+        version: link:../../packages/booking
+      '@visita/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@visita/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       next:
         specifier: ^16.4.3
         version: 16.4.3(@types/node@26.6.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -147,15 +147,15 @@ importers:
 
   packages/api:
     dependencies:
-      '@face/booking':
-        specifier: workspace:*
-        version: link:../booking
-      '@face/db':
-        specifier: workspace:*
-        version: link:../db
       '@trpc/server':
         specifier: ^11.19.0
         version: 11.19.0(typescript@6.0.3)
+      '@visita/booking':
+        specifier: workspace:*
+        version: link:../booking
+      '@visita/db':
+        specifier: workspace:*
+        version: link:../db
       superjson:
         specifier: ^2.2.6
         version: 2.2.6
@@ -172,7 +172,7 @@ importers:
       '@date-fns/tz':
         specifier: ^1.5.0
         version: 1.5.0
-      '@face/db':
+      '@visita/db':
         specifier: workspace:*
         version: link:../db
     devDependencies:

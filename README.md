@@ -1,20 +1,25 @@
-<img src="assets/icon.svg" width="64" height="64" alt="">
+# Visita
 
-# Face Aesthetic Centre
-
-Monorepo for Face Aesthetic Centre (ესთეტიკის ცენტრი ფეისი), Kutaisi. See [CONTEXT.md](./CONTEXT.md) for the domain language and [docs/adr](./docs/adr) for architecture decisions.
+Monorepo for Visita, an appointment booking product for clinics in Georgia, and the Landing Page of its first Clinic, Face Aesthetic Centre (ესთეტიკის ცენტრი ფეისი), Kutaisi. See [CONTEXT.md](./CONTEXT.md) for the domain language and [docs/adr](./docs/adr) for architecture decisions.
 
 ## Layout
 
-| Path           | What                                                                         |
-| -------------- | ---------------------------------------------------------------------------- |
-| `apps/landing` | Static HTML Landing Page. Georgian at `/`, English at `/en/`. No build step. |
-| `packages/`    | Shared code between apps (empty for now).                                    |
+| Path               | What                                                                                          |
+| ------------------ | --------------------------------------------------------------------------------------------- |
+| `apps/admin`       | Visita Admin Dashboard (Next.js). Georgian only.                                              |
+| `apps/booking`     | Visita Booking Site (Next.js). Headed by the Clinic's name, in Visita's styling.              |
+| `apps/landing`     | Face Aesthetic Centre's static Landing Page, in the Clinic's own styling. Not part of Visita. |
+| `packages/api`     | tRPC routers for the Booking Site and Admin Dashboard.                                        |
+| `packages/booking` | Booking rules shared by both routers.                                                         |
+| `packages/db`      | Database schema, migrations and seed.                                                         |
+| `packages/ui`      | Visita's shared components and theme.                                                         |
 
 ## Development
 
 ```sh
 pnpm dev:landing   # serves apps/landing on http://localhost:4173
+pnpm dev:booking   # Booking Site on http://localhost:3000
+pnpm dev:admin     # Admin Dashboard
 ```
 
 ## Deploying the Landing Page

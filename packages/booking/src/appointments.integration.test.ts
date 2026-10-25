@@ -1,4 +1,4 @@
-import { type Db, createDb, eq, like, schema } from "@face/db";
+import { type Db, createDb, eq, like, schema } from "@visita/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { cancelByPatient, createAppointment } from "./appointments";

@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, Field, Input } from "@face/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, Field, Input } from "@visita/ui";
 import { type FormEvent, useState } from "react";
 
 import { useTRPC } from "@/trpc/client";

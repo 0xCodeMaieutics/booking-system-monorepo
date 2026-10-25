@@ -1,7 +1,7 @@
 import "server-only";
-import type { BookingContext } from "@face/api/booking";
-import { createSmsSender } from "@face/booking";
-import { getDb } from "@face/db";
+import type { BookingContext } from "@visita/api/booking";
+import { createSmsSender } from "@visita/booking";
+import { getDb } from "@visita/db";
 
 let sms: ReturnType<typeof createSmsSender> | undefined;
 

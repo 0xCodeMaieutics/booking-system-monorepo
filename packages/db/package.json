@@ -1,5 +1,5 @@
 {
-  "name": "@face/db",
+  "name": "@visita/db",
   "private": true,
   "type": "module",
   "exports": {

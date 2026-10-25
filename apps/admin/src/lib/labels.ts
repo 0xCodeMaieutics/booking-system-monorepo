@@ -1,4 +1,4 @@
-import type { AttentionReason } from "@face/booking";
+import type { AttentionReason } from "@visita/booking";
 
 export const statusLabel = {
   booked: "დაჯავშნილი",
@@ -8,7 +8,7 @@ export const statusLabel = {
 } as const;
 
 export const statusTone = {
-  booked: "bg-sand text-ink",
+  booked: "bg-mist text-ink",
   cancelled: "bg-ink/5 text-ink-soft line-through",
   completed: "bg-success/10 text-success",
   no_show: "bg-danger/10 text-danger",

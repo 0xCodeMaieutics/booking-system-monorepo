@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, cn } from "@face/ui";
+import { Button, cn, Wordmark } from "@visita/ui";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -23,7 +23,10 @@ export function Nav({ adminName }: { adminName: string }) {
 
   return (
     <aside className="flex flex-col gap-6 border-b border-ink/10 bg-paper px-4 py-6 md:w-60 md:border-r md:border-b-0">
-      <p className="px-3 font-serif text-lg">ფეისი</p>
+      <div className="flex flex-col gap-0.5 px-3">
+        <Wordmark className="text-xl" />
+        <span className="text-xs text-ink-soft">ესთეტიკის ცენტრი ფეისი</span>
+      </div>
       <nav className="flex flex-wrap gap-1 md:flex-col">
         {links.map((l) => (
           <Link
@@ -32,8 +35,8 @@ export function Nav({ adminName }: { adminName: string }) {
             className={cn(
               "rounded-xl px-3 py-2 text-sm",
               active(l.href)
-                ? "bg-sand font-medium text-ink"
-                : "text-ink-soft hover:bg-sand/60 hover:text-ink",
+                ? "bg-mist font-medium text-ink"
+                : "text-ink-soft hover:bg-mist/60 hover:text-ink",
             )}
           >
             {l.label}

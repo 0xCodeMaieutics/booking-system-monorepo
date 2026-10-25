@@ -1,8 +1,8 @@
 "use client";
 
-import { formatDate, formatTime } from "@face/booking/time";
-import { Card } from "@face/ui";
 import { useQuery } from "@tanstack/react-query";
+import { formatDate, formatTime } from "@visita/booking/time";
+import { Card } from "@visita/ui";
 
 import { attentionLabel } from "@/lib/labels";
 import { useTRPC } from "@/trpc/client";

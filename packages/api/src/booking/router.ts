@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import {
   addDays,
   canPatientCancel,
@@ -11,9 +12,8 @@ import {
   requestVerificationCode,
   smsText,
   toLocalDate,
-} from "@face/booking";
-import { asc, isNull, schema } from "@face/db";
-import { TRPCError } from "@trpc/server";
+} from "@visita/booking";
+import { asc, isNull, schema } from "@visita/db";
 import { z } from "zod";
 
 import { zLocalDate, zLocale } from "../shared";
