@@ -17,6 +17,7 @@
     "db:generate": "pnpm --filter @tsami/db generate",
     "db:migrate": "pnpm --filter @tsami/db migrate",
     "db:seed": "pnpm --filter @tsami/db seed",
+    "db:reset": "pnpm --filter @tsami/db reset",
     "admin:create": "pnpm --filter @tsami/admin admin:create",
     "admin:create-dev": "pnpm --filter @tsami/admin admin:create-dev"
   },
