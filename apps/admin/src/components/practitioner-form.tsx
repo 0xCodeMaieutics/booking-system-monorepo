@@ -1,8 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Field, Input } from "@tsami/ui";
-import { type FormEvent, useState } from "react";
+import { Button, Field, FieldDescription, FieldLabel, Input } from "@tsami/ui";
+import { type FormEvent, useId, useState } from "react";
 
 import { useTRPC } from "@/trpc/client";
 
@@ -20,6 +20,7 @@ type Practitioner = {
 };
 
 export function PractitionerForm({ practitioner: p }: { practitioner: Practitioner }) {
+  const fieldId = useId();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const treatments = useQuery(trpc.treatments.list.queryOptions());
@@ -55,35 +56,53 @@ export function PractitionerForm({ practitioner: p }: { practitioner: Practition
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="სახელი (ქართულად)">
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-1`}>სახელი (ქართულად)</FieldLabel>
           <Input
+            id={`${fieldId}-1`}
             required
             value={form.nameKa}
             onChange={(e) => setForm({ ...form, nameKa: e.target.value })}
           />
         </Field>
-        <Field label="სახელი (ინგლისურად)">
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-2`}>სახელი (ინგლისურად)</FieldLabel>
           <Input
+            id={`${fieldId}-2`}
             required
             value={form.nameEn}
             onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
           />
         </Field>
-        <Field label="წოდება (ქართულად)" hint="მაგ. ექიმი">
-          <Input value={form.titleKa} onChange={(e) => setForm({ ...form, titleKa: e.target.value })} />
-        </Field>
-        <Field label="წოდება (ინგლისურად)" hint="e.g. Dr.">
-          <Input value={form.titleEn} onChange={(e) => setForm({ ...form, titleEn: e.target.value })} />
-        </Field>
-        <Field
-          label="რიგითობა"
-          hint="„ნებისმიერი სპეციალისტის“ შემთხვევაში თანაბარ პირობებში უპირატესობა აქვს უფრო მცირე ნომერს"
-        >
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-3`}>წოდება (ქართულად)</FieldLabel>
           <Input
+            id={`${fieldId}-3`}
+            value={form.titleKa}
+            onChange={(e) => setForm({ ...form, titleKa: e.target.value })}
+          />
+          <FieldDescription>მაგ. ექიმი</FieldDescription>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-4`}>წოდება (ინგლისურად)</FieldLabel>
+          <Input
+            id={`${fieldId}-4`}
+            value={form.titleEn}
+            onChange={(e) => setForm({ ...form, titleEn: e.target.value })}
+          />
+          <FieldDescription>e.g. Dr.</FieldDescription>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-5`}>რიგითობა</FieldLabel>
+          <Input
+            id={`${fieldId}-5`}
             type="number"
             value={form.sortOrder}
             onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })}
           />
+          <FieldDescription>
+            „ნებისმიერი სპეციალისტის“ შემთხვევაში თანაბარ პირობებში უპირატესობა აქვს უფრო მცირე ნომერს
+          </FieldDescription>
         </Field>
       </div>
 

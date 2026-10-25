@@ -2,8 +2,16 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addDays, formatDate, formatTime, localInstant, parseMinute, toLocalDate } from "@tsami/booking/time";
-import { Button, Field, Input, Select } from "@tsami/ui";
-import { type FormEvent, useState } from "react";
+import {
+  Button,
+  Field,
+  FieldDescription,
+  FieldLabel,
+  Input,
+  NativeSelect,
+  NativeSelectOption,
+} from "@tsami/ui";
+import { type FormEvent, useId, useState } from "react";
 
 import { useTRPC } from "@/trpc/client";
 
@@ -26,6 +34,7 @@ function describe(startsAt: Date, endsAt: Date) {
  * Practitioner (Clinic-wide closures are shown too); without, the Admin picks.
  */
 export function TimeOffManager({ practitionerId }: { practitionerId?: string }) {
+  const fieldId = useId();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const practitioners = useQuery({ ...trpc.practitioners.list.queryOptions(), enabled: !practitionerId });
@@ -85,21 +94,28 @@ export function TimeOffManager({ practitionerId }: { practitionerId?: string }) 
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-3">
           {!practitionerId && (
-            <Field label="ვისთვის">
-              <Select value={form.who} onChange={(e) => setForm({ ...form, who: e.target.value })}>
-                <option value="">მთელი კლინიკა (დახურულია)</option>
+            <Field>
+              <FieldLabel htmlFor={`${fieldId}-1`}>ვისთვის</FieldLabel>
+              <NativeSelect
+                id={`${fieldId}-1`}
+                value={form.who}
+                onChange={(e) => setForm({ ...form, who: e.target.value })}
+              >
+                <NativeSelectOption value="">მთელი კლინიკა (დახურულია)</NativeSelectOption>
                 {practitioners.data
                   ?.filter((p) => !p.archivedAt)
                   .map((p) => (
-                    <option key={p.id} value={p.id}>
+                    <NativeSelectOption key={p.id} value={p.id}>
                       {p.nameKa}
-                    </option>
+                    </NativeSelectOption>
                   ))}
-              </Select>
+              </NativeSelect>
             </Field>
           )}
-          <Field label="დან">
+          <Field>
+            <FieldLabel htmlFor={`${fieldId}-2`}>დან</FieldLabel>
             <Input
+              id={`${fieldId}-2`}
               type="date"
               required
               value={form.from}
@@ -112,8 +128,10 @@ export function TimeOffManager({ practitionerId }: { practitionerId?: string }) 
               }
             />
           </Field>
-          <Field label="მდე">
+          <Field>
+            <FieldLabel htmlFor={`${fieldId}-3`}>მდე</FieldLabel>
             <Input
+              id={`${fieldId}-3`}
               type="date"
               required
               min={form.from}
@@ -132,15 +150,19 @@ export function TimeOffManager({ practitionerId }: { practitionerId?: string }) 
         </label>
         {!form.allDay && (
           <div className="flex gap-4">
-            <Field label="დაწყება">
+            <Field>
+              <FieldLabel htmlFor={`${fieldId}-4`}>დაწყება</FieldLabel>
               <Input
+                id={`${fieldId}-4`}
                 type="time"
                 value={form.startTime}
                 onChange={(e) => setForm({ ...form, startTime: e.target.value })}
               />
             </Field>
-            <Field label="დასრულება">
+            <Field>
+              <FieldLabel htmlFor={`${fieldId}-5`}>დასრულება</FieldLabel>
               <Input
+                id={`${fieldId}-5`}
                 type="time"
                 value={form.endTime}
                 onChange={(e) => setForm({ ...form, endTime: e.target.value })}
@@ -148,8 +170,14 @@ export function TimeOffManager({ practitionerId }: { practitionerId?: string }) 
             </Field>
           </div>
         )}
-        <Field label="შენიშვნა" hint="მაგ. შვებულება, ავადმყოფობა, დღესასწაული">
-          <Input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-6`}>შენიშვნა</FieldLabel>
+          <Input
+            id={`${fieldId}-6`}
+            value={form.note}
+            onChange={(e) => setForm({ ...form, note: e.target.value })}
+          />
+          <FieldDescription>მაგ. შვებულება, ავადმყოფობა, დღესასწაული</FieldDescription>
         </Field>
         {create.error && <p className="text-sm text-danger">{errorMessage(create.error)}</p>}
         <Button size="lg" type="submit" className="self-start" disabled={create.isPending}>

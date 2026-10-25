@@ -2,8 +2,18 @@
 
 import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
 import { formatTime, localInstant, parseMinute } from "@tsami/booking/time";
-import { Button, Field, Input, Select, Textarea, cn } from "@tsami/ui";
-import { type FormEvent, useState } from "react";
+import {
+  Button,
+  Field,
+  FieldDescription,
+  FieldLabel,
+  Input,
+  NativeSelect,
+  NativeSelectOption,
+  Textarea,
+  cn,
+} from "@tsami/ui";
+import { type FormEvent, useId, useState } from "react";
 
 import { useTRPC } from "@/trpc/client";
 
@@ -21,6 +31,7 @@ export function AppointmentForm({
   initialDate: string;
   onDone: (result: { startsAt: Date }) => void;
 }) {
+  const fieldId = useId();
   const trpc = useTRPC();
   const treatments = useQuery(trpc.treatments.list.queryOptions());
   const practitioners = useQuery(trpc.practitioners.list.queryOptions());
@@ -80,8 +91,10 @@ export function AppointmentForm({
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-3">
         {!move && (
-          <Field label="პროცედურა">
-            <Select
+          <Field>
+            <FieldLabel htmlFor={`${fieldId}-1`}>პროცედურა</FieldLabel>
+            <NativeSelect
+              id={`${fieldId}-1`}
               required
               value={treatmentId}
               onChange={(e) => {
@@ -89,19 +102,21 @@ export function AppointmentForm({
                 setStartsAt(undefined);
               }}
             >
-              <option value="">—</option>
+              <NativeSelectOption value="">—</NativeSelectOption>
               {treatments.data
                 ?.filter((t) => !t.archivedAt)
                 .map((t) => (
-                  <option key={t.id} value={t.id}>
+                  <NativeSelectOption key={t.id} value={t.id}>
                     {t.nameKa} ({t.durationMinutes} წთ)
-                  </option>
+                  </NativeSelectOption>
                 ))}
-            </Select>
+            </NativeSelect>
           </Field>
         )}
-        <Field label="სპეციალისტი">
-          <Select
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-2`}>სპეციალისტი</FieldLabel>
+          <NativeSelect
+            id={`${fieldId}-2`}
             value={practitionerId}
             required={override || !!move}
             onChange={(e) => {
@@ -109,16 +124,18 @@ export function AppointmentForm({
               setStartsAt(undefined);
             }}
           >
-            {!move && <option value={ANY}>ნებისმიერი</option>}
+            {!move && <NativeSelectOption value={ANY}>ნებისმიერი</NativeSelectOption>}
             {qualified.map((p) => (
-              <option key={p.id} value={p.id}>
+              <NativeSelectOption key={p.id} value={p.id}>
                 {p.nameKa}
-              </option>
+              </NativeSelectOption>
             ))}
-          </Select>
+          </NativeSelect>
         </Field>
-        <Field label="თარიღი">
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-3`}>თარიღი</FieldLabel>
           <Input
+            id={`${fieldId}-3`}
             type="date"
             required
             value={date}
@@ -136,8 +153,10 @@ export function AppointmentForm({
       </label>
 
       {override ? (
-        <Field label="დრო" className="max-w-40">
+        <Field className="max-w-40">
+          <FieldLabel htmlFor={`${fieldId}-4`}>დრო</FieldLabel>
           <Input
+            id={`${fieldId}-4`}
             type="time"
             step={300}
             required
@@ -178,40 +197,51 @@ export function AppointmentForm({
 
       {!move && (
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="პაციენტის სახელი და გვარი">
+          <Field>
+            <FieldLabel htmlFor={`${fieldId}-5`}>პაციენტის სახელი და გვარი</FieldLabel>
             <Input
+              id={`${fieldId}-5`}
               required
               minLength={2}
               value={patient.fullName}
               onChange={(e) => setPatient({ ...patient, fullName: e.target.value })}
             />
           </Field>
-          <Field label="მობილური" hint="არსებული ნომრის შემთხვევაში ვიზიტი იმავე პაციენტს მიებმება">
+          <Field>
+            <FieldLabel htmlFor={`${fieldId}-6`}>მობილური</FieldLabel>
             <Input
+              id={`${fieldId}-6`}
               required
               type="tel"
               value={patient.phone}
               onChange={(e) => setPatient({ ...patient, phone: e.target.value })}
             />
+            <FieldDescription>არსებული ნომრის შემთხვევაში ვიზიტი იმავე პაციენტს მიებმება</FieldDescription>
           </Field>
-          <Field label="ელფოსტა (არასავალდებულო)">
+          <Field>
+            <FieldLabel htmlFor={`${fieldId}-7`}>ელფოსტა (არასავალდებულო)</FieldLabel>
             <Input
+              id={`${fieldId}-7`}
               type="email"
               value={patient.email}
               onChange={(e) => setPatient({ ...patient, email: e.target.value })}
             />
           </Field>
-          <Field label="SMS-ის ენა">
-            <Select
+          <Field>
+            <FieldLabel htmlFor={`${fieldId}-8`}>SMS-ის ენა</FieldLabel>
+            <NativeSelect
+              id={`${fieldId}-8`}
               value={patient.locale}
               onChange={(e) => setPatient({ ...patient, locale: e.target.value as "ka" | "en" })}
             >
-              <option value="ka">ქართული</option>
-              <option value="en">English</option>
-            </Select>
+              <NativeSelectOption value="ka">ქართული</NativeSelectOption>
+              <NativeSelectOption value="en">English</NativeSelectOption>
+            </NativeSelect>
           </Field>
-          <Field label="შენიშვნა" className="sm:col-span-2">
+          <Field className="sm:col-span-2">
+            <FieldLabel htmlFor={`${fieldId}-9`}>შენიშვნა</FieldLabel>
             <Textarea
+              id={`${fieldId}-9`}
               value={patient.note}
               onChange={(e) => setPatient({ ...patient, note: e.target.value })}
             />

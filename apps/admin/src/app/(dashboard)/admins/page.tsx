@@ -1,13 +1,14 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Card, CardContent, Field, Input } from "@tsami/ui";
-import { type FormEvent, useState } from "react";
+import { Button, Card, CardContent, Field, FieldLabel, Input } from "@tsami/ui";
+import { type FormEvent, useId, useState } from "react";
 
 import { errorMessage } from "@/components/errors";
 import { useTRPC } from "@/trpc/client";
 
 export default function AdminsPage() {
+  const fieldId = useId();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const me = useQuery(trpc.me.queryOptions());
@@ -52,15 +53,19 @@ export default function AdminsPage() {
           <form onSubmit={onSubmit} className="flex flex-col gap-4">
             <h2 className="text-xl">ახალი ადმინისტრატორის მოწვევა</h2>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="სახელი">
+              <Field>
+                <FieldLabel htmlFor={`${fieldId}-1`}>სახელი</FieldLabel>
                 <Input
+                  id={`${fieldId}-1`}
                   required
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                 />
               </Field>
-              <Field label="ელფოსტა">
+              <Field>
+                <FieldLabel htmlFor={`${fieldId}-2`}>ელფოსტა</FieldLabel>
                 <Input
+                  id={`${fieldId}-2`}
                   type="email"
                   required
                   value={form.email}

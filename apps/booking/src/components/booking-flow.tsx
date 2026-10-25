@@ -2,9 +2,19 @@
 
 import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
 import { addDays, formatDate, formatTime, toLocalDate } from "@tsami/booking/time";
-import { Button, Card, CardContent, Field, Input, Textarea, cn } from "@tsami/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  Field,
+  FieldDescription,
+  FieldLabel,
+  Input,
+  Textarea,
+  cn,
+} from "@tsami/ui";
 import Link from "next/link";
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useId, useMemo, useState } from "react";
 
 import { type Locale, dictionaries, localePath } from "@/i18n";
 import { bookingCodeOf, useTRPC } from "@/trpc/client";
@@ -304,6 +314,7 @@ function DetailsStep({
   onBooked: (result: { manageToken: string }) => void;
   onSlotGone: () => void;
 }) {
+  const fieldId = useId();
   const t = dictionaries[locale];
   const trpc = useTRPC();
   const [form, setForm] = useState({ fullName: "", phone: "", email: "", note: "" });
@@ -354,8 +365,10 @@ function DetailsStep({
       <h2 className="text-2xl">{t.details.title}</h2>
       {!verificationId ? (
         <form onSubmit={onSendCode} className="flex flex-col gap-4">
-          <Field label={t.details.fullName}>
+          <Field>
+            <FieldLabel htmlFor={`${fieldId}-1`}>{t.details.fullName}</FieldLabel>
             <Input
+              id={`${fieldId}-1`}
               required
               minLength={2}
               autoComplete="name"
@@ -363,8 +376,10 @@ function DetailsStep({
               onChange={set("fullName")}
             />
           </Field>
-          <Field label={t.details.phone} hint={t.details.phoneHint}>
+          <Field>
+            <FieldLabel htmlFor={`${fieldId}-2`}>{t.details.phone}</FieldLabel>
             <Input
+              id={`${fieldId}-2`}
               required
               type="tel"
               inputMode="tel"
@@ -373,12 +388,21 @@ function DetailsStep({
               value={form.phone}
               onChange={set("phone")}
             />
+            <FieldDescription>{t.details.phoneHint}</FieldDescription>
           </Field>
-          <Field label={t.details.email}>
-            <Input type="email" autoComplete="email" value={form.email} onChange={set("email")} />
+          <Field>
+            <FieldLabel htmlFor={`${fieldId}-3`}>{t.details.email}</FieldLabel>
+            <Input
+              id={`${fieldId}-3`}
+              type="email"
+              autoComplete="email"
+              value={form.email}
+              onChange={set("email")}
+            />
           </Field>
-          <Field label={t.details.note}>
-            <Textarea value={form.note} onChange={set("note")} maxLength={1000} />
+          <Field>
+            <FieldLabel htmlFor={`${fieldId}-4`}>{t.details.note}</FieldLabel>
+            <Textarea id={`${fieldId}-4`} value={form.note} onChange={set("note")} maxLength={1000} />
           </Field>
           {error && <p className="text-sm text-danger">{error}</p>}
           <Button size="lg" type="submit" disabled={busy} className="self-start">
@@ -390,8 +414,10 @@ function DetailsStep({
           <p className="text-sm text-ink-soft">
             {t.details.codeSentTo} {form.phone}
           </p>
-          <Field label={t.details.code}>
+          <Field>
+            <FieldLabel htmlFor={`${fieldId}-5`}>{t.details.code}</FieldLabel>
             <Input
+              id={`${fieldId}-5`}
               required
               inputMode="numeric"
               autoComplete="one-time-code"

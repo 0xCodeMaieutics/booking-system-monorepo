@@ -88,6 +88,10 @@ _Avoid_: Magic link, booking link, token
 The Clinic's own public website, in the Clinic's brand, that introduces the Clinic and its Practitioners and directs visitors to the Booking Site. It is not part of Tsami.
 _Avoid_: Homepage, site, website (when the landing page specifically is meant)
 
+**Marketing Site**:
+Tsami's public website, in Tsami's styling, that introduces Tsami to Clinics in Georgia and invites them to get in touch. It is not seen by Patients.
+_Avoid_: Landing page (for Tsami's site), homepage, B2B site
+
 **Booking Site**:
 Tsami's public site where Patients make and manage Appointments with a Clinic, at booking.example.com. It is in Tsami's styling but headed by the Clinic's name. No sign-in.
 _Avoid_: User booking interface, booking app, portal
