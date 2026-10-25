@@ -79,9 +79,11 @@ export function AppointmentsDay() {
         <Button type="button" variant="outline" size="sm" onClick={() => setDate(addDays(date, 1))}>
           →
         </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={() => setDate(toLocalDate(new Date()))}>
-          დღეს
-        </Button>
+        {date !== today && (
+          <Button type="button" variant="ghost" size="sm" onClick={() => setDate(today)}>
+            დღეს
+          </Button>
+        )}
       </div>
 
       {setStatus.error && <p className="text-sm text-danger">{errorMessage(setStatus.error)}</p>}
