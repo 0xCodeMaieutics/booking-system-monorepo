@@ -138,7 +138,7 @@ export function BookingFlow({
                 key={x.id}
                 type="button"
                 onClick={() => setTreatmentId(x.id)}
-                className="flex flex-col gap-1 rounded-card border border-ink/10 bg-paper p-5 text-left transition-colors hover:border-accent"
+                className="flex flex-col gap-1 rounded-card border border-ink/10 bg-paper p-5 text-left transition-colors hover:border-brand"
               >
                 <span className="text-lg font-medium">{name(x)}</span>
                 <span className="text-sm text-ink-soft">
@@ -201,7 +201,7 @@ export function BookingFlow({
                       onClick={() => setDate(d)}
                       className={cn(
                         "shrink-0 rounded-xl border px-4 py-2 text-sm whitespace-nowrap",
-                        d === date ? "border-accent bg-accent text-paper" : "border-ink/15 bg-paper",
+                        d === date ? "border-brand bg-brand text-paper" : "border-ink/15 bg-paper",
                       )}
                     >
                       {formatDate(first, locale)}
@@ -271,7 +271,7 @@ function Choice({ title, hint, onClick }: { title: string; hint?: string; onClic
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col gap-1 rounded-card border border-ink/10 bg-paper p-5 text-left transition-colors hover:border-accent"
+      className="flex flex-col gap-1 rounded-card border border-ink/10 bg-paper p-5 text-left transition-colors hover:border-brand"
     >
       <span className="text-lg font-medium">{title}</span>
       {hint && <span className="text-sm text-ink-soft">{hint}</span>}
