@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
-import { getClinicSettings } from "@visita/booking";
-import { asc, eq, schema } from "@visita/db";
+import { getClinicSettings } from "@tsami/booking";
+import { asc, eq, schema } from "@tsami/db";
 import { z } from "zod";
 
 import { appointmentsRouter, patientsRouter } from "./appointments";

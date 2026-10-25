@@ -8,7 +8,7 @@ import { Providers } from "@/trpc/client";
 const sans = Noto_Sans_Georgian({ subsets: ["georgian", "latin"], variable: "--font-noto-sans" });
 
 export const metadata: Metadata = {
-  title: "ვიზიტა — ადმინისტრატორი",
+  title: "წამი — ადმინისტრატორი",
   robots: { index: false, follow: false },
 };
 

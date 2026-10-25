@@ -1,4 +1,4 @@
-import { type Db, and, eq, gt, inArray, isNull, lte, schema, sql } from "@visita/db";
+import { type Db, and, eq, gt, inArray, isNull, lte, schema, sql } from "@tsami/db";
 
 import { getClinicSettings } from "./settings";
 import { type SmsSender, smsText } from "./sms";

@@ -10,8 +10,8 @@ import {
   moveAppointment,
   setStatusByAdmin,
   smsText,
-} from "@visita/booking";
-import { and, asc, desc, eq, gte, ilike, lt, or, schema } from "@visita/db";
+} from "@tsami/booking";
+import { and, asc, desc, eq, gte, ilike, lt, or, schema } from "@tsami/db";
 import { z } from "zod";
 
 import { zLocalDate, zLocale } from "../shared";

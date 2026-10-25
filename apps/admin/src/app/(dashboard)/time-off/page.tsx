@@ -1,4 +1,4 @@
-import { Card } from "@visita/ui";
+import { Card } from "@tsami/ui";
 
 import { TimeOffManager } from "@/components/time-off-manager";
 

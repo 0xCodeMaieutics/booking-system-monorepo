@@ -1,5 +1,5 @@
 {
-  "name": "@visita/admin",
+  "name": "@tsami/admin",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,10 +14,10 @@
     "@trpc/client": "^11.19.0",
     "@trpc/server": "^11.19.0",
     "@trpc/tanstack-react-query": "^11.19.0",
-    "@visita/api": "workspace:*",
-    "@visita/booking": "workspace:*",
-    "@visita/db": "workspace:*",
-    "@visita/ui": "workspace:*",
+    "@tsami/api": "workspace:*",
+    "@tsami/booking": "workspace:*",
+    "@tsami/db": "workspace:*",
+    "@tsami/ui": "workspace:*",
     "better-auth": "^1.7.12",
     "next": "^16.4.3",
     "react": "^19.3.1",

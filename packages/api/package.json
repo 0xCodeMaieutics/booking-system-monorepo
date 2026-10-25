@@ -1,5 +1,5 @@
 {
-  "name": "@visita/api",
+  "name": "@tsami/api",
   "private": true,
   "type": "module",
   "exports": {
@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@trpc/server": "^11.19.0",
-    "@visita/booking": "workspace:*",
-    "@visita/db": "workspace:*",
+    "@tsami/booking": "workspace:*",
+    "@tsami/db": "workspace:*",
     "superjson": "^2.2.6",
     "zod": "^4.6.7"
   },

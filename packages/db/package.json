@@ -1,5 +1,5 @@
 {
-  "name": "@visita/db",
+  "name": "@tsami/db",
   "private": true,
   "type": "module",
   "exports": {

@@ -1,8 +1,8 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { formatMinute, parseMinute } from "@visita/booking/time";
-import { Button, Input } from "@visita/ui";
+import { formatMinute, parseMinute } from "@tsami/booking/time";
+import { Button, Input } from "@tsami/ui";
 import { useState } from "react";
 
 import { weekdayLabel } from "@/lib/labels";

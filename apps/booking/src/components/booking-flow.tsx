@@ -1,8 +1,8 @@
 "use client";
 
 import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
-import { addDays, formatDate, formatTime, toLocalDate } from "@visita/booking/time";
-import { Button, Card, Field, Input, Textarea, cn } from "@visita/ui";
+import { addDays, formatDate, formatTime, toLocalDate } from "@tsami/booking/time";
+import { Button, Card, Field, Input, Textarea, cn } from "@tsami/ui";
 import Link from "next/link";
 import { type FormEvent, useMemo, useState } from "react";
 

@@ -17,12 +17,12 @@ export type Db = ReturnType<typeof createDb>;
 export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 export type DbOrTx = Db | Tx;
 
-const globalForDb = globalThis as unknown as { visitaDb?: Db };
+const globalForDb = globalThis as unknown as { tsamiDb?: Db };
 
 /** A process-wide Db, reused across hot reloads in development. */
 export function getDb(): Db {
-  globalForDb.visitaDb ??= createDb();
-  return globalForDb.visitaDb;
+  globalForDb.tsamiDb ??= createDb();
+  return globalForDb.tsamiDb;
 }
 
 /** Postgres error code for an exclusion constraint violation. */

@@ -1,4 +1,4 @@
-import { type DbOrTx, and, asc, eq, gt, inArray, isNull, lt, ne, or, schema } from "@visita/db";
+import { type DbOrTx, and, asc, eq, gt, inArray, isNull, lt, ne, or, schema } from "@tsami/db";
 
 import { BookingError } from "./errors";
 import { bookingWindow, getClinicSettings } from "./settings";

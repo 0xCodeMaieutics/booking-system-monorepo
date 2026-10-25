@@ -1,6 +1,6 @@
 import { initTRPC } from "@trpc/server";
-import type { SmsSender } from "@visita/booking";
-import type { Db } from "@visita/db";
+import type { SmsSender } from "@tsami/booking";
+import type { Db } from "@tsami/db";
 
 import { rethrowBookingError, trpcOptions } from "../shared";
 

@@ -1,4 +1,4 @@
-import { type DbOrTx, and, eq, gt, gte, schema } from "@visita/db";
+import { type DbOrTx, and, eq, gt, gte, schema } from "@tsami/db";
 
 import { fitsWeeklySchedule, overlaps } from "./slots";
 

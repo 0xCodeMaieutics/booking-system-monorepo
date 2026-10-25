@@ -1,5 +1,5 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import { bookingRouter } from "@visita/api/booking";
+import { bookingRouter } from "@tsami/api/booking";
 
 import { createBookingContext } from "@/server/context";
 

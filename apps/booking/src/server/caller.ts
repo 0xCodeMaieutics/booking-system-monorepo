@@ -1,5 +1,5 @@
 import "server-only";
-import { createBookingCaller } from "@visita/api/booking";
+import { createBookingCaller } from "@tsami/api/booking";
 import { headers } from "next/headers";
 
 import { createBookingContext } from "./context";

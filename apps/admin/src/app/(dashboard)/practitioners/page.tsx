@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button, Card } from "@visita/ui";
+import { Button, Card } from "@tsami/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 

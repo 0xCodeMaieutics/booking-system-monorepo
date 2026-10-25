@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Card } from "@visita/ui";
+import { Card } from "@tsami/ui";
 import { use } from "react";
 
 import { AttentionList } from "@/components/attention-list";

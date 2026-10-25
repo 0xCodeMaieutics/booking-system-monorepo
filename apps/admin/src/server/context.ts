@@ -1,7 +1,7 @@
 import "server-only";
-import type { AdminContext } from "@visita/api/admin";
-import { createSmsSender } from "@visita/booking";
-import { getDb } from "@visita/db";
+import type { AdminContext } from "@tsami/api/admin";
+import { createSmsSender } from "@tsami/booking";
+import { getDb } from "@tsami/db";
 
 import { adminAccounts, auth } from "./auth";
 
