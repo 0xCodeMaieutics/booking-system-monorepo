@@ -17,7 +17,10 @@ Monorepo for Tsami, an appointment booking product for clinics in Georgia, and t
 
 ## Development
 
+Requires Docker. `make setup` creates `.env` from `.env.example` if missing, installs dependencies, starts Postgres on port 5433, and runs migrations and the seed. `make db-reset` wipes the database and does the same again; `make db-down` stops it.
+
 ```sh
+make setup
 pnpm dev:landing   # serves apps/landing on http://localhost:4173
 pnpm dev:booking   # Booking Site on http://localhost:3000
 pnpm dev:admin     # Admin Dashboard
