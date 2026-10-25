@@ -180,6 +180,7 @@ export function AppointmentsDay() {
                         type="button"
                         size="sm"
                         variant="ghost"
+                        className="text-danger"
                         onClick={() => {
                           const reason = window.prompt("გაუქმების მიზეზი (არასავალდებულო)");
                           if (reason === null) return;
