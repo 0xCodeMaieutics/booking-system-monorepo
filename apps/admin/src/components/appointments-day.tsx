@@ -2,7 +2,22 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type LocalDate, addDays, formatTime, isLocalDate, toLocalDate } from "@tsami/booking/time";
-import { Button, Card, CardContent, Input, cn } from "@tsami/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  Input,
+  Textarea,
+  cn,
+} from "@tsami/ui";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -161,23 +176,7 @@ export function AppointmentsDay() {
                       >
                         გადატანა
                       </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        className="text-danger"
-                        onClick={() => {
-                          const reason = window.prompt("გაუქმების მიზეზი (არასავალდებულო)");
-                          if (reason === null) return;
-                          setStatus.mutate({
-                            id: a.id,
-                            status: "cancelled",
-                            reason: reason || undefined,
-                          });
-                        }}
-                      >
-                        გაუქმება
-                      </Button>
+                      <CancelAppointmentDialog id={a.id} onCancelled={invalidate} />
                     </>
                   )}
                   {a.status !== "booked" && (
@@ -213,5 +212,67 @@ export function AppointmentsDay() {
         })}
       </div>
     </div>
+  );
+}
+
+function CancelAppointmentDialog({ id, onCancelled }: { id: string; onCancelled: () => Promise<unknown> }) {
+  const trpc = useTRPC();
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const cancel = useMutation(
+    trpc.appointments.setStatus.mutationOptions({
+      onSuccess: async () => {
+        await onCancelled();
+        onOpenChange(false);
+      },
+    }),
+  );
+  const onOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (!next) {
+      setReason("");
+      cancel.reset();
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogTrigger asChild>
+        <Button type="button" size="sm" variant="ghost" className="text-danger">
+          გაუქმება
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <form
+          className="flex flex-col gap-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            cancel.mutate({ id, status: "cancelled", reason: reason.trim() || undefined });
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>ვიზიტის გაუქმება</DialogTitle>
+            <DialogDescription>პაციენტი SMS-ს მიიღებს.</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="გაუქმების მიზეზი (არასავალდებულო)"
+            aria-label="გაუქმების მიზეზი"
+          />
+          {cancel.error && <p className="text-sm text-danger">{errorMessage(cancel.error)}</p>}
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                უკან
+              </Button>
+            </DialogClose>
+            <Button type="submit" variant="destructive" disabled={cancel.isPending}>
+              გაუქმება
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -11,6 +11,16 @@ export {
   CardTitle,
 } from "./components/card";
 export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./components/dialog";
+export {
   Field,
   FieldContent,
   FieldDescription,
