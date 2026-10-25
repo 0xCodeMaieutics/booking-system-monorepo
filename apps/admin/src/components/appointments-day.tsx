@@ -27,7 +27,6 @@ export function AppointmentsDay() {
     params.set("date", next);
     router.replace(`${pathname}?${params}`, { scroll: false });
   };
-  const [creating, setCreating] = useState(false);
   const [moving, setMoving] = useState<string>();
 
   const day = useQuery(trpc.appointments.day.queryOptions({ date }));
@@ -56,25 +55,10 @@ export function AppointmentsDay() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl">ვიზიტები</h1>
-        <Button type="button" size="lg" onClick={() => setCreating((v) => !v)}>
-          {creating ? "დახურვა" : "ახალი ვიზიტი"}
+        <Button asChild size="lg">
+          <Link href={`/new?date=${date}`}>ახალი ვიზიტი</Link>
         </Button>
       </div>
-
-      {creating && (
-        <Card>
-          <CardContent>
-            <AppointmentForm
-              initialDate={date}
-              onDone={async (created) => {
-                setCreating(false);
-                setDate(toLocalDate(created.startsAt));
-                await invalidate();
-              }}
-            />
-          </CardContent>
-        </Card>
-      )}
 
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" variant="outline" size="sm" onClick={() => setDate(addDays(date, -1))}>
