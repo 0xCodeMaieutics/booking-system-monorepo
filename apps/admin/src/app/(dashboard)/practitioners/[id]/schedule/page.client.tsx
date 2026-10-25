@@ -1,14 +1,13 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatMinute, parseMinute } from "@tsami/booking/time";
 import { Button, Input } from "@tsami/ui";
 import { useState } from "react";
 
+import { errorMessage } from "@/components/errors";
 import { weekdayLabel } from "@/lib/labels";
 import { useTRPC } from "@/trpc/client";
-
-import { errorMessage } from "./errors";
+import { useRefreshingMutation } from "@/trpc/use-refreshing-mutation";
 
 type Range = { key: string; weekday: number; start: string; end: string };
 
@@ -20,7 +19,6 @@ export function WeeklyScheduleEditor({
   ranges: { weekday: number; startMinute: number; endMinute: number }[];
 }) {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const [ranges, setRanges] = useState<Range[]>(() =>
     initial.map((r) => ({
       key: crypto.randomUUID(),
@@ -29,15 +27,7 @@ export function WeeklyScheduleEditor({
       end: formatMinute(r.endMinute),
     })),
   );
-  const save = useMutation(
-    trpc.practitioners.setWeeklySchedule.mutationOptions({
-      onSuccess: () =>
-        Promise.all([
-          queryClient.invalidateQueries({ queryKey: trpc.practitioners.pathKey() }),
-          queryClient.invalidateQueries({ queryKey: trpc.attention.pathKey() }),
-        ]),
-    }),
-  );
+  const save = useRefreshingMutation(trpc.practitioners.setWeeklySchedule.mutationOptions());
 
   const update = (index: number, patch: Partial<Range>) =>
     setRanges((rs) => rs.map((r, i) => (i === index ? { ...r, ...patch } : r)));

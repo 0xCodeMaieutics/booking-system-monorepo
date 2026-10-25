@@ -1,46 +1,23 @@
-"use client";
-
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Avatar, Button, Card, CardContent } from "@tsami/ui";
+import { Avatar, Card, CardContent } from "@tsami/ui";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
-import { useTRPC } from "@/trpc/client";
+import { serverCaller } from "@/server/caller";
 
-export default function PractitionersPage() {
-  const trpc = useTRPC();
-  const router = useRouter();
-  const practitioners = useQuery(trpc.practitioners.list.queryOptions());
-  const treatments = useQuery(trpc.treatments.list.queryOptions());
-  const create = useMutation(
-    trpc.practitioners.create.mutationOptions({ onSuccess: (p) => router.push(`/practitioners/${p.id}`) }),
-  );
-  const treatmentName = new Map(treatments.data?.map((t) => [t.id, t.nameKa]));
+import { CreatePractitionerButton } from "./page.client";
+
+export default async function PractitionersPage() {
+  const api = await serverCaller();
+  const [practitioners, treatments] = await Promise.all([api.practitioners.list(), api.treatments.list()]);
+  const treatmentName = new Map(treatments.map((t) => [t.id, t.nameKa]));
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl">სპეციალისტები</h1>
-        <Button
-          type="button"
-          size="lg"
-          disabled={create.isPending}
-          onClick={() =>
-            create.mutate({
-              nameKa: "ახალი სპეციალისტი",
-              nameEn: "New practitioner",
-              titleKa: null,
-              titleEn: null,
-              sortOrder: practitioners.data?.length ?? 0,
-              treatmentIds: [],
-            })
-          }
-        >
-          დამატება
-        </Button>
+        <CreatePractitionerButton sortOrder={practitioners.length} />
       </div>
       <div className="grid gap-3">
-        {practitioners.data?.map((p) => (
+        {practitioners.map((p) => (
           <Link key={p.id} href={`/practitioners/${p.id}`}>
             <Card size="sm" className={`hover:ring-brand ${p.archivedAt ? "opacity-50" : ""}`}>
               <CardContent className="flex items-center gap-4">

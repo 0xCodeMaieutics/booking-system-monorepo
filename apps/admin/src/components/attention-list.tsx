@@ -1,18 +1,13 @@
-"use client";
-
-import { useQuery } from "@tanstack/react-query";
 import { formatDate, formatTime, toLocalDate } from "@tsami/booking/time";
 import { Card, CardContent } from "@tsami/ui";
 import Link from "next/link";
 
 import { attentionLabel } from "@/lib/labels";
-import { useTRPC } from "@/trpc/client";
+import type { AdminOutputs } from "@/trpc/types";
 
 /** Future Appointments that no longer fit this Practitioner's setup. */
-export function AttentionList({ practitionerId }: { practitionerId: string }) {
-  const trpc = useTRPC();
-  const attention = useQuery(trpc.attention.list.queryOptions({ practitionerId }));
-  if (!attention.data?.length) return null;
+export function AttentionList({ rows }: { rows: AdminOutputs["attention"]["list"] }) {
+  if (!rows.length) return null;
 
   return (
     <Card className="ring-danger/30 bg-danger/5">
@@ -22,7 +17,7 @@ export function AttentionList({ practitionerId }: { practitionerId: string }) {
           ცვლილებები არსებულ ვიზიტებს არ ეხება. გადაიტანეთ ან გააუქმეთ ისინი „ვიზიტების“ გვერდზე.
         </p>
         <ul className="flex flex-col gap-1 text-sm">
-          {attention.data.map((row) => (
+          {rows.map((row) => (
             <li key={row.appointment.id}>
               {formatDate(row.appointment.startsAt, "ka")} {formatTime(row.appointment.startsAt)} ·{" "}
               {row.patient.fullName} ·{" "}

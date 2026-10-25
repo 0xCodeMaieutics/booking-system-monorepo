@@ -1,11 +1,12 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Button, Field, FieldDescription, FieldLabel, Input, Textarea } from "@tsami/ui";
 import { type FormEvent, useId, useState } from "react";
 
 import { errorMessage } from "@/components/errors";
 import { useTRPC } from "@/trpc/client";
+import { useRefreshingMutation } from "@/trpc/use-refreshing-mutation";
 
 export type Treatment = {
   id: string;
@@ -30,14 +31,9 @@ export function TreatmentForm({
 }) {
   const fieldId = useId();
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const onSuccess = async () => {
-    await queryClient.invalidateQueries({ queryKey: trpc.treatments.pathKey() });
-    onDone();
-  };
-  const create = useMutation(trpc.treatments.create.mutationOptions({ onSuccess }));
-  const update = useMutation(trpc.treatments.update.mutationOptions({ onSuccess }));
-  const archive = useMutation(trpc.treatments.setArchived.mutationOptions({ onSuccess }));
+  const create = useMutation(trpc.treatments.create.mutationOptions({ onSuccess: onDone }));
+  const update = useRefreshingMutation(trpc.treatments.update.mutationOptions({ onSuccess: onDone }));
+  const archive = useRefreshingMutation(trpc.treatments.setArchived.mutationOptions({ onSuccess: onDone }));
   const [form, setForm] = useState({
     nameKa: treatment?.nameKa ?? "",
     nameEn: treatment?.nameEn ?? "",
@@ -60,7 +56,8 @@ export function TreatmentForm({
     else create.mutate(values);
   }
 
-  const error = create.error ?? update.error;
+  const error = create.error ?? update.error ?? archive.error;
+  const isPending = create.isPending || update.isPending || archive.isPending;
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
@@ -135,7 +132,7 @@ export function TreatmentForm({
       </div>
       {error && <p className="text-sm text-danger">{errorMessage(error)}</p>}
       <div className="flex flex-wrap gap-3">
-        <Button size="lg" type="submit">
+        <Button size="lg" type="submit" disabled={isPending}>
           შენახვა
         </Button>
         <Button type="button" size="lg" variant="outline" onClick={onDone}>
@@ -146,6 +143,7 @@ export function TreatmentForm({
             type="button"
             size="lg"
             variant="ghost"
+            disabled={isPending}
             onClick={() => archive.mutate({ id: treatment.id, archived: !treatment.archivedAt })}
           >
             {treatment.archivedAt ? "არქივიდან აღდგენა" : "დაარქივება"}

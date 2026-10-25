@@ -1,6 +1,5 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addDays, formatDate, formatTime, localInstant, parseMinute, toLocalDate } from "@tsami/booking/time";
 import {
   Button,
@@ -14,6 +13,8 @@ import {
 import { type FormEvent, useId, useState } from "react";
 
 import { useTRPC } from "@/trpc/client";
+import type { AdminOutputs } from "@/trpc/types";
+import { useRefreshingMutation } from "@/trpc/use-refreshing-mutation";
 
 import { errorMessage } from "./errors";
 
@@ -31,21 +32,22 @@ function describe(startsAt: Date, endsAt: Date) {
 
 /**
  * Lists and adds Time Off. With a `practitionerId`, it's scoped to that
- * Practitioner (Clinic-wide closures are shown too); without, the Admin picks.
+ * Practitioner (Clinic-wide closures are shown too); without, the Admin picks
+ * from `practitioners`.
  */
-export function TimeOffManager({ practitionerId }: { practitionerId?: string }) {
+export function TimeOffManager({
+  practitionerId,
+  timeOff,
+  practitioners,
+}: {
+  practitionerId?: string;
+  timeOff: AdminOutputs["timeOff"]["list"];
+  practitioners?: AdminOutputs["practitioners"]["list"];
+}) {
   const fieldId = useId();
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const practitioners = useQuery({ ...trpc.practitioners.list.queryOptions(), enabled: !practitionerId });
-  const list = useQuery(trpc.timeOff.list.queryOptions({ practitionerId: practitionerId ?? null }));
-  const invalidate = () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: trpc.timeOff.pathKey() }),
-      queryClient.invalidateQueries({ queryKey: trpc.attention.pathKey() }),
-    ]);
-  const create = useMutation(trpc.timeOff.create.mutationOptions({ onSuccess: invalidate }));
-  const remove = useMutation(trpc.timeOff.delete.mutationOptions({ onSuccess: invalidate }));
+  const create = useRefreshingMutation(trpc.timeOff.create.mutationOptions());
+  const remove = useRefreshingMutation(trpc.timeOff.delete.mutationOptions());
 
   const [form, setForm] = useState(() => {
     const today = toLocalDate(new Date());
@@ -74,8 +76,8 @@ export function TimeOffManager({ practitionerId }: { practitionerId?: string }) 
   return (
     <div className="flex flex-col gap-5">
       <ul className="flex flex-col gap-2 text-sm">
-        {list.data?.length === 0 && <li className="text-ink-soft">დაგეგმილი არასამუშაო დრო არ არის.</li>}
-        {list.data?.map(({ timeOff: t, practitioner }) => (
+        {timeOff.length === 0 && <li className="text-ink-soft">დაგეგმილი არასამუშაო დრო არ არის.</li>}
+        {timeOff.map(({ timeOff: t, practitioner }) => (
           <li
             key={t.id}
             className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-mist/50 px-3 py-2"
@@ -84,7 +86,13 @@ export function TimeOffManager({ practitionerId }: { practitionerId?: string }) 
               {describe(t.startsAt, t.endsAt)} · {practitioner?.nameKa ?? "მთელი კლინიკა"}
               {t.note && <span className="text-ink-soft"> — {t.note}</span>}
             </span>
-            <Button type="button" variant="ghost" size="sm" onClick={() => remove.mutate({ id: t.id })}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={remove.isPending}
+              onClick={() => remove.mutate({ id: t.id })}
+            >
               წაშლა
             </Button>
           </li>
@@ -102,7 +110,7 @@ export function TimeOffManager({ practitionerId }: { practitionerId?: string }) 
                 onChange={(e) => setForm({ ...form, who: e.target.value })}
               >
                 <NativeSelectOption value="">მთელი კლინიკა (დახურულია)</NativeSelectOption>
-                {practitioners.data
+                {practitioners
                   ?.filter((p) => !p.archivedAt)
                   .map((p) => (
                     <NativeSelectOption key={p.id} value={p.id}>

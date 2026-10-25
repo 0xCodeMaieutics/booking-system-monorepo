@@ -18,6 +18,32 @@
     "typescript/no-explicit-any": "error",
     "typescript/consistent-type-imports": "error"
   },
+  "overrides": [
+    {
+      "files": ["apps/admin/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@tanstack/react-query",
+                "importNames": [
+                  "useQuery",
+                  "useQueries",
+                  "useSuspenseQuery",
+                  "useSuspenseQueries",
+                  "useInfiniteQuery",
+                  "useSuspenseInfiniteQuery"
+                ],
+                "message": "Fetch data in a server component with serverCaller() and pass it down as props; refresh after mutations with useRefreshingMutation (docs/adr/0007)."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
   "ignorePatterns": [
     "apps/landing/**",
     "packages/db/migrations/**",

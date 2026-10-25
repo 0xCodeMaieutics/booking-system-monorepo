@@ -1,30 +1,20 @@
-"use client";
-
-import { useQueryClient } from "@tanstack/react-query";
-import { isLocalDate, toLocalDate } from "@tsami/booking/time";
 import { Button, Card, CardContent } from "@tsami/ui";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
 
-import { AppointmentForm } from "@/components/appointment-form";
-import { useTRPC } from "@/trpc/client";
+import { dateParamOrToday } from "@/lib/dates";
+import { serverCaller } from "@/server/caller";
 
-export default function NewAppointmentPage() {
-  return (
-    <Suspense>
-      <NewAppointment />
-    </Suspense>
-  );
-}
+import { NewAppointmentForm } from "./page.client";
 
-function NewAppointment() {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const router = useRouter();
-  const dateParam = useSearchParams().get("date");
-  const [today] = useState(() => toLocalDate(new Date()));
-  const date = dateParam && isLocalDate(dateParam) ? dateParam : today;
+export default async function NewAppointmentPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string }>;
+}) {
+  const { date: dateParam } = await searchParams;
+  const date = dateParamOrToday(dateParam);
+  const api = await serverCaller();
+  const [treatments, practitioners] = await Promise.all([api.treatments.list(), api.practitioners.list()]);
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
@@ -36,16 +26,7 @@ function NewAppointment() {
       </div>
       <Card>
         <CardContent>
-          <AppointmentForm
-            initialDate={date}
-            onDone={async (created) => {
-              await Promise.all([
-                queryClient.invalidateQueries({ queryKey: trpc.appointments.pathKey() }),
-                queryClient.invalidateQueries({ queryKey: trpc.attention.pathKey() }),
-              ]);
-              router.push(`/?date=${toLocalDate(created.startsAt)}`);
-            }}
-          />
+          <NewAppointmentForm date={date} treatments={treatments} practitioners={practitioners} />
         </CardContent>
       </Card>
     </div>

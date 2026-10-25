@@ -1,23 +1,21 @@
-"use client";
-
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@tsami/ui";
-import { use } from "react";
 
-import { PractitionerForm } from "@/components/practitioner-form";
-import { useTRPC } from "@/trpc/client";
+import { serverCaller } from "@/server/caller";
 
-export default function PractitionerDetailsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const trpc = useTRPC();
-  const practitioner = useQuery(trpc.practitioners.get.queryOptions({ id }));
+import { getPractitioner } from "../get-practitioner";
+import { PractitionerForm } from "./page.client";
 
-  if (!practitioner.data) return null;
+export default async function PractitionerDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const [practitioner, treatments] = await Promise.all([
+    getPractitioner(id),
+    (await serverCaller()).treatments.list(),
+  ]);
 
   return (
     <Card>
       <CardContent>
-        <PractitionerForm practitioner={practitioner.data} />
+        <PractitionerForm practitioner={practitioner} treatments={treatments} />
       </CardContent>
     </Card>
   );

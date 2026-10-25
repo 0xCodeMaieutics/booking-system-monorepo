@@ -1,19 +1,12 @@
-"use client";
-
-import { useQuery } from "@tanstack/react-query";
 import { Button, Card, CardContent } from "@tsami/ui";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
-import { TreatmentForm } from "@/components/treatment-form";
-import { useTRPC } from "@/trpc/client";
+import { serverCaller } from "@/server/caller";
 
-export default function NewTreatmentPage() {
-  const trpc = useTRPC();
-  const router = useRouter();
-  const treatments = useQuery(trpc.treatments.list.queryOptions());
+import { NewTreatmentForm } from "./page.client";
 
-  if (!treatments.data) return <p className="text-ink-soft">იტვირთება…</p>;
+export default async function NewTreatmentPage() {
+  const treatments = await (await serverCaller()).treatments.list();
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
@@ -25,7 +18,7 @@ export default function NewTreatmentPage() {
       </div>
       <Card>
         <CardContent>
-          <TreatmentForm sortOrder={treatments.data.length} onDone={() => router.push("/treatments")} />
+          <NewTreatmentForm sortOrder={treatments.length} />
         </CardContent>
       </Card>
     </div>

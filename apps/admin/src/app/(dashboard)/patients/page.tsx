@@ -1,33 +1,22 @@
-"use client";
-
-import { skipToken, useQuery } from "@tanstack/react-query";
-import { Card, CardContent, Input } from "@tsami/ui";
+import { Card, CardContent } from "@tsami/ui";
 import Link from "next/link";
-import { useDeferredValue, useState } from "react";
 
-import { useTRPC } from "@/trpc/client";
+import { serverCaller } from "@/server/caller";
 
-export default function PatientsPage() {
-  const trpc = useTRPC();
-  const [q, setQ] = useState("");
-  const query = useDeferredValue(q.trim());
-  const isSearching = query.length >= 2;
-  const searchResults = useQuery(trpc.patients.search.queryOptions(isSearching ? { q: query } : skipToken));
-  const recentResults = useQuery(trpc.patients.recent.queryOptions(undefined, { enabled: !isSearching }));
-  const results = isSearching ? searchResults : recentResults;
+import { PatientSearch } from "./page.client";
+
+export default async function PatientsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q = "" } = await searchParams;
+  const query = q.trim();
+  const api = await serverCaller();
+  const results = query.length >= 2 ? await api.patients.search({ q: query }) : await api.patients.recent();
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
       <h1 className="text-3xl">პაციენტები</h1>
-      <Input
-        placeholder="სახელი ან ტელეფონის ნომერი"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        className="w-full"
-      />
-      <div className="grid gap-2">
-        {results.data?.length === 0 && <p className="text-ink-soft">ვერ მოიძებნა.</p>}
-        {results.data?.map((p) => (
+      <PatientSearch initialQuery={q}>
+        {results.length === 0 && <p className="text-ink-soft">ვერ მოიძებნა.</p>}
+        {results.map((p) => (
           <Link key={p.id} href={`/patients/${p.id}`}>
             <Card size="sm" className="hover:ring-brand">
               <CardContent>
@@ -37,7 +26,7 @@ export default function PatientsPage() {
             </Card>
           </Link>
         ))}
-      </div>
+      </PatientSearch>
     </div>
   );
 }

@@ -7,12 +7,10 @@ import type { AdminRouter } from "@tsami/api/admin";
 import { type ReactNode, useState } from "react";
 import superjson from "superjson";
 
-export const { TRPCProvider, useTRPC } = createTRPCContext<AdminRouter>();
+export const { TRPCProvider, useTRPC, useTRPCClient } = createTRPCContext<AdminRouter>();
 
 export function Providers({ children }: { children: ReactNode }) {
-  const [queryClient] = useState(
-    () => new QueryClient({ defaultOptions: { queries: { staleTime: 10_000, retry: 1 } } }),
-  );
+  const [queryClient] = useState(() => new QueryClient());
   const [trpcClient] = useState(() =>
     createTRPCClient<AdminRouter>({
       links: [httpBatchLink({ url: "/api/trpc", transformer: superjson })],
