@@ -96,7 +96,7 @@ function SettingsForm({
           </Field>
           {save.error && <p className="text-sm text-danger">{errorMessage(save.error)}</p>}
           {save.isSuccess && <p className="text-sm text-success">შენახულია.</p>}
-          <Button type="submit" className="self-start" disabled={save.isPending}>
+          <Button size="lg" type="submit" className="self-start" disabled={save.isPending}>
             შენახვა
           </Button>
         </form>

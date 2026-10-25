@@ -34,7 +34,9 @@ export function AppointmentsDay() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl">ვიზიტები</h1>
-        <Button onClick={() => setCreating((v) => !v)}>{creating ? "დახურვა" : "ახალი ვიზიტი"}</Button>
+        <Button type="button" size="lg" onClick={() => setCreating((v) => !v)}>
+          {creating ? "დახურვა" : "ახალი ვიზიტი"}
+        </Button>
       </div>
 
       {creating && (
@@ -77,7 +79,7 @@ export function AppointmentsDay() {
       )}
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button variant="secondary" size="sm" onClick={() => setDate(addDays(date, -1))}>
+        <Button type="button" variant="outline" size="sm" onClick={() => setDate(addDays(date, -1))}>
           ←
         </Button>
         <Input
@@ -86,10 +88,10 @@ export function AppointmentsDay() {
           onChange={(e) => e.target.value && setDate(e.target.value)}
           className="w-44"
         />
-        <Button variant="secondary" size="sm" onClick={() => setDate(addDays(date, 1))}>
+        <Button type="button" variant="outline" size="sm" onClick={() => setDate(addDays(date, 1))}>
           →
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => setDate(toLocalDate(new Date()))}>
+        <Button type="button" variant="ghost" size="sm" onClick={() => setDate(toLocalDate(new Date()))}>
           დღეს
         </Button>
       </div>
@@ -129,15 +131,17 @@ export function AppointmentsDay() {
               {a.status === "booked" && a.startsAt <= now && (
                 <>
                   <Button
+                    type="button"
                     size="sm"
-                    variant="secondary"
+                    variant="outline"
                     onClick={() => setStatus.mutate({ id: a.id, status: "completed" })}
                   >
                     დასრულდა
                   </Button>
                   <Button
+                    type="button"
                     size="sm"
-                    variant="secondary"
+                    variant="outline"
                     onClick={() => setStatus.mutate({ id: a.id, status: "no_show" })}
                   >
                     არ გამოცხადდა
@@ -147,13 +151,15 @@ export function AppointmentsDay() {
               {a.status === "booked" && (
                 <>
                   <Button
+                    type="button"
                     size="sm"
-                    variant="secondary"
+                    variant="outline"
                     onClick={() => setMoving(moving === a.id ? undefined : a.id)}
                   >
                     გადატანა
                   </Button>
                   <Button
+                    type="button"
                     size="sm"
                     variant="ghost"
                     onClick={() => {
@@ -168,6 +174,7 @@ export function AppointmentsDay() {
               )}
               {a.status !== "booked" && (
                 <Button
+                  type="button"
                   size="sm"
                   variant="ghost"
                   onClick={() => setStatus.mutate({ id: a.id, status: "booked" })}

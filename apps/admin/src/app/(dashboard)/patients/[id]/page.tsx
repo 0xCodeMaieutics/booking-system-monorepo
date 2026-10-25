@@ -76,7 +76,7 @@ function PatientForm({
         </Field>
       </div>
       {update.error && <p className="text-sm text-danger">{errorMessage(update.error)}</p>}
-      <Button type="submit" className="self-start" disabled={update.isPending}>
+      <Button size="lg" type="submit" className="self-start" disabled={update.isPending}>
         შენახვა
       </Button>
     </form>

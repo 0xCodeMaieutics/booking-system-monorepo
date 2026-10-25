@@ -26,7 +26,9 @@ export default function ForgotPasswordPage() {
           <Field label="ელფოსტა">
             <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </Field>
-          <Button type="submit">ბმულის გაგზავნა</Button>
+          <Button size="lg" type="submit">
+            ბმულის გაგზავნა
+          </Button>
           <Link href="/sign-in" className="text-sm text-ink-soft hover:text-ink">
             შესვლაზე დაბრუნება
           </Link>

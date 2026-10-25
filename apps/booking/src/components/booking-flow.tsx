@@ -83,10 +83,14 @@ export function BookingFlow({
         <p className="text-ink-soft">{t.done.body}</p>
         <div className="flex flex-wrap gap-3">
           <Link href={localePath(locale, `/a/${booked.manageToken}`)}>
-            <Button>{t.done.manage}</Button>
+            <Button type="button" size="lg">
+              {t.done.manage}
+            </Button>
           </Link>
           <Button
-            variant="secondary"
+            type="button"
+            size="lg"
+            variant="outline"
             onClick={() => {
               setBooked(undefined);
               reset("treatment");
@@ -212,7 +216,13 @@ export function BookingFlow({
               {date && (
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                   {slotsByDate.get(date)?.map((s) => (
-                    <Button key={s.getTime()} variant="secondary" onClick={() => setStartsAt(s)}>
+                    <Button
+                      type="button"
+                      size="lg"
+                      key={s.getTime()}
+                      variant="outline"
+                      onClick={() => setStartsAt(s)}
+                    >
                       {formatTime(s)}
                     </Button>
                   ))}
@@ -259,7 +269,7 @@ function SummaryRow({
         <span className="text-ink-soft">{label}: </span>
         {value}
       </span>
-      <Button variant="ghost" size="sm" onClick={onChange}>
+      <Button type="button" variant="ghost" size="sm" onClick={onChange}>
         {t.change}
       </Button>
     </div>
@@ -367,7 +377,7 @@ function DetailsStep({
             <Textarea value={form.note} onChange={set("note")} maxLength={1000} />
           </Field>
           {error && <p className="text-sm text-danger">{error}</p>}
-          <Button type="submit" disabled={busy} className="self-start">
+          <Button size="lg" type="submit" disabled={busy} className="self-start">
             {t.details.sendCode}
           </Button>
         </form>
@@ -390,10 +400,10 @@ function DetailsStep({
           </Field>
           {error && <p className="text-sm text-danger">{error}</p>}
           <div className="flex flex-wrap gap-3">
-            <Button type="submit" disabled={busy}>
+            <Button size="lg" type="submit" disabled={busy}>
               {t.details.confirm}
             </Button>
-            <Button variant="ghost" onClick={() => setVerificationId(undefined)}>
+            <Button type="button" size="lg" variant="ghost" onClick={() => setVerificationId(undefined)}>
               {t.details.resend}
             </Button>
           </div>

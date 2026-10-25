@@ -51,7 +51,9 @@ export function ManageAppointment({ locale, token }: { locale: Locale; token: st
       {a.status === "booked" &&
         (a.canCancel ? (
           <Button
-            variant="danger"
+            type="button"
+            size="lg"
+            variant="destructive"
             disabled={cancel.isPending}
             onClick={() => {
               if (window.confirm(t.manage.confirmCancel)) cancel.mutate({ token });
@@ -73,7 +75,9 @@ export function ManageAppointment({ locale, token }: { locale: Locale; token: st
 function BookAgain({ locale }: { locale: Locale }) {
   return (
     <Link href={localePath(locale)}>
-      <Button variant="secondary">{dictionaries[locale].manage.bookAgain}</Button>
+      <Button type="button" size="lg" variant="outline">
+        {dictionaries[locale].manage.bookAgain}
+      </Button>
     </Link>
   );
 }

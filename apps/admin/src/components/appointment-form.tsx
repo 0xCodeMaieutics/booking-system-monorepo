@@ -220,7 +220,7 @@ export function AppointmentForm({
       )}
 
       {mutation.error && <p className="text-sm text-danger">{errorMessage(mutation.error)}</p>}
-      <Button type="submit" disabled={!chosenStart || mutation.isPending} className="self-start">
+      <Button size="lg" type="submit" disabled={!chosenStart || mutation.isPending} className="self-start">
         {move ? "გადატანა (პაციენტი SMS-ს მიიღებს)" : "ვიზიტის შექმნა"}
       </Button>
     </form>

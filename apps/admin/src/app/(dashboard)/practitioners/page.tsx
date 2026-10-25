@@ -22,6 +22,8 @@ export default function PractitionersPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl">სპეციალისტები</h1>
         <Button
+          type="button"
+          size="lg"
           disabled={create.isPending}
           onClick={() =>
             create.mutate({

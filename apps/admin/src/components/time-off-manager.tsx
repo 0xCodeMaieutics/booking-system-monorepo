@@ -75,7 +75,7 @@ export function TimeOffManager({ practitionerId }: { practitionerId?: string }) 
               {describe(t.startsAt, t.endsAt)} · {practitioner?.nameKa ?? "მთელი კლინიკა"}
               {t.note && <span className="text-ink-soft"> — {t.note}</span>}
             </span>
-            <Button variant="ghost" size="sm" onClick={() => remove.mutate({ id: t.id })}>
+            <Button type="button" variant="ghost" size="sm" onClick={() => remove.mutate({ id: t.id })}>
               წაშლა
             </Button>
           </li>
@@ -152,7 +152,7 @@ export function TimeOffManager({ practitionerId }: { practitionerId?: string }) 
           <Input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
         </Field>
         {create.error && <p className="text-sm text-danger">{errorMessage(create.error)}</p>}
-        <Button type="submit" className="self-start" disabled={create.isPending}>
+        <Button size="lg" type="submit" className="self-start" disabled={create.isPending}>
           დამატება
         </Button>
       </form>

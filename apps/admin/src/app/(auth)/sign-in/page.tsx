@@ -57,7 +57,7 @@ export default function SignInPage() {
           />
         </Field>
         {error && <p className="text-sm text-danger">{error}</p>}
-        <Button type="submit" disabled={pending}>
+        <Button size="lg" type="submit" disabled={pending}>
           შესვლა
         </Button>
         <Link href="/forgot-password" className="text-sm text-ink-soft hover:text-ink">

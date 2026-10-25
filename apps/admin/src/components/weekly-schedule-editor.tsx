@@ -69,6 +69,7 @@ export function WeeklyScheduleEditor({
                   className="h-9 w-28"
                 />
                 <Button
+                  type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => setRanges((rs) => rs.filter((_, j) => j !== i))}
@@ -80,6 +81,7 @@ export function WeeklyScheduleEditor({
             ),
           )}
           <Button
+            type="button"
             variant="ghost"
             size="sm"
             onClick={() =>
@@ -96,6 +98,8 @@ export function WeeklyScheduleEditor({
       {save.error && <p className="text-sm text-danger">{errorMessage(save.error)}</p>}
       {save.isSuccess && <p className="text-sm text-success">შენახულია. არსებული ვიზიტები არ შეცვლილა.</p>}
       <Button
+        type="button"
+        size="lg"
         className="self-start"
         disabled={save.isPending}
         onClick={() =>

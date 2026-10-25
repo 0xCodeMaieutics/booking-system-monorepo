@@ -48,7 +48,9 @@ function SetPasswordForm() {
         />
       </Field>
       {state === "error" && <p className="text-sm text-danger">ბმული ვადაგასულია. მოითხოვეთ ახალი.</p>}
-      <Button type="submit">შენახვა</Button>
+      <Button size="lg" type="submit">
+        შენახვა
+      </Button>
     </form>
   );
 }
