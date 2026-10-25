@@ -1,7 +1,7 @@
 "use client";
 
-import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
-import { addDays, formatDate, formatLongDate, formatTime, toLocalDate } from "@tsami/booking/time";
+import { useMutation } from "@tanstack/react-query";
+import { formatDate, formatLongDate, formatTime, toLocalDate } from "@tsami/booking/time";
 import {
   Avatar,
   Button,
@@ -15,16 +15,8 @@ import {
   cn,
 } from "@tsami/ui";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  type FormEvent,
-  type ReactNode,
-  useEffect,
-  useId,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { type FormEvent, type ReactNode, useId, useMemo, useState, useTransition } from "react";
 
 import {
   ANY_PRACTITIONER as ANY,
@@ -32,89 +24,63 @@ import {
   bookingPath,
   parseBookingPathname,
 } from "@/booking-path";
-import { AppointmentDetails } from "@/components/manage-appointment";
+import { AppointmentDetails } from "@/components/appointment-details";
 import { type Locale, dictionaries, localePath } from "@/i18n";
+import { forgetManageToken, rememberManageToken } from "@/manage-token";
 import { bookingCodeOf, useTRPC } from "@/trpc/client";
-
-type Treatment = {
-  id: string;
-  nameKa: string;
-  nameEn: string;
-  descriptionKa: string | null;
-  descriptionEn: string | null;
-  durationMinutes: number;
-  priceFromGel: number | null;
-};
-
-const manageTokenKey = (confirmedPath: string) => `manageToken:${confirmedPath}`;
-const subscribeToNothing = () => () => {};
+import type { BookingOutputs } from "@/trpc/types";
 
 export function BookingFlow({
   locale,
   treatments,
+  practitioners,
+  slots,
   clinicPhone,
 }: {
   locale: Locale;
-  treatments: Treatment[];
+  treatments: BookingOutputs["treatments"];
+  practitioners: BookingOutputs["practitioners"] | null;
+  slots: BookingOutputs["slots"] | null;
   clinicPhone: string;
 }) {
   const t = dictionaries[locale];
-  const trpc = useTRPC();
+  const router = useRouter();
+  const [isNavigating, startNavigation] = useTransition();
   const name = (x: { nameKa: string; nameEn: string }) => (locale === "ka" ? x.nameKa : x.nameEn);
 
   const selection = parseBookingPathname(usePathname());
-  const confirmedPath = selection.confirmed ? bookingPath(selection) : undefined;
-  const manageToken = useSyncExternalStore(
-    subscribeToNothing,
-    () => (confirmedPath ? sessionStorage.getItem(manageTokenKey(confirmedPath)) : null),
-    () => undefined,
-  );
-  const appointment = useQuery(
-    trpc.appointment.queryOptions(manageToken ? { token: manageToken } : skipToken, { retry: false }),
-  );
 
-  useEffect(() => {
-    if (confirmedPath && manageToken === null)
-      navigate({ ...selection, confirmed: false }, { replace: true });
-  });
-
+  /**
+   * Steps that change what the page fetches go through the router; picking a date
+   * or time only updates the URL, since the slots are already loaded.
+   */
   function navigate(next: BookingSelection, { replace = false } = {}) {
     const url = localePath(locale, bookingPath(next));
-    if (replace) window.history.replaceState(null, "", url);
-    else window.history.pushState(null, "", url);
+    const shallow =
+      !next.confirmed &&
+      next.treatmentId === selection.treatmentId &&
+      next.practitionerId === selection.practitionerId;
+    if (shallow) window.history[replace ? "replaceState" : "pushState"](null, "", url);
+    else startNavigation(() => (replace ? router.replace(url) : router.push(url)));
   }
 
   const treatment = treatments.find((x) => x.id === selection.treatmentId);
   const treatmentId = treatment?.id;
 
-  const practitioners = useQuery(trpc.practitioners.queryOptions(treatmentId ? { treatmentId } : skipToken));
-  const practitioner = practitioners.data?.find((p) => p.id === selection.practitionerId);
+  const practitioner = practitioners?.find((p) => p.id === selection.practitionerId);
   const practitionerId =
-    practitioners.data && (selection.practitionerId === ANY || practitioner)
+    practitioners && (selection.practitionerId === ANY || practitioner)
       ? selection.practitionerId
       : undefined;
 
-  const [today] = useState(() => toLocalDate(new Date()));
-  const slots = useQuery(
-    trpc.slots.queryOptions(
-      treatmentId && practitionerId
-        ? {
-            treatmentId,
-            practitionerId: practitionerId === ANY ? null : practitionerId,
-            from: today,
-            to: addDays(today, 365),
-          }
-        : skipToken,
-    ),
-  );
   const slotsByDate = useMemo(() => {
     const map = new Map<string, Date[]>();
-    for (const s of slots.data ?? []) {
+    for (const s of slots ?? []) {
       const d = toLocalDate(s);
       map.set(d, [...(map.get(d) ?? []), s]);
     }
     return map;
-  }, [slots.data]);
+  }, [slots]);
 
   const date = practitionerId ? selection.date : undefined;
   const startsAt = date ? slotsByDate.get(date)?.find((s) => formatTime(s) === selection.time) : undefined;
@@ -125,40 +91,14 @@ export function BookingFlow({
     if (step === "time") navigate({ treatmentId, practitionerId });
   }
 
-  if (confirmedPath) {
-    return (
-      <Card>
-        <CardContent className="flex flex-col items-start gap-4">
-          <h1 className="text-3xl">{t.done.title}</h1>
-          <p className="text-ink-soft">{t.done.body}</p>
-          {appointment.data && <AppointmentDetails locale={locale} appointment={appointment.data} />}
-          <div className="flex flex-wrap gap-3">
-            {manageToken && (
-              <Link href={localePath(locale, `/a/${manageToken}`)}>
-                <Button type="button" size="lg">
-                  {t.done.manage}
-                </Button>
-              </Link>
-            )}
-            <Button
-              type="button"
-              size="lg"
-              variant="outline"
-              onClick={() => {
-                sessionStorage.removeItem(manageTokenKey(confirmedPath));
-                navigate({}, { replace: true });
-              }}
-            >
-              {t.done.another}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <div className="flex flex-col gap-8">
+    <div
+      aria-busy={isNavigating}
+      className={cn(
+        "flex flex-col gap-8 transition-opacity",
+        isNavigating && "pointer-events-none opacity-60",
+      )}
+    >
       {treatment && (
         <Card size="sm" className="bg-mist/50 text-sm">
           <CardContent className="flex flex-col gap-2">
@@ -221,15 +161,13 @@ export function BookingFlow({
       {treatment && !practitionerId && (
         <section className="flex flex-col gap-4">
           <h2 className="text-2xl">{t.practitioner.title}</h2>
-          {practitioners.isPending ? (
-            <p className="text-ink-soft">{t.time.loading}</p>
-          ) : practitioners.data?.length === 0 ? (
+          {practitioners?.length === 0 ? (
             <p className="text-ink-soft">
               {t.practitioner.none} <a href={`tel:${clinicPhone}`}>{clinicPhone}</a>
             </p>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
-              {(practitioners.data?.length ?? 0) > 1 && (
+              {(practitioners?.length ?? 0) > 1 && (
                 <Choice
                   title={t.practitioner.any}
                   hint={t.practitioner.anyHint}
@@ -237,7 +175,7 @@ export function BookingFlow({
                   onClick={() => navigate({ treatmentId, practitionerId: ANY })}
                 />
               )}
-              {practitioners.data?.map((p) => (
+              {practitioners?.map((p) => (
                 <Choice
                   key={p.id}
                   title={name(p)}
@@ -254,9 +192,7 @@ export function BookingFlow({
       {treatment && practitionerId && !startsAt && (
         <section className="flex flex-col gap-4">
           <h2 className="text-2xl">{t.time.title}</h2>
-          {slots.isPending ? (
-            <p className="text-ink-soft">{t.time.loading}</p>
-          ) : slotsByDate.size === 0 ? (
+          {slotsByDate.size === 0 ? (
             <p className="text-ink-soft">{t.time.none}</p>
           ) : (
             <div className="flex flex-col gap-3">
@@ -288,18 +224,61 @@ export function BookingFlow({
             practitionerId: practitionerId === ANY ? null : practitionerId,
             startsAt,
           }}
+          disabled={isNavigating}
           onBooked={(result) => {
             const confirmed = { ...selection, confirmed: true };
-            sessionStorage.setItem(manageTokenKey(bookingPath(confirmed)), result.manageToken);
+            rememberManageToken(localePath(locale, bookingPath(confirmed)), result.manageToken);
             navigate(confirmed, { replace: true });
           }}
           onSlotGone={() => {
             navigate({ treatmentId, practitionerId, date }, { replace: true });
-            void slots.refetch();
+            startNavigation(() => router.refresh());
           }}
         />
       )}
     </div>
+  );
+}
+
+export function BookingConfirmation({
+  locale,
+  manageToken,
+  appointment,
+}: {
+  locale: Locale;
+  manageToken: string;
+  appointment: BookingOutputs["appointment"] | null;
+}) {
+  const t = dictionaries[locale];
+  const router = useRouter();
+  const confirmationUrl = localePath(locale, bookingPath(parseBookingPathname(usePathname())));
+
+  return (
+    <Card>
+      <CardContent className="flex flex-col items-start gap-4">
+        <h1 className="text-3xl">{t.done.title}</h1>
+        <p className="text-ink-soft">{t.done.body}</p>
+        {appointment && <AppointmentDetails locale={locale} appointment={appointment} />}
+        <div className="flex flex-wrap gap-3">
+          <Link href={localePath(locale, `/a/${manageToken}`)}>
+            <Button type="button" size="lg">
+              {t.done.manage}
+            </Button>
+          </Link>
+          <Button
+            type="button"
+            size="lg"
+            variant="outline"
+            onClick={() => {
+              forgetManageToken(confirmationUrl);
+              router.replace(localePath(locale));
+            }}
+          >
+            {t.done.another}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -414,11 +393,13 @@ function Choice({
 function DetailsStep({
   locale,
   booking,
+  disabled,
   onBooked,
   onSlotGone,
 }: {
   locale: Locale;
   booking: { treatmentId: string; practitionerId: string | null; startsAt: Date };
+  disabled: boolean;
   onBooked: (result: { manageToken: string }) => void;
   onSlotGone: () => void;
 }) {
@@ -433,7 +414,7 @@ function DetailsStep({
   const requestCode = useMutation(trpc.requestCode.mutationOptions());
   const checkCode = useMutation(trpc.checkCode.mutationOptions());
   const book = useMutation(trpc.book.mutationOptions());
-  const busy = requestCode.isPending || checkCode.isPending || book.isPending;
+  const busy = disabled || requestCode.isPending || checkCode.isPending || book.isPending;
 
   function showError(e: unknown) {
     const bookingCode = bookingCodeOf(e);

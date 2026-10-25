@@ -20,7 +20,7 @@
   },
   "overrides": [
     {
-      "files": ["apps/admin/**"],
+      "files": ["apps/admin/**", "apps/booking/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
