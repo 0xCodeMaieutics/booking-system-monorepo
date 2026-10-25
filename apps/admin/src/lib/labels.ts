@@ -8,7 +8,7 @@ export const statusLabel = {
 } as const;
 
 export const statusTone = {
-  booked: "bg-mist text-ink",
+  booked: "bg-success/20 text-success font-medium",
   cancelled: "bg-ink/5 text-ink-soft line-through",
   completed: "bg-success/10 text-success",
   no_show: "bg-danger/10 text-danger",
