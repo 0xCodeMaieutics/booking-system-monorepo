@@ -13,11 +13,19 @@ export interface AdminAccounts {
   reactivate(adminId: string): Promise<void>;
 }
 
+/** The S3-compatible bucket holding Practitioner Photos (ADR 0006). */
+export interface PhotoStore {
+  publicUrl(key: string): string;
+  copy(fromKey: string, toKey: string): Promise<void>;
+  delete(key: string): Promise<void>;
+}
+
 export type AdminContext = {
   db: Db;
   sms: SmsSender;
   admin: SignedInAdmin | null;
   accounts: AdminAccounts;
+  photos: PhotoStore;
   /** Public origin of the Booking Site, for Manage Links in SMS. */
   bookingSiteUrl: string;
   now: () => Date;

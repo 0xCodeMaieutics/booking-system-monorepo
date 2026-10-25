@@ -27,6 +27,7 @@ export async function practitionersForTreatment(db: DbOrTx, treatmentId: string)
       nameEn: practitioner.nameEn,
       titleKa: practitioner.titleKa,
       titleEn: practitioner.titleEn,
+      photoKey: practitioner.photoKey,
       sortOrder: practitioner.sortOrder,
     })
     .from(practitioner)

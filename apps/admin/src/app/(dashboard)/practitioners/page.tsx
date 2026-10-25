@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button, Card, CardContent } from "@tsami/ui";
+import { Avatar, Button, Card, CardContent } from "@tsami/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -43,15 +43,18 @@ export default function PractitionersPage() {
         {practitioners.data?.map((p) => (
           <Link key={p.id} href={`/practitioners/${p.id}`}>
             <Card size="sm" className={`hover:ring-brand ${p.archivedAt ? "opacity-50" : ""}`}>
-              <CardContent>
-                <p className="font-medium">
-                  {p.titleKa ? `${p.titleKa} ` : ""}
-                  {p.nameKa} {p.archivedAt && "· დაარქივებული"}
-                </p>
-                <p className="text-sm text-ink-soft">
-                  {p.treatmentIds.map((id) => treatmentName.get(id)).join(", ") ||
-                    "პროცედურები არ არის მითითებული"}
-                </p>
+              <CardContent className="flex items-center gap-4">
+                <Avatar src={p.photoUrl} name={p.nameKa} />
+                <div>
+                  <p className="font-medium">
+                    {p.titleKa ? `${p.titleKa} ` : ""}
+                    {p.nameKa} {p.archivedAt && "· დაარქივებული"}
+                  </p>
+                  <p className="text-sm text-ink-soft">
+                    {p.treatmentIds.map((id) => treatmentName.get(id)).join(", ") ||
+                      "პროცედურები არ არის მითითებული"}
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </Link>

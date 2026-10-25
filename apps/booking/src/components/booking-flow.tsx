@@ -3,6 +3,7 @@
 import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
 import { addDays, formatDate, formatLongDate, formatTime, toLocalDate } from "@tsami/booking/time";
 import {
+  Avatar,
   Button,
   Card,
   CardContent,
@@ -15,7 +16,15 @@ import {
 } from "@tsami/ui";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type FormEvent, useEffect, useId, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  type FormEvent,
+  type ReactNode,
+  useEffect,
+  useId,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import {
   ANY_PRACTITIONER as ANY,
@@ -164,6 +173,13 @@ export function BookingFlow({
               <SummaryRow
                 label={t.steps.practitioner}
                 value={practitioner ? name(practitioner) : t.practitioner.any}
+                avatar={
+                  <Avatar
+                    src={practitioner?.photoUrl}
+                    name={practitioner && name(practitioner)}
+                    className="size-6 text-[10px]"
+                  />
+                }
                 onChange={() => reset("practitioner")}
                 t={t}
               />
@@ -217,6 +233,7 @@ export function BookingFlow({
                 <Choice
                   title={t.practitioner.any}
                   hint={t.practitioner.anyHint}
+                  avatar={<Avatar />}
                   onClick={() => navigate({ treatmentId, practitionerId: ANY })}
                 />
               )}
@@ -225,6 +242,7 @@ export function BookingFlow({
                   key={p.id}
                   title={name(p)}
                   hint={(locale === "ka" ? p.titleKa : p.titleEn) ?? undefined}
+                  avatar={<Avatar src={p.photoUrl} name={name(p)} />}
                   onClick={() => navigate({ treatmentId, practitionerId: p.id })}
                 />
               ))}
@@ -288,18 +306,21 @@ export function BookingFlow({
 function SummaryRow({
   label,
   value,
+  avatar,
   onChange,
   t,
 }: {
   label: string;
   value: string;
+  avatar?: ReactNode;
   onChange: () => void;
   t: (typeof dictionaries)[Locale];
 }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span>
-        <span className="text-ink-soft">{label}: </span>
+      <span className="flex items-center gap-2">
+        <span className="text-ink-soft">{label}:</span>
+        {avatar}
         {value}
       </span>
       <Button type="button" variant="ghost" size="sm" onClick={onChange}>
@@ -364,15 +385,28 @@ function DaySlots({
   );
 }
 
-function Choice({ title, hint, onClick }: { title: string; hint?: string; onClick: () => void }) {
+function Choice({
+  title,
+  hint,
+  avatar,
+  onClick,
+}: {
+  title: string;
+  hint?: string;
+  avatar: ReactNode;
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col gap-1 rounded-2xl border border-ink/10 bg-paper p-5 text-left transition-colors hover:border-brand"
+      className="flex items-center gap-4 rounded-2xl border border-ink/10 bg-paper p-5 text-left transition-colors hover:border-brand"
     >
-      <span className="text-lg font-medium">{title}</span>
-      {hint && <span className="text-sm text-ink-soft">{hint}</span>}
+      {avatar}
+      <span className="flex flex-col gap-1">
+        <span className="text-lg font-medium">{title}</span>
+        {hint && <span className="text-sm text-ink-soft">{hint}</span>}
+      </span>
     </button>
   );
 }

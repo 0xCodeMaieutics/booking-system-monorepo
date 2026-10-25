@@ -88,6 +88,8 @@ export const practitioner = pgTable("practitioner", {
   nameEn: text().notNull(),
   titleKa: text(),
   titleEn: text(),
+  /** Object key of the Practitioner Photo in the photo bucket, e.g. `practitioners/<uuid>.webp`. */
+  photoKey: text(),
   sortOrder: integer().notNull().default(0),
   archivedAt: timestamp({ withTimezone: true }),
   ...timestamps,
