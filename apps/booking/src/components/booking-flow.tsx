@@ -1,7 +1,7 @@
 "use client";
 
 import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
-import { addDays, formatDate, formatTime, toLocalDate } from "@tsami/booking/time";
+import { addDays, formatDate, formatLongDate, formatTime, toLocalDate } from "@tsami/booking/time";
 import {
   Button,
   Card,
@@ -221,41 +221,23 @@ export function BookingFlow({
           ) : slotsByDate.size === 0 ? (
             <p className="text-ink-soft">{t.time.none}</p>
           ) : (
-            <>
-              <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2">
-                {[...slotsByDate.keys()].map((d) => {
-                  const first = slotsByDate.get(d)![0]!;
-                  return (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => navigate({ treatmentId, practitionerId, date: d }, { replace: !!date })}
-                      className={cn(
-                        "shrink-0 rounded-xl border px-4 py-2 text-sm whitespace-nowrap",
-                        d === date ? "border-brand bg-brand text-paper" : "border-ink/15 bg-paper",
-                      )}
-                    >
-                      {formatDate(first, locale)}
-                    </button>
-                  );
-                })}
-              </div>
-              {date && (
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                  {slotsByDate.get(date)?.map((s) => (
-                    <Button
-                      type="button"
-                      size="lg"
-                      key={s.getTime()}
-                      variant="outline"
-                      onClick={() => navigate({ treatmentId, practitionerId, date, time: formatTime(s) })}
-                    >
-                      {formatTime(s)}
-                    </Button>
-                  ))}
-                </div>
-              )}
-            </>
+            <div className="flex flex-col gap-3">
+              {[...slotsByDate].map(([d, daySlots]) => (
+                <DaySlots
+                  key={d}
+                  label={formatLongDate(daySlots[0]!, locale)}
+                  slots={daySlots}
+                  expanded={d === date}
+                  onToggle={() =>
+                    navigate(
+                      { treatmentId, practitionerId, date: d === date ? undefined : d },
+                      { replace: !!date },
+                    )
+                  }
+                  onPick={(s) => navigate({ treatmentId, practitionerId, date: d, time: formatTime(s) })}
+                />
+              ))}
+            </div>
           )}
         </section>
       )}
@@ -302,6 +284,61 @@ function SummaryRow({
       <Button type="button" variant="ghost" size="sm" onClick={onChange}>
         {t.change}
       </Button>
+    </div>
+  );
+}
+
+function DaySlots({
+  label,
+  slots,
+  expanded,
+  onToggle,
+  onPick,
+}: {
+  label: string;
+  slots: Date[];
+  expanded: boolean;
+  onToggle: () => void;
+  onPick: (slot: Date) => void;
+}) {
+  const panelId = useId();
+  return (
+    <div className="overflow-hidden rounded-2xl border border-ink/10 bg-paper">
+      <button
+        type="button"
+        aria-expanded={expanded}
+        aria-controls={panelId}
+        onClick={onToggle}
+        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left font-medium transition-colors hover:bg-mist/40"
+      >
+        {label}
+        <svg
+          aria-hidden
+          viewBox="0 0 24 24"
+          className={cn("size-5 shrink-0 text-ink-soft transition-transform", expanded && "rotate-180")}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+      {expanded && (
+        <div id={panelId} className="grid grid-cols-3 gap-3 border-t border-ink/10 p-5 sm:grid-cols-5">
+          {slots.map((s) => (
+            <button
+              key={s.getTime()}
+              type="button"
+              onClick={() => onPick(s)}
+              className="rounded-lg bg-mist/60 py-3 font-semibold transition-colors hover:bg-brand hover:text-paper"
+            >
+              {formatTime(s)}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

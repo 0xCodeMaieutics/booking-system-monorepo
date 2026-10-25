@@ -77,6 +77,16 @@ export function formatDate(instant: Date, locale: "ka" | "en"): string {
   }).format(instant);
 }
 
+export function formatLongDate(instant: Date, locale: "ka" | "en"): string {
+  return new Intl.DateTimeFormat(intlLocale[locale], {
+    timeZone: CLINIC_TIME_ZONE,
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(instant);
+}
+
 export function formatTime(instant: Date): string {
   return formatMinute(toLocalMinute(instant));
 }
