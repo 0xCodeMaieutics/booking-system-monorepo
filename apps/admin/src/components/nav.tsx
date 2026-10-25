@@ -46,7 +46,8 @@ export function Nav({ adminName }: { adminName: string }) {
       <div className="mt-auto flex flex-col gap-2 px-3 text-sm">
         <span className="text-ink-soft">{adminName}</span>
         <Button
-          variant="secondary"
+          type="button"
+          variant="outline"
           size="sm"
           onClick={async () => {
             await authClient.signOut();

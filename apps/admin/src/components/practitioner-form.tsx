@@ -106,10 +106,12 @@ export function PractitionerForm({ practitioner: p }: { practitioner: Practition
       {update.error && <p className="text-sm text-danger">{errorMessage(update.error)}</p>}
       {update.isSuccess && <p className="text-sm text-success">შენახულია.</p>}
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" disabled={update.isPending}>
+        <Button size="lg" type="submit" disabled={update.isPending}>
           შენახვა
         </Button>
         <Button
+          type="button"
+          size="lg"
           variant="ghost"
           onClick={() => archive.mutate({ id: p.id, archived: !p.archivedAt })}
           disabled={archive.isPending}

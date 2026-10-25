@@ -28,7 +28,9 @@ export default function TreatmentsPage() {
     <div className="flex max-w-3xl flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl">პროცედურები</h1>
-        <Button onClick={() => setEditing("new")}>დამატება</Button>
+        <Button type="button" size="lg" onClick={() => setEditing("new")}>
+          დამატება
+        </Button>
       </div>
       {editing === "new" && (
         <Card>
@@ -53,7 +55,7 @@ export default function TreatmentsPage() {
                 {t.nameEn} · {t.durationMinutes} წთ{t.priceFromGel !== null && ` · ${t.priceFromGel} ₾-დან`}
               </p>
             </div>
-            <Button variant="secondary" size="sm" onClick={() => setEditing(t.id)}>
+            <Button type="button" variant="outline" size="sm" onClick={() => setEditing(t.id)}>
               რედაქტირება
             </Button>
           </Card>
@@ -162,12 +164,16 @@ function TreatmentForm({
       </div>
       {error && <p className="text-sm text-danger">{errorMessage(error)}</p>}
       <div className="flex flex-wrap gap-3">
-        <Button type="submit">შენახვა</Button>
-        <Button variant="secondary" onClick={onDone}>
+        <Button size="lg" type="submit">
+          შენახვა
+        </Button>
+        <Button type="button" size="lg" variant="outline" onClick={onDone}>
           გაუქმება
         </Button>
         {treatment && (
           <Button
+            type="button"
+            size="lg"
             variant="ghost"
             onClick={() => archive.mutate({ id: treatment.id, archived: !treatment.archivedAt })}
           >

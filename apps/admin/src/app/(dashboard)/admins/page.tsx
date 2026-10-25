@@ -33,6 +33,7 @@ export default function AdminsPage() {
             </span>
             {a.id !== me.data?.id && (
               <Button
+                type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => setActive.mutate({ id: a.id, active: !!a.deactivatedAt })}
@@ -69,7 +70,7 @@ export default function AdminsPage() {
           </p>
           {invite.error && <p className="text-sm text-danger">{errorMessage(invite.error)}</p>}
           {invite.isSuccess && <p className="text-sm text-success">მოწვევა გაიგზავნა.</p>}
-          <Button type="submit" className="self-start" disabled={invite.isPending}>
+          <Button size="lg" type="submit" className="self-start" disabled={invite.isPending}>
             მოწვევა
           </Button>
         </form>
