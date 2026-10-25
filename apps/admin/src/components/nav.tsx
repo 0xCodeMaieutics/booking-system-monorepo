@@ -19,7 +19,8 @@ const links = [
 export function Nav({ adminName }: { adminName: string }) {
   const pathname = usePathname();
   const router = useRouter();
-  const active = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+  const active = (href: string) =>
+    href === "/" ? pathname === "/" || pathname === "/new" : pathname.startsWith(href);
 
   return (
     <aside className="flex flex-col gap-6 border-b border-ink/10 bg-paper px-4 py-6 md:w-60 md:border-r md:border-b-0">
