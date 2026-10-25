@@ -1,4 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": { "@tsami/ui/*": ["./src/*"] }
+  },
   "include": ["src"]
 }
