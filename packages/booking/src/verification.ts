@@ -19,7 +19,7 @@ const LIMITS = {
 
 /**
  * Creates a one-time code for a Patient's phone, enforcing per-phone and
- * per-IP rate limits. The caller sends the code by SMS.
+ * per-IP rate limits (skipped in development). The caller sends the code by SMS.
  */
 export async function requestVerificationCode(
   db: Db,
@@ -37,9 +37,10 @@ export async function requestVerificationCode(
   };
 
   if (
-    (await countSince("phone", phone, 15)) >= LIMITS.perPhone15Min ||
-    (await countSince("phone", phone, 24 * 60)) >= LIMITS.perPhoneDay ||
-    (input.ipAddress && (await countSince("ipAddress", input.ipAddress, 60)) >= LIMITS.perIpHour)
+    process.env.NODE_ENV !== "development" &&
+    ((await countSince("phone", phone, 15)) >= LIMITS.perPhone15Min ||
+      (await countSince("phone", phone, 24 * 60)) >= LIMITS.perPhoneDay ||
+      (input.ipAddress && (await countSince("ipAddress", input.ipAddress, 60)) >= LIMITS.perIpHour))
   ) {
     throw new BookingError("RATE_LIMITED");
   }
