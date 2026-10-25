@@ -1,0 +1,7 @@
+# Practitioner photos in Cloudflare R2, behind the S3 API
+
+Practitioner photos are stored in a Cloudflare R2 bucket with EU jurisdiction and served publicly, since Patients on the Booking Site have no sign-in. R2 was chosen over AWS S3 in `eu-central-1` for zero egress fees and one-switch public access without CloudFront or IAM setup, and over Vercel Blob because we want the portable S3 API. The code talks only to the S3 API through a configurable endpoint, so moving to AWS S3 or another S3-compatible store is a configuration change, in the same spirit as the `SmsSender` interface in ADR 0004.
+
+The Admin Dashboard crops the photo in the browser and uploads only the small result, through a plain Admin-only route rather than tRPC (an exception to ADR 0003, because tRPC handles file bodies poorly) and rather than presigned uploads straight to R2. This keeps R2 write credentials server-side, needs no bucket CORS, and lets the server reject anything that is not the expected image before it is stored. Originals are not kept; re-cropping means uploading again.
+
+Uploads land under `pending/` and are moved to `practitioners/` only when the Practitioner is saved, so everything under `practitioners/` is referenced. Replaced or removed photos are deleted on save. Abandoned uploads are not swept yet; enabling an R2 lifecycle rule that expires `pending/` after a day will do it without code changes.
