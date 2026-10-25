@@ -1,7 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type LocalDate, addDays, formatTime, isLocalDate, toLocalDate } from "@tsami/booking/time";
+import { type LocalDate, addDays, formatTime, toLocalDate } from "@tsami/booking/time";
 import {
   Button,
   Card,
@@ -20,51 +19,56 @@ import {
 } from "@tsami/ui";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 
+import { AppointmentForm } from "@/components/appointment-form";
+import { errorMessage } from "@/components/errors";
 import { attentionLabel, statusLabel, statusTone } from "@/lib/labels";
 import { useTRPC } from "@/trpc/client";
+import type { AdminOutputs } from "@/trpc/types";
+import { useRefreshingMutation } from "@/trpc/use-refreshing-mutation";
 
-import { AppointmentForm } from "./appointment-form";
-import { errorMessage } from "./errors";
-
-export function AppointmentsDay() {
+export function AppointmentsDay({
+  date,
+  today,
+  highlightId,
+  day,
+  attention,
+  treatments,
+  practitioners,
+}: {
+  date: LocalDate;
+  today: LocalDate;
+  highlightId: string | null;
+  day: AdminOutputs["appointments"]["day"];
+  attention: AdminOutputs["attention"]["list"];
+  treatments: AdminOutputs["treatments"]["list"];
+  practitioners: AdminOutputs["practitioners"]["list"];
+}) {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const dateParam = searchParams.get("date");
-  const [today] = useState(() => toLocalDate(new Date()));
-  const date = dateParam && isLocalDate(dateParam) ? dateParam : today;
+  const [isChangingDate, startDateChange] = useTransition();
   const setDate = (next: LocalDate) => {
     const params = new URLSearchParams(searchParams);
     params.set("date", next);
-    router.replace(`${pathname}?${params}`, { scroll: false });
+    startDateChange(() => router.replace(`${pathname}?${params}`, { scroll: false }));
   };
   const [moving, setMoving] = useState<string>();
 
-  const day = useQuery(trpc.appointments.day.queryOptions({ date }));
-  const attention = useQuery(trpc.attention.list.queryOptions());
-  const invalidate = () =>
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: trpc.appointments.pathKey() }),
-      queryClient.invalidateQueries({ queryKey: trpc.attention.pathKey() }),
-    ]);
-
-  const setStatus = useMutation(trpc.appointments.setStatus.mutationOptions({ onSuccess: invalidate }));
+  const setStatus = useRefreshingMutation(trpc.appointments.setStatus.mutationOptions());
   const [now] = useState(() => new Date());
-  const attentionById = new Map(attention.data?.map((row) => [row.appointment.id, row.reasons]));
+  const attentionById = new Map(attention.map((row) => [row.appointment.id, row.reasons]));
 
-  const highlightId = searchParams.get("appointmentId");
   const scrolledTo = useRef<string>(null);
   useEffect(() => {
-    if (!highlightId || !day.data || scrolledTo.current === highlightId) return;
+    if (!highlightId || scrolledTo.current === highlightId) return;
     const el = document.getElementById(`appointment-${highlightId}`);
     if (!el) return;
     scrolledTo.current = highlightId;
     el.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [highlightId, day.data]);
+  }, [highlightId]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -97,10 +101,9 @@ export function AppointmentsDay() {
 
       {setStatus.error && <p className="text-sm text-danger">{errorMessage(setStatus.error)}</p>}
 
-      <div className="flex flex-col gap-3">
-        {day.isPending && <p className="text-ink-soft">იტვირთება…</p>}
-        {day.data?.length === 0 && <p className="text-ink-soft">ამ დღეს ვიზიტები არ არის.</p>}
-        {day.data?.map(({ appointment: a, patient, practitioner, treatment, createdBy }) => {
+      <div className={cn("flex flex-col gap-3 transition-opacity", isChangingDate && "opacity-60")}>
+        {day.length === 0 && <p className="text-ink-soft">ამ დღეს ვიზიტები არ არის.</p>}
+        {day.map(({ appointment: a, patient, practitioner, treatment, createdBy }) => {
           const reasons = attentionById.get(a.id);
           return (
             <Card
@@ -176,7 +179,7 @@ export function AppointmentsDay() {
                       >
                         გადატანა
                       </Button>
-                      <CancelAppointmentDialog id={a.id} onCancelled={invalidate} />
+                      <CancelAppointmentDialog id={a.id} />
                     </>
                   )}
                   {a.status !== "booked" && (
@@ -199,10 +202,15 @@ export function AppointmentsDay() {
                       practitionerId: practitioner.id,
                     }}
                     initialDate={toLocalDate(a.startsAt)}
-                    onDone={async (moved) => {
-                      setMoving(undefined);
-                      setDate(toLocalDate(moved.startsAt));
-                      await invalidate();
+                    treatments={treatments}
+                    practitioners={practitioners}
+                    onDone={(moved) => {
+                      const movedTo = toLocalDate(moved.startsAt);
+                      startDateChange(() => {
+                        setMoving(undefined);
+                        if (movedTo === date) router.refresh();
+                        else setDate(movedTo);
+                      });
                     }}
                   />
                 )}
@@ -215,17 +223,12 @@ export function AppointmentsDay() {
   );
 }
 
-function CancelAppointmentDialog({ id, onCancelled }: { id: string; onCancelled: () => Promise<unknown> }) {
+function CancelAppointmentDialog({ id }: { id: string }) {
   const trpc = useTRPC();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
-  const cancel = useMutation(
-    trpc.appointments.setStatus.mutationOptions({
-      onSuccess: async () => {
-        await onCancelled();
-        onOpenChange(false);
-      },
-    }),
+  const cancel = useRefreshingMutation(
+    trpc.appointments.setStatus.mutationOptions({ onSuccess: () => onOpenChange(false) }),
   );
   const onOpenChange = (next: boolean) => {
     setOpen(next);

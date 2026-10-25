@@ -1,27 +1,22 @@
-"use client";
-
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@tsami/ui";
 import Link from "next/link";
-import { use } from "react";
 
 import { AttentionList } from "@/components/attention-list";
 import { PractitionerTabs } from "@/components/practitioner-tabs";
-import { useTRPC } from "@/trpc/client";
+import { serverCaller } from "@/server/caller";
 
-export default function PractitionerLayout({
+import { getPractitioner } from "./get-practitioner";
+
+export default async function PractitionerLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params);
-  const trpc = useTRPC();
-  const practitioner = useQuery(trpc.practitioners.get.queryOptions({ id }));
-
-  if (!practitioner.data) return <p className="text-ink-soft">იტვირთება…</p>;
-  const p = practitioner.data;
+  const { id } = await params;
+  const p = await getPractitioner(id);
+  const attention = await (await serverCaller()).attention.list({ practitionerId: p.id });
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
@@ -31,7 +26,7 @@ export default function PractitionerLayout({
         </Button>
         <h1 className="text-3xl">{p.nameKa}</h1>
       </div>
-      <AttentionList practitionerId={p.id} />
+      <AttentionList rows={attention} />
       <PractitionerTabs practitionerId={p.id} />
       {children}
     </div>

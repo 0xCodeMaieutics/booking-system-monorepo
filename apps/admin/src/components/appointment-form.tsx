@@ -1,6 +1,6 @@
 "use client";
 
-import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { formatTime, localInstant, parseMinute } from "@tsami/booking/time";
 import {
   Button,
@@ -13,28 +13,35 @@ import {
   Textarea,
   cn,
 } from "@tsami/ui";
-import { type FormEvent, useId, useState } from "react";
+import { type FormEvent, useEffect, useId, useState } from "react";
 
-import { useTRPC } from "@/trpc/client";
+import { useTRPC, useTRPCClient } from "@/trpc/client";
+import type { AdminInputs, AdminOutputs } from "@/trpc/types";
 
 import { errorMessage } from "./errors";
 
 const ANY = "";
 
-/** Creates an Appointment, or moves one when `move` is given. */
+/**
+ * Creates an Appointment, or moves one when `move` is given. It doesn't refresh
+ * the route itself: `onDone` navigates or refreshes.
+ */
 export function AppointmentForm({
   move,
   initialDate,
+  treatments,
+  practitioners,
   onDone,
 }: {
   move?: { id: string; treatmentId: string; practitionerId: string };
   initialDate: string;
+  treatments: AdminOutputs["treatments"]["list"];
+  practitioners: AdminOutputs["practitioners"]["list"];
   onDone: (result: { startsAt: Date }) => void;
 }) {
   const fieldId = useId();
   const trpc = useTRPC();
-  const treatments = useQuery(trpc.treatments.list.queryOptions());
-  const practitioners = useQuery(trpc.practitioners.list.queryOptions());
+  const trpcClient = useTRPCClient();
 
   const [treatmentId, setTreatmentId] = useState(move?.treatmentId ?? "");
   const [practitionerId, setPractitionerId] = useState(move?.practitionerId ?? ANY);
@@ -50,19 +57,16 @@ export function AppointmentForm({
     locale: "ka" as "ka" | "en",
   });
 
-  const qualified = (practitioners.data ?? []).filter(
+  const qualified = practitioners.filter(
     (p) => !p.archivedAt && (!treatmentId || p.treatmentIds.includes(treatmentId)),
   );
-  const slots = useQuery(
-    trpc.appointments.slots.queryOptions(
-      treatmentId && !override
-        ? { treatmentId, practitionerId: practitionerId || null, date, excludeAppointmentId: move?.id }
-        : skipToken,
-    ),
+  const slots = useSlots(
+    trpcClient,
+    treatmentId && !override
+      ? { treatmentId, practitionerId: practitionerId || null, date, excludeAppointmentId: move?.id }
+      : null,
   );
-  const uniqueSlots = [
-    ...new Map((slots.data ?? []).map((s) => [s.startsAt.getTime(), s.startsAt])).values(),
-  ];
+  const uniqueSlots = [...new Map((slots ?? []).map((s) => [s.startsAt.getTime(), s.startsAt])).values()];
 
   const create = useMutation(trpc.appointments.create.mutationOptions());
   const moveMutation = useMutation(trpc.appointments.move.mutationOptions());
@@ -103,8 +107,8 @@ export function AppointmentForm({
               }}
             >
               <NativeSelectOption value="">—</NativeSelectOption>
-              {treatments.data
-                ?.filter((t) => !t.archivedAt)
+              {treatments
+                .filter((t) => !t.archivedAt)
                 .map((t) => (
                   <NativeSelectOption key={t.id} value={t.id}>
                     {t.nameKa} ({t.durationMinutes} წთ)
@@ -168,7 +172,7 @@ export function AppointmentForm({
         treatmentId && (
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium">თავისუფალი დრო</span>
-            {slots.isPending ? (
+            {slots === undefined ? (
               <span className="text-sm text-ink-soft">იტვირთება…</span>
             ) : uniqueSlots.length === 0 ? (
               <span className="text-sm text-ink-soft">თავისუფალი დრო არ არის.</span>
@@ -255,4 +259,27 @@ export function AppointmentForm({
       </Button>
     </form>
   );
+}
+
+type SlotsInput = AdminInputs["appointments"]["slots"];
+type Slot = AdminOutputs["appointments"]["slots"][number];
+
+/** Available slots for the form's current choices; `undefined` while they load. */
+function useSlots(client: ReturnType<typeof useTRPCClient>, input: SlotsInput | null) {
+  const key = input && JSON.stringify(input);
+  const [result, setResult] = useState<{ key: string; slots: Slot[] }>();
+
+  useEffect(() => {
+    if (!key) return;
+    let current = true;
+    client.appointments.slots.query(JSON.parse(key) as SlotsInput).then(
+      (slots) => current && setResult({ key, slots }),
+      () => current && setResult({ key, slots: [] }),
+    );
+    return () => {
+      current = false;
+    };
+  }, [client, key]);
+
+  return result && result.key === key ? result.slots : undefined;
 }

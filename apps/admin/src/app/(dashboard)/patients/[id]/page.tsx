@@ -1,20 +1,14 @@
-"use client";
-
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate, formatTime } from "@tsami/booking/time";
-import { Button, Card, CardContent, Field, FieldDescription, FieldLabel, Input, cn } from "@tsami/ui";
-import { type FormEvent, use, useId, useState } from "react";
+import { Card, CardContent, cn } from "@tsami/ui";
 
-import { errorMessage } from "@/components/errors";
 import { statusLabel, statusTone } from "@/lib/labels";
-import { useTRPC } from "@/trpc/client";
+import { findOrNotFound, serverCaller } from "@/server/caller";
 
-export default function PatientPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const trpc = useTRPC();
-  const patient = useQuery(trpc.patients.get.queryOptions({ id }));
-  if (!patient.data) return <p className="text-ink-soft">იტვირთება…</p>;
-  const p = patient.data;
+import { PatientForm } from "./page.client";
+
+export default async function PatientPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const p = await findOrNotFound((await serverCaller()).patients.get({ id }));
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
@@ -43,57 +37,5 @@ export default function PatientPage({ params }: { params: Promise<{ id: string }
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function PatientForm({
-  patient,
-}: {
-  patient: { id: string; fullName: string; phone: string; email: string | null };
-}) {
-  const fieldId = useId();
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const [fullName, setFullName] = useState(patient.fullName);
-  const [email, setEmail] = useState(patient.email ?? "");
-  const update = useMutation(
-    trpc.patients.update.mutationOptions({
-      onSuccess: () => queryClient.invalidateQueries({ queryKey: trpc.patients.pathKey() }),
-    }),
-  );
-
-  function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    update.mutate({ id: patient.id, fullName, email: email || null });
-  }
-
-  return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field>
-          <FieldLabel htmlFor={`${fieldId}-1`}>სახელი და გვარი</FieldLabel>
-          <Input
-            id={`${fieldId}-1`}
-            required
-            minLength={2}
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-          />
-        </Field>
-        <Field>
-          <FieldLabel htmlFor={`${fieldId}-2`}>მობილური</FieldLabel>
-          <Input id={`${fieldId}-2`} value={patient.phone} disabled />
-          <FieldDescription>ნომერი პაციენტის იდენტიფიკატორია და არ იცვლება</FieldDescription>
-        </Field>
-        <Field>
-          <FieldLabel htmlFor={`${fieldId}-3`}>ელფოსტა</FieldLabel>
-          <Input id={`${fieldId}-3`} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </Field>
-      </div>
-      {update.error && <p className="text-sm text-danger">{errorMessage(update.error)}</p>}
-      <Button size="lg" type="submit" className="self-start" disabled={update.isPending}>
-        შენახვა
-      </Button>
-    </form>
   );
 }

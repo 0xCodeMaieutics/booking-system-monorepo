@@ -1,18 +1,20 @@
-"use client";
-
 import { Card, CardContent } from "@tsami/ui";
-import { use } from "react";
 
 import { TimeOffManager } from "@/components/time-off-manager";
+import { serverCaller } from "@/server/caller";
 
-export default function PractitionerTimeOffPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+import { getPractitioner } from "../get-practitioner";
+
+export default async function PractitionerTimeOffPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  await getPractitioner(id);
+  const timeOff = await (await serverCaller()).timeOff.list({ practitionerId: id });
 
   return (
     <Card>
       <CardContent>
         <h2 className="mb-4 text-xl">არასამუშაო დრო</h2>
-        <TimeOffManager practitionerId={id} />
+        <TimeOffManager practitionerId={id} timeOff={timeOff} />
       </CardContent>
     </Card>
   );

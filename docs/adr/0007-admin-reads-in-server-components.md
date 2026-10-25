@@ -1,0 +1,3 @@
+# Admin Dashboard reads data in server components
+
+The Admin Dashboard fetches data in server components through the tRPC server caller and passes it to client components as props, instead of caching it on the client with React Query's `useQuery`. Mutations stay on tRPC (ADR 0003) and are followed by `router.refresh()`, which re-renders the whole route, so there are no hand-maintained cache invalidations to keep in sync. Page-level state that drives a read (date, search term) lives in the URL; lookups that depend on in-form state (available slots) call the tRPC client imperatively. `useQuery` and its siblings are banned in `apps/admin` by lint, even though React Query remains installed for `useMutation`.
