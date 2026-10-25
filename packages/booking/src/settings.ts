@@ -1,4 +1,4 @@
-import { type DbOrTx, eq, schema } from "@face/db";
+import { type DbOrTx, eq, schema } from "@visita/db";
 
 export type ClinicSettings = typeof schema.clinicSettings.$inferSelect;
 

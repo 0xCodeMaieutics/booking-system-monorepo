@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, Card } from "@face/ui";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { Button, Card } from "@visita/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -40,7 +40,7 @@ export default function PractitionersPage() {
       <div className="grid gap-3">
         {practitioners.data?.map((p) => (
           <Link key={p.id} href={`/practitioners/${p.id}`}>
-            <Card className={`p-4 hover:border-rose-deep ${p.archivedAt ? "opacity-50" : ""}`}>
+            <Card className={`p-4 hover:border-accent ${p.archivedAt ? "opacity-50" : ""}`}>
               <p className="font-medium">
                 {p.titleKa ? `${p.titleKa} ` : ""}
                 {p.nameKa} {p.archivedAt && "· დაარქივებული"}

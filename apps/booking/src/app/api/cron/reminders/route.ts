@@ -1,5 +1,5 @@
-import { createSmsSender, sendDueReminders } from "@face/booking";
-import { getDb } from "@face/db";
+import { createSmsSender, sendDueReminders } from "@visita/booking";
+import { getDb } from "@visita/db";
 
 /** Called every 15 minutes by Vercel Cron (see vercel.json). */
 export async function GET(req: Request) {

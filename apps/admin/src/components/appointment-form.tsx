@@ -1,8 +1,8 @@
 "use client";
 
-import { formatTime, localInstant, parseMinute } from "@face/booking/time";
-import { Button, Field, Input, Select, Textarea, cn } from "@face/ui";
 import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
+import { formatTime, localInstant, parseMinute } from "@visita/booking/time";
+import { Button, Field, Input, Select, Textarea, cn } from "@visita/ui";
 import { type FormEvent, useState } from "react";
 
 import { useTRPC } from "@/trpc/client";
@@ -163,7 +163,7 @@ export function AppointmentForm({
                     className={cn(
                       "rounded-lg border px-3 py-1.5 text-sm",
                       startsAt?.getTime() === s.getTime()
-                        ? "border-rose-deep bg-rose-deep text-paper"
+                        ? "border-accent bg-accent text-paper"
                         : "border-ink/15 bg-paper",
                     )}
                   >

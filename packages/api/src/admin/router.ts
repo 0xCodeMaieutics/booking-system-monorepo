@@ -1,6 +1,6 @@
-import { getClinicSettings } from "@face/booking";
-import { asc, eq, schema } from "@face/db";
 import { TRPCError } from "@trpc/server";
+import { getClinicSettings } from "@visita/booking";
+import { asc, eq, schema } from "@visita/db";
 import { z } from "zod";
 
 import { appointmentsRouter, patientsRouter } from "./appointments";

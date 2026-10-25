@@ -16,6 +16,7 @@ const ka = {
     description: "აირჩიეთ პროცედურა, სპეციალისტი და თქვენთვის სასურველი დრო.",
   },
   clinic: "ესთეტიკის ცენტრი ფეისი",
+  poweredBy: "ჯავშნის სისტემა",
   otherLocale: "English",
   steps: { treatment: "პროცედურა", practitioner: "სპეციალისტი", time: "დრო", details: "თქვენი მონაცემები" },
   treatment: { title: "რომელი პროცედურა გსურთ?", minutes: "წთ", price: (gel: number) => `${gel} ₾-დან` },
@@ -82,6 +83,7 @@ const en: Dictionary = {
     description: "Choose a treatment, a practitioner and a time that suits you.",
   },
   clinic: "Face Aesthetic Centre",
+  poweredBy: "Bookings by",
   otherLocale: "ქართული",
   steps: { treatment: "Treatment", practitioner: "Practitioner", time: "Time", details: "Your details" },
   treatment: {

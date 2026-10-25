@@ -1,4 +1,15 @@
-import { type Db, type DbOrTx, and, eq, gte, isExclusionViolation, isNull, lt, schema, sql } from "@face/db";
+import {
+  type Db,
+  type DbOrTx,
+  and,
+  eq,
+  gte,
+  isExclusionViolation,
+  isNull,
+  lt,
+  schema,
+  sql,
+} from "@visita/db";
 
 import { type Actor, findAvailableSlots, getBookableTreatment } from "./availability";
 import { BookingError } from "./errors";

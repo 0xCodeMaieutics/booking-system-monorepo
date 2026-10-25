@@ -1,5 +1,5 @@
 {
-  "name": "@face/admin",
+  "name": "@visita/admin",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,14 +10,14 @@
     "admin:create": "tsx --env-file-if-exists=../../.env scripts/create-admin.ts"
   },
   "dependencies": {
-    "@face/api": "workspace:*",
-    "@face/booking": "workspace:*",
-    "@face/db": "workspace:*",
-    "@face/ui": "workspace:*",
     "@tanstack/react-query": "^5.104.5",
     "@trpc/client": "^11.19.0",
     "@trpc/server": "^11.19.0",
     "@trpc/tanstack-react-query": "^11.19.0",
+    "@visita/api": "workspace:*",
+    "@visita/booking": "workspace:*",
+    "@visita/db": "workspace:*",
+    "@visita/ui": "workspace:*",
     "better-auth": "^1.7.12",
     "next": "^16.4.3",
     "react": "^19.3.1",

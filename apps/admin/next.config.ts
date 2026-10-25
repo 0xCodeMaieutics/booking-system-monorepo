@@ -8,7 +8,7 @@ const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 if (existsSync(`${repoRoot}.env`)) process.loadEnvFile(`${repoRoot}.env`);
 
 const config: NextConfig = {
-  transpilePackages: ["@face/api", "@face/booking", "@face/db", "@face/ui"],
+  transpilePackages: ["@visita/api", "@visita/booking", "@visita/db", "@visita/ui"],
   turbopack: { root: repoRoot },
   async headers() {
     return [{ source: "/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] }];

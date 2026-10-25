@@ -1,5 +1,5 @@
-import { adminRouter } from "@face/api/admin";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { adminRouter } from "@visita/api/admin";
 
 import { createAdminContext } from "@/server/context";
 

@@ -1,4 +1,4 @@
-import { type Db, and, count, eq, gte, schema, sql } from "@face/db";
+import { type Db, and, count, eq, gte, schema, sql } from "@visita/db";
 
 import { BookingError } from "./errors";
 import { normalizePhone } from "./phone";

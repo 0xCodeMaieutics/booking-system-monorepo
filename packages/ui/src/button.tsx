@@ -3,9 +3,9 @@ import type { ButtonHTMLAttributes } from "react";
 import { cn } from "./cn";
 
 const variants = {
-  primary: "bg-rose-deep text-paper hover:bg-ink",
+  primary: "bg-accent text-paper hover:bg-ink",
   secondary: "border border-ink/15 bg-paper text-ink hover:border-ink/40",
-  ghost: "text-ink-soft hover:bg-sand hover:text-ink",
+  ghost: "text-ink-soft hover:bg-mist hover:text-ink",
   danger: "bg-danger text-paper hover:bg-danger/85",
 } as const;
 
@@ -27,7 +27,7 @@ export function Button({
       className={cn(
         "inline-flex items-center justify-center gap-2 rounded-full font-medium transition-colors",
         "disabled:cursor-not-allowed disabled:opacity-50",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-deep",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
         size === "sm" ? "h-8 px-3 text-sm" : "h-11 px-5",
         variants[variant],
         className,

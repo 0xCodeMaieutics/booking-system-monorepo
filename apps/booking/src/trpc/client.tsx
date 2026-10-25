@@ -1,9 +1,9 @@
 "use client";
 
-import type { BookingRouter } from "@face/api/booking";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
+import type { BookingRouter } from "@visita/api/booking";
 import { type ReactNode, useState } from "react";
 import superjson from "superjson";
 

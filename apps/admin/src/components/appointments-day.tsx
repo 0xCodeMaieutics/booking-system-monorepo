@@ -1,8 +1,8 @@
 "use client";
 
-import { addDays, formatDate, formatTime, toLocalDate } from "@face/booking/time";
-import { Button, Card, Input, cn } from "@face/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { addDays, formatDate, formatTime, toLocalDate } from "@visita/booking/time";
+import { Button, Card, Input, cn } from "@visita/ui";
 import Link from "next/link";
 import { useState } from "react";
 

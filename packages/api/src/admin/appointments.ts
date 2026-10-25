@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import {
   type Appointment,
   createAppointment,
@@ -9,9 +10,8 @@ import {
   moveAppointment,
   setStatusByAdmin,
   smsText,
-} from "@face/booking";
-import { and, asc, desc, eq, gte, ilike, lt, or, schema } from "@face/db";
-import { TRPCError } from "@trpc/server";
+} from "@visita/booking";
+import { and, asc, desc, eq, gte, ilike, lt, or, schema } from "@visita/db";
 import { z } from "zod";
 
 import { zLocalDate, zLocale } from "../shared";
