@@ -1,4 +1,4 @@
-import type { AttentionReason } from "@visita/booking";
+import type { AttentionReason } from "@tsami/booking";
 
 export const statusLabel = {
   booked: "დაჯავშნილი",

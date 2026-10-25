@@ -1,7 +1,7 @@
 "use client";
 
 import { skipToken, useQuery } from "@tanstack/react-query";
-import { Card, Input } from "@visita/ui";
+import { Card, Input } from "@tsami/ui";
 import Link from "next/link";
 import { useDeferredValue, useState } from "react";
 

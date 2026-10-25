@@ -1,8 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatDate, formatTime } from "@visita/booking/time";
-import { Button, Card, Field, Input, cn } from "@visita/ui";
+import { formatDate, formatTime } from "@tsami/booking/time";
+import { Button, Card, Field, Input, cn } from "@tsami/ui";
 import { type FormEvent, use, useState } from "react";
 
 import { errorMessage } from "@/components/errors";

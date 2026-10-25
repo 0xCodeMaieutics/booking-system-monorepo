@@ -1,5 +1,5 @@
 {
-  "name": "@visita/face-landing",
+  "name": "@tsami/face-landing",
   "private": true,
   "scripts": {
     "dev": "npx --yes serve@14 . -l 4173"

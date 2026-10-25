@@ -1,8 +1,8 @@
 "use client";
 
 import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
-import { formatTime, localInstant, parseMinute } from "@visita/booking/time";
-import { Button, Field, Input, Select, Textarea, cn } from "@visita/ui";
+import { formatTime, localInstant, parseMinute } from "@tsami/booking/time";
+import { Button, Field, Input, Select, Textarea, cn } from "@tsami/ui";
 import { type FormEvent, useState } from "react";
 
 import { useTRPC } from "@/trpc/client";

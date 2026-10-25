@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, cn, Wordmark } from "@visita/ui";
+import { Button, cn, Wordmark } from "@tsami/ui";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 

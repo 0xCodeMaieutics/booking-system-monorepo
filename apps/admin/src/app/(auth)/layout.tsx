@@ -1,4 +1,4 @@
-import { Wordmark } from "@visita/ui";
+import { Wordmark } from "@tsami/ui";
 import type { ReactNode } from "react";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {

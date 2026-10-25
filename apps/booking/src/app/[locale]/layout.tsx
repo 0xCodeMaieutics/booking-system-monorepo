@@ -1,5 +1,5 @@
 import "../globals.css";
-import { Wordmark } from "@visita/ui";
+import { Wordmark } from "@tsami/ui";
 import type { Metadata } from "next";
 import { Noto_Sans_Georgian } from "next/font/google";
 import Link from "next/link";

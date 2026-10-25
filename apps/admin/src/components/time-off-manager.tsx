@@ -1,15 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  addDays,
-  formatDate,
-  formatTime,
-  localInstant,
-  parseMinute,
-  toLocalDate,
-} from "@visita/booking/time";
-import { Button, Field, Input, Select } from "@visita/ui";
+import { addDays, formatDate, formatTime, localInstant, parseMinute, toLocalDate } from "@tsami/booking/time";
+import { Button, Field, Input, Select } from "@tsami/ui";
 import { type FormEvent, useState } from "react";
 
 import { useTRPC } from "@/trpc/client";

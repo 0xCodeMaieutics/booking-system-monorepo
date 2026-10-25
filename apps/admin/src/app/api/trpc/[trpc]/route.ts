@@ -1,5 +1,5 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import { adminRouter } from "@visita/api/admin";
+import { adminRouter } from "@tsami/api/admin";
 
 import { createAdminContext } from "@/server/context";
 

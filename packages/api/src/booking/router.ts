@@ -12,8 +12,8 @@ import {
   requestVerificationCode,
   smsText,
   toLocalDate,
-} from "@visita/booking";
-import { asc, isNull, schema } from "@visita/db";
+} from "@tsami/booking";
+import { asc, isNull, schema } from "@tsami/db";
 import { z } from "zod";
 
 import { zLocalDate, zLocale } from "../shared";

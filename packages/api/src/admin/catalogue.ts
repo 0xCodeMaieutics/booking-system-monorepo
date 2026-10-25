@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
-import { appointmentsNeedingAttention } from "@visita/booking";
-import { and, asc, eq, gt, isNull, or, schema } from "@visita/db";
+import { appointmentsNeedingAttention } from "@tsami/booking";
+import { and, asc, eq, gt, isNull, or, schema } from "@tsami/db";
 import { z } from "zod";
 
 import { adminProcedure, router } from "./trpc";

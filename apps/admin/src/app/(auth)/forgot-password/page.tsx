@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Card, Field, Input } from "@visita/ui";
+import { Button, Card, Field, Input } from "@tsami/ui";
 import Link from "next/link";
 import { type FormEvent, useState } from "react";
 
