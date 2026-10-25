@@ -1,8 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { formatDate, formatTime } from "@tsami/booking/time";
+import { formatDate, formatTime, toLocalDate } from "@tsami/booking/time";
 import { Card, CardContent } from "@tsami/ui";
+import Link from "next/link";
 
 import { attentionLabel } from "@/lib/labels";
 import { useTRPC } from "@/trpc/client";
@@ -24,8 +25,14 @@ export function AttentionList({ practitionerId }: { practitionerId: string }) {
           {attention.data.map((row) => (
             <li key={row.appointment.id}>
               {formatDate(row.appointment.startsAt, "ka")} {formatTime(row.appointment.startsAt)} ·{" "}
-              {row.patient.fullName} · {row.treatment.nameKa} —{" "}
-              <span className="text-danger">{row.reasons.map((r) => attentionLabel[r]).join(", ")}</span>
+              {row.patient.fullName} ·{" "}
+              <Link
+                href={`/?date=${toLocalDate(row.appointment.startsAt)}&appointmentId=${row.appointment.id}`}
+                className="underline"
+              >
+                {row.treatment.nameKa}
+              </Link>{" "}
+              — <span className="text-danger">{row.reasons.map((r) => attentionLabel[r]).join(", ")}</span>
             </li>
           ))}
         </ul>
