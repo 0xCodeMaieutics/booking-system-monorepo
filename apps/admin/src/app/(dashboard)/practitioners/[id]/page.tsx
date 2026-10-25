@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@tsami/ui";
+import { Button, Card, CardContent } from "@tsami/ui";
+import Link from "next/link";
 import { use } from "react";
 
 import { AttentionList } from "@/components/attention-list";
@@ -20,7 +21,12 @@ export default function PractitionerPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
-      <h1 className="text-3xl">{p.nameKa}</h1>
+      <div className="flex flex-col items-start gap-2">
+        <Button asChild variant="ghost" size="sm" className="-ml-2">
+          <Link href="/practitioners">← უკან</Link>
+        </Button>
+        <h1 className="text-3xl">{p.nameKa}</h1>
+      </div>
       <AttentionList practitionerId={p.id} />
       <Card>
         <CardContent>
