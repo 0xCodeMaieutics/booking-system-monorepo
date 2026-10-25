@@ -66,10 +66,33 @@ export function parseMinute(value: string): number {
   return Number(match[1]) * 60 + Number(match[2]);
 }
 
-const intlLocale = { ka: "ka-GE", en: "en-GB" } as const;
+// Chromium ships without Georgian ICU data, so `Intl` silently falls back to English there.
+const KA_MONTHS = [
+  "იანვარი",
+  "თებერვალი",
+  "მარტი",
+  "აპრილი",
+  "მაისი",
+  "ივნისი",
+  "ივლისი",
+  "აგვისტო",
+  "სექტემბერი",
+  "ოქტომბერი",
+  "ნოემბერი",
+  "დეკემბერი",
+];
+const KA_WEEKDAYS = ["კვირა", "ორშაბათი", "სამშაბათი", "ოთხშაბათი", "ხუთშაბათი", "პარასკევი", "შაბათი"];
+
+function formatKa(instant: Date, { long }: { long: boolean }): string {
+  const t = new TZDate(instant.getTime(), CLINIC_TIME_ZONE);
+  const weekday = KA_WEEKDAYS[t.getDay()]!;
+  const dayMonth = `${t.getDate()} ${KA_MONTHS[t.getMonth()]}`;
+  return long ? `${weekday}, ${dayMonth}, ${t.getFullYear()}` : `${weekday.slice(0, 3)}, ${dayMonth}`;
+}
 
 export function formatDate(instant: Date, locale: "ka" | "en"): string {
-  return new Intl.DateTimeFormat(intlLocale[locale], {
+  if (locale === "ka") return formatKa(instant, { long: false });
+  return new Intl.DateTimeFormat("en-GB", {
     timeZone: CLINIC_TIME_ZONE,
     weekday: "short",
     day: "numeric",
@@ -78,7 +101,8 @@ export function formatDate(instant: Date, locale: "ka" | "en"): string {
 }
 
 export function formatLongDate(instant: Date, locale: "ka" | "en"): string {
-  return new Intl.DateTimeFormat(intlLocale[locale], {
+  if (locale === "ka") return formatKa(instant, { long: true });
+  return new Intl.DateTimeFormat("en-GB", {
     timeZone: CLINIC_TIME_ZONE,
     weekday: "long",
     day: "numeric",
