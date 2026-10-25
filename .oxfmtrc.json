@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 110,
+  "sortImports": true,
+  "sortPackageJson": true,
+  "sortTailwindcss": {
+    "stylesheet": "./packages/ui/src/theme.css",
+    "functions": ["cn"]
+  },
+  "ignorePatterns": ["apps/landing/**", "packages/db/migrations/**", "pnpm-lock.yaml", "**/next-env.d.ts"]
+}

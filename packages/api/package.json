@@ -1,0 +1,22 @@
+{
+  "name": "@face/api",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./booking": "./src/booking/router.ts",
+    "./admin": "./src/admin/router.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@face/booking": "workspace:*",
+    "@face/db": "workspace:*",
+    "@trpc/server": "^11.19.0",
+    "superjson": "^2.2.6",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5"
+  }
+}

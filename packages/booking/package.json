@@ -1,0 +1,22 @@
+{
+  "name": "@face/booking",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./time": "./src/time.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@date-fns/tz": "^1.5.0",
+    "@face/db": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "vite": "^8",
+    "vitest": "^5.0.5"
+  }
+}

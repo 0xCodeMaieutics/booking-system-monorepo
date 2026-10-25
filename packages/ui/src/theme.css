@@ -1,0 +1,37 @@
+/*
+ * Shared Tailwind configuration for the Admin Dashboard and Booking Site.
+ * Brand values mirror apps/landing/assets/styles.css; keep them in sync.
+ * Apps set --font-noto-sans / --font-noto-serif with next/font.
+ */
+@import "tailwindcss";
+
+@source "./";
+
+@theme {
+  --color-cream: #f7f1ea;
+  --color-sand: #ecdfd1;
+  --color-rose: #c99a86;
+  --color-rose-deep: #a5715d;
+  --color-ink: #2b2522;
+  --color-ink-soft: #6b5f58;
+  --color-paper: #fffdfb;
+  --color-danger: #b3261e;
+  --color-success: #2e6b4f;
+
+  --font-sans: var(--font-noto-sans), system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-noto-serif), Georgia, serif;
+
+  --radius-card: 20px;
+}
+
+@layer base {
+  body {
+    @apply bg-cream font-sans text-ink antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-serif leading-tight font-medium;
+  }
+}
