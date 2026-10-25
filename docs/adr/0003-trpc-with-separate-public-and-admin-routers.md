@@ -1,0 +1,3 @@
+# tRPC with separate public and admin routers
+
+The backend is tRPC rather than Next.js server actions, giving one explicit, typed API surface with Zod-validated inputs that is easy to test and rate-limit. A shared `packages/api` exposes two routers: `bookingRouter` (public, used by the Booking Site) and `adminRouter` (every procedure requires a signed-in Admin, used by the Admin Dashboard). Each app mounts only its own router, so admin procedures do not exist on booking.example.com at all, rather than relying solely on an auth check to hide them. Business rules live in `packages/booking`, not in the routers, so both routers apply the same rules with different permissions.

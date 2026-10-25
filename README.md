@@ -2,14 +2,14 @@
 
 # Face Aesthetic Centre
 
-Monorepo for Face Aesthetic Centre (ესთეტიკის ცენტრი ფეისი), Kutaisi. See [CONTEXT.md](./CONTEXT.md) for the domain language.
+Monorepo for Face Aesthetic Centre (ესთეტიკის ცენტრი ფეისი), Kutaisi. See [CONTEXT.md](./CONTEXT.md) for the domain language and [docs/adr](./docs/adr) for architecture decisions.
 
 ## Layout
 
-| Path | What |
-| --- | --- |
+| Path           | What                                                                         |
+| -------------- | ---------------------------------------------------------------------------- |
 | `apps/landing` | Static HTML Landing Page. Georgian at `/`, English at `/en/`. No build step. |
-| `packages/` | Shared code between apps (empty for now). |
+| `packages/`    | Shared code between apps (empty for now).                                    |
 
 ## Development
 
