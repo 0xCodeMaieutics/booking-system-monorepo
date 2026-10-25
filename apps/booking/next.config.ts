@@ -10,6 +10,9 @@ if (existsSync(`${repoRoot}.env`)) process.loadEnvFile(`${repoRoot}.env`);
 const config: NextConfig = {
   transpilePackages: ["@tsami/api", "@tsami/booking", "@tsami/db", "@tsami/ui"],
   turbopack: { root: repoRoot },
+  ...(process.env.NODE_ENV === "development" && {
+    allowedDevOrigins: ["192.168.0.211"],
+  }),
 };
 
 export default config;
