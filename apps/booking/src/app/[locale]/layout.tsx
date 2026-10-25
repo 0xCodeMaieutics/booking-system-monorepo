@@ -6,6 +6,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { LocaleSwitch } from "@/components/locale-switch";
 import { dictionaries, isLocale, localePath } from "@/i18n";
 import { Providers } from "@/trpc/client";
 
@@ -39,7 +40,6 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const t = dictionaries[locale];
-  const other = locale === "ka" ? "en" : "ka";
 
   return (
     <html lang={locale} className={sans.variable}>
@@ -49,9 +49,7 @@ export default async function LocaleLayout({
             <Link href={localePath(locale)} className="text-lg font-semibold">
               {t.clinic}
             </Link>
-            <Link href={localePath(other)} className="text-sm text-ink-soft hover:text-ink" hrefLang={other}>
-              {t.otherLocale}
-            </Link>
+            <LocaleSwitch locale={locale} />
           </div>
         </header>
         <main className="mx-auto max-w-3xl px-6 py-10">
