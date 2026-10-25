@@ -2,8 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDate, formatTime } from "@tsami/booking/time";
-import { Button, Card, CardContent, Field, Input, cn } from "@tsami/ui";
-import { type FormEvent, use, useState } from "react";
+import { Button, Card, CardContent, Field, FieldDescription, FieldLabel, Input, cn } from "@tsami/ui";
+import { type FormEvent, use, useId, useState } from "react";
 
 import { errorMessage } from "@/components/errors";
 import { statusLabel, statusTone } from "@/lib/labels";
@@ -51,6 +51,7 @@ function PatientForm({
 }: {
   patient: { id: string; fullName: string; phone: string; email: string | null };
 }) {
+  const fieldId = useId();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [fullName, setFullName] = useState(patient.fullName);
@@ -69,14 +70,24 @@ function PatientForm({
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="სახელი და გვარი">
-          <Input required minLength={2} value={fullName} onChange={(e) => setFullName(e.target.value)} />
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-1`}>სახელი და გვარი</FieldLabel>
+          <Input
+            id={`${fieldId}-1`}
+            required
+            minLength={2}
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+          />
         </Field>
-        <Field label="მობილური" hint="ნომერი პაციენტის იდენტიფიკატორია და არ იცვლება">
-          <Input value={patient.phone} disabled />
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-2`}>მობილური</FieldLabel>
+          <Input id={`${fieldId}-2`} value={patient.phone} disabled />
+          <FieldDescription>ნომერი პაციენტის იდენტიფიკატორია და არ იცვლება</FieldDescription>
         </Field>
-        <Field label="ელფოსტა">
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-3`}>ელფოსტა</FieldLabel>
+          <Input id={`${fieldId}-3`} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </Field>
       </div>
       {update.error && <p className="text-sm text-danger">{errorMessage(update.error)}</p>}

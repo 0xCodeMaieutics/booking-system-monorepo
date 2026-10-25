@@ -1,8 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Card, CardContent, Field, Input, Textarea } from "@tsami/ui";
-import { type FormEvent, useState } from "react";
+import { Button, Card, CardContent, Field, FieldDescription, FieldLabel, Input, Textarea } from "@tsami/ui";
+import { type FormEvent, useId, useState } from "react";
 
 import { errorMessage } from "@/components/errors";
 import { useTRPC } from "@/trpc/client";
@@ -77,6 +77,7 @@ function TreatmentForm({
   sortOrder: number;
   onDone: () => void;
 }) {
+  const fieldId = useId();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const onSuccess = async () => {
@@ -113,22 +114,28 @@ function TreatmentForm({
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="დასახელება (ქართულად)">
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-1`}>დასახელება (ქართულად)</FieldLabel>
           <Input
+            id={`${fieldId}-1`}
             required
             value={form.nameKa}
             onChange={(e) => setForm({ ...form, nameKa: e.target.value })}
           />
         </Field>
-        <Field label="დასახელება (ინგლისურად)">
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-2`}>დასახელება (ინგლისურად)</FieldLabel>
           <Input
+            id={`${fieldId}-2`}
             required
             value={form.nameEn}
             onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
           />
         </Field>
-        <Field label="ხანგრძლივობა (წთ)" hint="ცვლილება არსებულ ვიზიტებს არ ეხება">
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-3`}>ხანგრძლივობა (წთ)</FieldLabel>
           <Input
+            id={`${fieldId}-3`}
             type="number"
             required
             min={5}
@@ -136,29 +143,39 @@ function TreatmentForm({
             value={form.durationMinutes}
             onChange={(e) => setForm({ ...form, durationMinutes: Number(e.target.value) })}
           />
+          <FieldDescription>ცვლილება არსებულ ვიზიტებს არ ეხება</FieldDescription>
         </Field>
-        <Field label="ფასი ₾-დან (არასავალდებულო)" hint="მხოლოდ საინფორმაციოდ">
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-4`}>ფასი ₾-დან (არასავალდებულო)</FieldLabel>
           <Input
+            id={`${fieldId}-4`}
             type="number"
             min={0}
             value={form.priceFromGel}
             onChange={(e) => setForm({ ...form, priceFromGel: e.target.value })}
           />
+          <FieldDescription>მხოლოდ საინფორმაციოდ</FieldDescription>
         </Field>
-        <Field label="აღწერა (ქართულად)">
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-5`}>აღწერა (ქართულად)</FieldLabel>
           <Textarea
+            id={`${fieldId}-5`}
             value={form.descriptionKa}
             onChange={(e) => setForm({ ...form, descriptionKa: e.target.value })}
           />
         </Field>
-        <Field label="აღწერა (ინგლისურად)">
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-6`}>აღწერა (ინგლისურად)</FieldLabel>
           <Textarea
+            id={`${fieldId}-6`}
             value={form.descriptionEn}
             onChange={(e) => setForm({ ...form, descriptionEn: e.target.value })}
           />
         </Field>
-        <Field label="რიგითობა">
+        <Field>
+          <FieldLabel htmlFor={`${fieldId}-7`}>რიგითობა</FieldLabel>
           <Input
+            id={`${fieldId}-7`}
             type="number"
             value={form.sortOrder}
             onChange={(e) => setForm({ ...form, sortOrder: Number(e.target.value) })}

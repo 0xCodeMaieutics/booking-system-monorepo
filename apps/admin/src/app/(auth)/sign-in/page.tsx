@@ -1,13 +1,14 @@
 "use client";
 
-import { Button, Card, CardContent, Field, Input } from "@tsami/ui";
+import { Button, Card, CardContent, Field, FieldLabel, Input } from "@tsami/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useId, useState } from "react";
 
 import { authClient } from "@/lib/auth-client";
 
 export default function SignInPage() {
+  const fieldId = useId();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,8 +40,10 @@ export default function SignInPage() {
       <CardContent>
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <h1 className="text-2xl">შესვლა</h1>
-          <Field label="ელფოსტა">
+          <Field>
+            <FieldLabel htmlFor={`${fieldId}-1`}>ელფოსტა</FieldLabel>
             <Input
+              id={`${fieldId}-1`}
               type="email"
               required
               autoComplete="email"
@@ -48,8 +51,10 @@ export default function SignInPage() {
               onChange={(e) => setEmail(e.target.value)}
             />
           </Field>
-          <Field label="პაროლი">
+          <Field>
+            <FieldLabel htmlFor={`${fieldId}-2`}>პაროლი</FieldLabel>
             <Input
+              id={`${fieldId}-2`}
               type="password"
               required
               autoComplete="current-password"

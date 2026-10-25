@@ -1,13 +1,14 @@
 "use client";
 
-import { Button, Card, CardContent, Field, Input } from "@tsami/ui";
+import { Button, Card, CardContent, Field, FieldDescription, FieldLabel, Input } from "@tsami/ui";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { type FormEvent, Suspense, useState } from "react";
+import { type FormEvent, Suspense, useId, useState } from "react";
 
 import { authClient } from "@/lib/auth-client";
 
 function SetPasswordForm() {
+  const fieldId = useId();
   const params = useSearchParams();
   const token = params.get("token");
   const [password, setPassword] = useState("");
@@ -37,8 +38,10 @@ function SetPasswordForm() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <h1 className="text-2xl">პაროლის დაყენება</h1>
-      <Field label="ახალი პაროლი" hint="მინიმუმ 10 სიმბოლო">
+      <Field>
+        <FieldLabel htmlFor={`${fieldId}-1`}>ახალი პაროლი</FieldLabel>
         <Input
+          id={`${fieldId}-1`}
           type="password"
           required
           minLength={10}
@@ -46,6 +49,7 @@ function SetPasswordForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        <FieldDescription>მინიმუმ 10 სიმბოლო</FieldDescription>
       </Field>
       {state === "error" && <p className="text-sm text-danger">ბმული ვადაგასულია. მოითხოვეთ ახალი.</p>}
       <Button size="lg" type="submit">
