@@ -7,6 +7,7 @@ export type BookingSelection = {
   practitionerId?: string;
   date?: string;
   time?: string;
+  confirmed?: boolean;
 };
 
 const STEPS = [
@@ -16,22 +17,28 @@ const STEPS = [
   ["time", "time"],
 ] as const;
 
+const CONFIRMATION = "confirmation";
+
 /**
- * `/treatment/<id>/practitioner/<id|any>/date/<YYYY-MM-DD>/time/<HH:MM>`,
+ * `/treatment/<id>/practitioner/<id|any>/date/<YYYY-MM-DD>/time/<HH:MM>[/confirmation]`,
  * truncated at the first step without a value.
  */
 export function bookingPath(selection: BookingSelection): string {
   let path = "";
   for (const [segment, field] of STEPS) {
     const value = selection[field];
-    if (!value) break;
+    if (!value) return path || "/";
     path += `/${segment}/${value}`;
   }
-  return path || "/";
+  return selection.confirmed ? `${path}/${CONFIRMATION}` : path;
 }
 
 /** Parses the path segments after the locale; `undefined` if they aren't a booking path. */
 export function parseBookingSteps(segments: string[]): BookingSelection | undefined {
+  if (segments.length === STEPS.length * 2 + 1 && segments.at(-1) === CONFIRMATION) {
+    const selection = parseBookingSteps(segments.slice(0, -1));
+    return selection && { ...selection, confirmed: true };
+  }
   if (segments.length % 2 !== 0 || segments.length > STEPS.length * 2) return undefined;
   const selection: BookingSelection = {};
   for (let i = 0; i < segments.length; i += 2) {

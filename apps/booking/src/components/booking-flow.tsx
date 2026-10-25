@@ -15,7 +15,7 @@ import {
 } from "@tsami/ui";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type FormEvent, useId, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useId, useMemo, useState, useSyncExternalStore } from "react";
 
 import {
   ANY_PRACTITIONER as ANY,
@@ -36,6 +36,9 @@ type Treatment = {
   priceFromGel: number | null;
 };
 
+const manageTokenKey = (confirmedPath: string) => `manageToken:${confirmedPath}`;
+const subscribeToNothing = () => () => {};
+
 export function BookingFlow({
   locale,
   treatments,
@@ -50,7 +53,17 @@ export function BookingFlow({
   const name = (x: { nameKa: string; nameEn: string }) => (locale === "ka" ? x.nameKa : x.nameEn);
 
   const selection = parseBookingPathname(usePathname());
-  const [booked, setBooked] = useState<{ manageToken: string }>();
+  const confirmedPath = selection.confirmed ? bookingPath(selection) : undefined;
+  const manageToken = useSyncExternalStore(
+    subscribeToNothing,
+    () => (confirmedPath ? sessionStorage.getItem(manageTokenKey(confirmedPath)) : null),
+    () => undefined,
+  );
+
+  useEffect(() => {
+    if (confirmedPath && manageToken === null)
+      navigate({ ...selection, confirmed: false }, { replace: true });
+  });
 
   function navigate(next: BookingSelection, { replace = false } = {}) {
     const url = localePath(locale, bookingPath(next));
@@ -99,24 +112,26 @@ export function BookingFlow({
     if (step === "time") navigate({ treatmentId, practitionerId });
   }
 
-  if (booked) {
+  if (confirmedPath) {
     return (
       <Card>
         <CardContent className="flex flex-col items-start gap-4">
           <h1 className="text-3xl">{t.done.title}</h1>
           <p className="text-ink-soft">{t.done.body}</p>
           <div className="flex flex-wrap gap-3">
-            <Link href={localePath(locale, `/a/${booked.manageToken}`)}>
-              <Button type="button" size="lg">
-                {t.done.manage}
-              </Button>
-            </Link>
+            {manageToken && (
+              <Link href={localePath(locale, `/a/${manageToken}`)}>
+                <Button type="button" size="lg">
+                  {t.done.manage}
+                </Button>
+              </Link>
+            )}
             <Button
               type="button"
               size="lg"
               variant="outline"
               onClick={() => {
-                setBooked(undefined);
+                sessionStorage.removeItem(manageTokenKey(confirmedPath));
                 navigate({}, { replace: true });
               }}
             >
@@ -251,8 +266,9 @@ export function BookingFlow({
             startsAt,
           }}
           onBooked={(result) => {
-            setBooked(result);
-            navigate({}, { replace: true });
+            const confirmed = { ...selection, confirmed: true };
+            sessionStorage.setItem(manageTokenKey(bookingPath(confirmed)), result.manageToken);
+            navigate(confirmed, { replace: true });
           }}
           onSlotGone={() => {
             navigate({ treatmentId, practitionerId, date }, { replace: true });
