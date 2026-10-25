@@ -93,6 +93,7 @@ export function AppointmentsDay() {
               key={a.id}
               id={`appointment-${a.id}`}
               className={cn(
+                a.status === "completed" && "ring-success",
                 reasons && "ring-danger/30 bg-danger/5",
                 a.id === highlightId && "ring-2 ring-brand",
               )}
@@ -135,7 +136,7 @@ export function AppointmentsDay() {
                       <Button
                         type="button"
                         size="sm"
-                        variant="outline"
+                        className="bg-success hover:bg-success/80"
                         onClick={() => setStatus.mutate({ id: a.id, status: "completed" })}
                       >
                         დასრულდა
@@ -143,7 +144,7 @@ export function AppointmentsDay() {
                       <Button
                         type="button"
                         size="sm"
-                        variant="outline"
+                        className="bg-orange-600 hover:bg-orange-600/80"
                         onClick={() => setStatus.mutate({ id: a.id, status: "no_show" })}
                       >
                         არ გამოცხადდა
