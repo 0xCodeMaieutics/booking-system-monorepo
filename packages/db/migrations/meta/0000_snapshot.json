@@ -1,5 +1,5 @@
 {
-  "id": "d7580211-dd77-4e1d-a3a7-0c72ffbb3389",
+  "id": "157ea380-ccb8-47e3-98f1-c827799fff46",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -882,6 +882,12 @@
         },
         "title_en": {
           "name": "title_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "photo_key": {
+          "name": "photo_key",
           "type": "text",
           "primaryKey": false,
           "notNull": false

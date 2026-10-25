@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1792873804518,
+      "when": 1792948727061,
       "tag": "0000_init",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1792873805048,
-      "tag": "0001_appointment_no_overlap",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1792944016980,
-      "tag": "0002_practitioner_photo",
       "breakpoints": true
     }
   ]
