@@ -101,5 +101,5 @@ Tsami's signed-in site where Admins manage Practitioners, Treatments, Weekly Sch
 _Avoid_: Admin panel, back office, CMS
 
 **Locale**:
-One of the languages the Clinic's public content (Landing Page, Booking Site, Patient SMS) is published in: Georgian (`ka`) or English (`en`). The Admin Dashboard is Georgian only.
+One of the languages public content (the Clinic's Landing Page, Booking Site and Patient SMS, and Tsami's Marketing Site) is published in: Georgian (`ka`) or English (`en`). The Admin Dashboard is Georgian only.
 _Avoid_: Translation, language version

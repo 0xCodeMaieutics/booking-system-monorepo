@@ -8,6 +8,7 @@ Monorepo for Tsami, an appointment booking product for clinics in Georgia, and t
 | ------------------ | -------------------------------------------------------------------------------------------- |
 | `apps/admin`       | Tsami Admin Dashboard (Next.js). Georgian only.                                              |
 | `apps/booking`     | Tsami Booking Site (Next.js). Headed by the Clinic's name, in Tsami's styling.               |
+| `apps/marketing`   | Tsami Marketing Site (Next.js) for Clinics. Georgian and English.                            |
 | `apps/landing`     | Face Aesthetic Centre's static Landing Page, in the Clinic's own styling. Not part of Tsami. |
 | `packages/api`     | tRPC routers for the Booking Site and Admin Dashboard.                                       |
 | `packages/booking` | Booking rules shared by both routers.                                                        |
@@ -20,6 +21,7 @@ Monorepo for Tsami, an appointment booking product for clinics in Georgia, and t
 pnpm dev:landing   # serves apps/landing on http://localhost:4173
 pnpm dev:booking   # Booking Site on http://localhost:3000
 pnpm dev:admin     # Admin Dashboard
+pnpm dev:marketing # Marketing Site on http://localhost:3003
 ```
 
 ## Deploying the Landing Page
