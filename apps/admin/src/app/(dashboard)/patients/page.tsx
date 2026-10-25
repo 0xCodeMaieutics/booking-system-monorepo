@@ -11,7 +11,10 @@ export default function PatientsPage() {
   const trpc = useTRPC();
   const [q, setQ] = useState("");
   const query = useDeferredValue(q.trim());
-  const results = useQuery(trpc.patients.search.queryOptions(query.length >= 2 ? { q: query } : skipToken));
+  const isSearching = query.length >= 2;
+  const searchResults = useQuery(trpc.patients.search.queryOptions(isSearching ? { q: query } : skipToken));
+  const recentResults = useQuery(trpc.patients.recent.queryOptions(undefined, { enabled: !isSearching }));
+  const results = isSearching ? searchResults : recentResults;
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">

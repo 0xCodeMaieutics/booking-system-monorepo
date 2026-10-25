@@ -174,6 +174,10 @@ export const appointmentsRouter = router({
 });
 
 export const patientsRouter = router({
+  recent: adminProcedure.query(({ ctx }) =>
+    ctx.db.select().from(patient).orderBy(desc(patient.createdAt)).limit(20),
+  ),
+
   search: adminProcedure.input(z.object({ q: z.string().trim().min(2).max(100) })).query(({ ctx, input }) => {
     const digits = input.q.replace(/\D/g, "");
     return ctx.db
