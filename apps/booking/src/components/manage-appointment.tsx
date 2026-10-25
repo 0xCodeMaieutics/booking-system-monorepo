@@ -67,7 +67,9 @@ export function ManageAppointment({ locale, token }: { locale: Locale; token: st
           ) : (
             <p className="text-sm text-ink-soft">
               {t.manage.tooLate(a.cancellationCutoffHours)}{" "}
-              <a href={`tel:${a.clinicPhone}`}>{a.clinicPhone}</a>
+              <a href={`tel:${a.clinicPhone}`} className="underline underline-offset-2">
+                {a.clinicPhone}
+              </a>
             </p>
           ))}
         {cancel.isError && <p className="text-sm text-danger">{t.errors.generic}</p>}
