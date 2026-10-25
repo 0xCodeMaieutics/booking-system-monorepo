@@ -20,6 +20,10 @@ _Avoid_: Salon, studio, centre (on its own), practice
 A qualified person who performs one or more Treatments at the Clinic, according to a Weekly Schedule. Dr. Khatuna Robakidze is the lead Practitioner.
 _Avoid_: Doctor (as a role name), specialist, staff, provider
 
+**Practitioner Photo**:
+An optional square portrait of a Practitioner, set by an Admin and shown as a circle on the Booking Site and Admin Dashboard. A Practitioner without one is shown by their initials instead. It is not used on the Landing Page.
+_Avoid_: Avatar, profile picture, image
+
 **Patient**:
 A person who receives, or wants to receive, Treatments at the Clinic. A Patient has no account and is identified by their mobile number.
 _Avoid_: Client, customer, user, guest
