@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Card, Field, Input } from "@tsami/ui";
+import { Button, Card, CardContent, Field, Input } from "@tsami/ui";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { type FormEvent, Suspense, useState } from "react";
@@ -58,9 +58,11 @@ function SetPasswordForm() {
 export default function SetPasswordPage() {
   return (
     <Card>
-      <Suspense>
-        <SetPasswordForm />
-      </Suspense>
+      <CardContent>
+        <Suspense>
+          <SetPasswordForm />
+        </Suspense>
+      </CardContent>
     </Card>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Card, Field, Input } from "@tsami/ui";
+import { Button, Card, CardContent, Field, Input } from "@tsami/ui";
 import Link from "next/link";
 import { type FormEvent, useState } from "react";
 
@@ -18,22 +18,24 @@ export default function ForgotPasswordPage() {
 
   return (
     <Card>
-      {sent ? (
-        <p>თუ ეს ელფოსტა რეგისტრირებულია, მასზე გამოგიგზავნეთ პაროლის აღდგენის ბმული.</p>
-      ) : (
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <h1 className="text-2xl">პაროლის აღდგენა</h1>
-          <Field label="ელფოსტა">
-            <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-          </Field>
-          <Button size="lg" type="submit">
-            ბმულის გაგზავნა
-          </Button>
-          <Link href="/sign-in" className="text-sm text-ink-soft hover:text-ink">
-            შესვლაზე დაბრუნება
-          </Link>
-        </form>
-      )}
+      <CardContent>
+        {sent ? (
+          <p>თუ ეს ელფოსტა რეგისტრირებულია, მასზე გამოგიგზავნეთ პაროლის აღდგენის ბმული.</p>
+        ) : (
+          <form onSubmit={onSubmit} className="flex flex-col gap-4">
+            <h1 className="text-2xl">პაროლის აღდგენა</h1>
+            <Field label="ელფოსტა">
+              <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            </Field>
+            <Button size="lg" type="submit">
+              ბმულის გაგზავნა
+            </Button>
+            <Link href="/sign-in" className="text-sm text-ink-soft hover:text-ink">
+              შესვლაზე დაბრუნება
+            </Link>
+          </form>
+        )}
+      </CardContent>
     </Card>
   );
 }

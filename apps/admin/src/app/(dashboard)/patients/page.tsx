@@ -1,7 +1,7 @@
 "use client";
 
 import { skipToken, useQuery } from "@tanstack/react-query";
-import { Card, Input } from "@tsami/ui";
+import { Card, CardContent, Input } from "@tsami/ui";
 import Link from "next/link";
 import { useDeferredValue, useState } from "react";
 
@@ -26,9 +26,11 @@ export default function PatientsPage() {
         {results.data?.length === 0 && <p className="text-ink-soft">ვერ მოიძებნა.</p>}
         {results.data?.map((p) => (
           <Link key={p.id} href={`/patients/${p.id}`}>
-            <Card className="p-4 hover:border-brand">
-              <p className="font-medium">{p.fullName}</p>
-              <p className="text-sm text-ink-soft">{p.phone}</p>
+            <Card size="sm" className="hover:ring-brand">
+              <CardContent>
+                <p className="font-medium">{p.fullName}</p>
+                <p className="text-sm text-ink-soft">{p.phone}</p>
+              </CardContent>
             </Card>
           </Link>
         ))}

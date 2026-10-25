@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { formatDate, formatTime } from "@tsami/booking/time";
-import { Card } from "@tsami/ui";
+import { Card, CardContent } from "@tsami/ui";
 
 import { attentionLabel } from "@/lib/labels";
 import { useTRPC } from "@/trpc/client";
@@ -14,20 +14,22 @@ export function AttentionList({ practitionerId }: { practitionerId: string }) {
   if (!attention.data?.length) return null;
 
   return (
-    <Card className="border-danger/30 bg-danger/5">
-      <h2 className="mb-2 text-lg">ეს ვიზიტები აღარ ემთხვევა განრიგს</h2>
-      <p className="mb-3 text-sm text-ink-soft">
-        ცვლილებები არსებულ ვიზიტებს არ ეხება. გადაიტანეთ ან გააუქმეთ ისინი „ვიზიტების“ გვერდზე.
-      </p>
-      <ul className="flex flex-col gap-1 text-sm">
-        {attention.data.map((row) => (
-          <li key={row.appointment.id}>
-            {formatDate(row.appointment.startsAt, "ka")} {formatTime(row.appointment.startsAt)} ·{" "}
-            {row.patient.fullName} · {row.treatment.nameKa} —{" "}
-            <span className="text-danger">{row.reasons.map((r) => attentionLabel[r]).join(", ")}</span>
-          </li>
-        ))}
-      </ul>
+    <Card className="ring-danger/30 bg-danger/5">
+      <CardContent>
+        <h2 className="mb-2 text-lg">ეს ვიზიტები აღარ ემთხვევა განრიგს</h2>
+        <p className="mb-3 text-sm text-ink-soft">
+          ცვლილებები არსებულ ვიზიტებს არ ეხება. გადაიტანეთ ან გააუქმეთ ისინი „ვიზიტების“ გვერდზე.
+        </p>
+        <ul className="flex flex-col gap-1 text-sm">
+          {attention.data.map((row) => (
+            <li key={row.appointment.id}>
+              {formatDate(row.appointment.startsAt, "ka")} {formatTime(row.appointment.startsAt)} ·{" "}
+              {row.patient.fullName} · {row.treatment.nameKa} —{" "}
+              <span className="text-danger">{row.reasons.map((r) => attentionLabel[r]).join(", ")}</span>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
     </Card>
   );
 }

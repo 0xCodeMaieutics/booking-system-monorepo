@@ -2,7 +2,7 @@
 
 import { skipToken, useMutation, useQuery } from "@tanstack/react-query";
 import { addDays, formatDate, formatTime, toLocalDate } from "@tsami/booking/time";
-import { Button, Card, Field, Input, Textarea, cn } from "@tsami/ui";
+import { Button, Card, CardContent, Field, Input, Textarea, cn } from "@tsami/ui";
 import Link from "next/link";
 import { type FormEvent, useMemo, useState } from "react";
 
@@ -78,27 +78,29 @@ export function BookingFlow({
 
   if (booked) {
     return (
-      <Card className="flex flex-col items-start gap-4">
-        <h1 className="text-3xl">{t.done.title}</h1>
-        <p className="text-ink-soft">{t.done.body}</p>
-        <div className="flex flex-wrap gap-3">
-          <Link href={localePath(locale, `/a/${booked.manageToken}`)}>
-            <Button type="button" size="lg">
-              {t.done.manage}
+      <Card>
+        <CardContent className="flex flex-col items-start gap-4">
+          <h1 className="text-3xl">{t.done.title}</h1>
+          <p className="text-ink-soft">{t.done.body}</p>
+          <div className="flex flex-wrap gap-3">
+            <Link href={localePath(locale, `/a/${booked.manageToken}`)}>
+              <Button type="button" size="lg">
+                {t.done.manage}
+              </Button>
+            </Link>
+            <Button
+              type="button"
+              size="lg"
+              variant="outline"
+              onClick={() => {
+                setBooked(undefined);
+                reset("treatment");
+              }}
+            >
+              {t.done.another}
             </Button>
-          </Link>
-          <Button
-            type="button"
-            size="lg"
-            variant="outline"
-            onClick={() => {
-              setBooked(undefined);
-              reset("treatment");
-            }}
-          >
-            {t.done.another}
-          </Button>
-        </div>
+          </div>
+        </CardContent>
       </Card>
     );
   }
@@ -106,30 +108,32 @@ export function BookingFlow({
   return (
     <div className="flex flex-col gap-8">
       {treatment && (
-        <Card className="flex flex-col gap-2 bg-mist/50 p-5 text-sm">
-          <span className="text-xs tracking-widest text-ink-soft uppercase">{t.summary}</span>
-          <SummaryRow
-            label={t.steps.treatment}
-            value={name(treatment)}
-            onChange={() => reset("treatment")}
-            t={t}
-          />
-          {practitionerId && (
+        <Card size="sm" className="bg-mist/50 text-sm">
+          <CardContent className="flex flex-col gap-2">
+            <span className="text-xs tracking-widest text-ink-soft uppercase">{t.summary}</span>
             <SummaryRow
-              label={t.steps.practitioner}
-              value={practitioner ? name(practitioner) : t.practitioner.any}
-              onChange={() => reset("practitioner")}
+              label={t.steps.treatment}
+              value={name(treatment)}
+              onChange={() => reset("treatment")}
               t={t}
             />
-          )}
-          {startsAt && (
-            <SummaryRow
-              label={t.steps.time}
-              value={`${formatDate(startsAt, locale)}, ${formatTime(startsAt)}`}
-              onChange={() => reset("time")}
-              t={t}
-            />
-          )}
+            {practitionerId && (
+              <SummaryRow
+                label={t.steps.practitioner}
+                value={practitioner ? name(practitioner) : t.practitioner.any}
+                onChange={() => reset("practitioner")}
+                t={t}
+              />
+            )}
+            {startsAt && (
+              <SummaryRow
+                label={t.steps.time}
+                value={`${formatDate(startsAt, locale)}, ${formatTime(startsAt)}`}
+                onChange={() => reset("time")}
+                t={t}
+              />
+            )}
+          </CardContent>
         </Card>
       )}
 
