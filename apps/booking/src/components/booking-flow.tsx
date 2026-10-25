@@ -23,6 +23,7 @@ import {
   bookingPath,
   parseBookingPathname,
 } from "@/booking-path";
+import { AppointmentDetails } from "@/components/manage-appointment";
 import { type Locale, dictionaries, localePath } from "@/i18n";
 import { bookingCodeOf, useTRPC } from "@/trpc/client";
 
@@ -58,6 +59,9 @@ export function BookingFlow({
     subscribeToNothing,
     () => (confirmedPath ? sessionStorage.getItem(manageTokenKey(confirmedPath)) : null),
     () => undefined,
+  );
+  const appointment = useQuery(
+    trpc.appointment.queryOptions(manageToken ? { token: manageToken } : skipToken, { retry: false }),
   );
 
   useEffect(() => {
@@ -118,6 +122,7 @@ export function BookingFlow({
         <CardContent className="flex flex-col items-start gap-4">
           <h1 className="text-3xl">{t.done.title}</h1>
           <p className="text-ink-soft">{t.done.body}</p>
+          {appointment.data && <AppointmentDetails locale={locale} appointment={appointment.data} />}
           <div className="flex flex-wrap gap-3">
             {manageToken && (
               <Link href={localePath(locale, `/a/${manageToken}`)}>
