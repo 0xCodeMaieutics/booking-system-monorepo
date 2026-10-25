@@ -1,9 +1,10 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { addDays, formatTime, toLocalDate } from "@tsami/booking/time";
+import { type LocalDate, addDays, formatTime, isLocalDate, toLocalDate } from "@tsami/booking/time";
 import { Button, Card, CardContent, Input, cn } from "@tsami/ui";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { attentionLabel, statusLabel, statusTone } from "@/lib/labels";
@@ -15,7 +16,17 @@ import { errorMessage } from "./errors";
 export function AppointmentsDay() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const [date, setDate] = useState(() => toLocalDate(new Date()));
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const dateParam = searchParams.get("date");
+  const [today] = useState(() => toLocalDate(new Date()));
+  const date = dateParam && isLocalDate(dateParam) ? dateParam : today;
+  const setDate = (next: LocalDate) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("date", next);
+    router.replace(`${pathname}?${params}`, { scroll: false });
+  };
   const [creating, setCreating] = useState(false);
   const [moving, setMoving] = useState<string>();
 
