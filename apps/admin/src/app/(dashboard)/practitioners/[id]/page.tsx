@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Card } from "@tsami/ui";
+import { Card, CardContent } from "@tsami/ui";
 import { use } from "react";
 
 import { AttentionList } from "@/components/attention-list";
@@ -23,15 +23,21 @@ export default function PractitionerPage({ params }: { params: Promise<{ id: str
       <h1 className="text-3xl">{p.nameKa}</h1>
       <AttentionList practitionerId={p.id} />
       <Card>
-        <PractitionerForm practitioner={p} />
+        <CardContent>
+          <PractitionerForm practitioner={p} />
+        </CardContent>
       </Card>
       <Card>
-        <h2 className="mb-4 text-xl">სამუშაო განრიგი</h2>
-        <WeeklyScheduleEditor practitionerId={p.id} ranges={p.ranges} />
+        <CardContent>
+          <h2 className="mb-4 text-xl">სამუშაო განრიგი</h2>
+          <WeeklyScheduleEditor practitionerId={p.id} ranges={p.ranges} />
+        </CardContent>
       </Card>
       <Card>
-        <h2 className="mb-4 text-xl">არასამუშაო დრო</h2>
-        <TimeOffManager practitionerId={p.id} />
+        <CardContent>
+          <h2 className="mb-4 text-xl">არასამუშაო დრო</h2>
+          <TimeOffManager practitionerId={p.id} />
+        </CardContent>
       </Card>
     </div>
   );

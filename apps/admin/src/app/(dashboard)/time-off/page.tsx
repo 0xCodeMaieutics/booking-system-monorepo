@@ -1,4 +1,4 @@
-import { Card } from "@tsami/ui";
+import { Card, CardContent } from "@tsami/ui";
 
 import { TimeOffManager } from "@/components/time-off-manager";
 
@@ -11,7 +11,9 @@ export default function TimeOffPage() {
         გამოჩნდება „ყურადღება საჭიროა“ სიაში.
       </p>
       <Card>
-        <TimeOffManager />
+        <CardContent>
+          <TimeOffManager />
+        </CardContent>
       </Card>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Card, Field, Input, Textarea } from "@tsami/ui";
+import { Button, Card, CardContent, Field, Input, Textarea } from "@tsami/ui";
 import { type FormEvent, useState } from "react";
 
 import { errorMessage } from "@/components/errors";
@@ -34,30 +34,33 @@ export default function TreatmentsPage() {
       </div>
       {editing === "new" && (
         <Card>
-          <TreatmentForm sortOrder={treatments.data?.length ?? 0} onDone={() => setEditing(undefined)} />
+          <CardContent>
+            <TreatmentForm sortOrder={treatments.data?.length ?? 0} onDone={() => setEditing(undefined)} />
+          </CardContent>
         </Card>
       )}
       {treatments.data?.map((t) =>
         editing === t.id ? (
           <Card key={t.id}>
-            <TreatmentForm treatment={t} sortOrder={t.sortOrder} onDone={() => setEditing(undefined)} />
+            <CardContent>
+              <TreatmentForm treatment={t} sortOrder={t.sortOrder} onDone={() => setEditing(undefined)} />
+            </CardContent>
           </Card>
         ) : (
-          <Card
-            key={t.id}
-            className={`flex items-center justify-between gap-4 p-4 ${t.archivedAt ? "opacity-50" : ""}`}
-          >
-            <div>
-              <p className="font-medium">
-                {t.nameKa} {t.archivedAt && "· დაარქივებული"}
-              </p>
-              <p className="text-sm text-ink-soft">
-                {t.nameEn} · {t.durationMinutes} წთ{t.priceFromGel !== null && ` · ${t.priceFromGel} ₾-დან`}
-              </p>
-            </div>
-            <Button type="button" variant="outline" size="sm" onClick={() => setEditing(t.id)}>
-              რედაქტირება
-            </Button>
+          <Card size="sm" key={t.id} className={t.archivedAt ? "opacity-50" : undefined}>
+            <CardContent className="flex items-center justify-between gap-4">
+              <div>
+                <p className="font-medium">
+                  {t.nameKa} {t.archivedAt && "· დაარქივებული"}
+                </p>
+                <p className="text-sm text-ink-soft">
+                  {t.nameEn} · {t.durationMinutes} წთ{t.priceFromGel !== null && ` · ${t.priceFromGel} ₾-დან`}
+                </p>
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={() => setEditing(t.id)}>
+                რედაქტირება
+              </Button>
+            </CardContent>
           </Card>
         ),
       )}

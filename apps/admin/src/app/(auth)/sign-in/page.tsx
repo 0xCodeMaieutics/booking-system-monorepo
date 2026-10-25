@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Card, Field, Input } from "@tsami/ui";
+import { Button, Card, CardContent, Field, Input } from "@tsami/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
@@ -36,34 +36,36 @@ export default function SignInPage() {
 
   return (
     <Card>
-      <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        <h1 className="text-2xl">შესვლა</h1>
-        <Field label="ელფოსტა">
-          <Input
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </Field>
-        <Field label="პაროლი">
-          <Input
-            type="password"
-            required
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </Field>
-        {error && <p className="text-sm text-danger">{error}</p>}
-        <Button size="lg" type="submit" disabled={pending}>
-          შესვლა
-        </Button>
-        <Link href="/forgot-password" className="text-sm text-ink-soft hover:text-ink">
-          დაგავიწყდათ პაროლი?
-        </Link>
-      </form>
+      <CardContent>
+        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+          <h1 className="text-2xl">შესვლა</h1>
+          <Field label="ელფოსტა">
+            <Input
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </Field>
+          <Field label="პაროლი">
+            <Input
+              type="password"
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </Field>
+          {error && <p className="text-sm text-danger">{error}</p>}
+          <Button size="lg" type="submit" disabled={pending}>
+            შესვლა
+          </Button>
+          <Link href="/forgot-password" className="text-sm text-ink-soft hover:text-ink">
+            დაგავიწყდათ პაროლი?
+          </Link>
+        </form>
+      </CardContent>
     </Card>
   );
 }
