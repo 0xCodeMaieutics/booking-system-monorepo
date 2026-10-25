@@ -5,7 +5,7 @@ import { type LocalDate, addDays, formatTime, isLocalDate, toLocalDate } from "@
 import { Button, Card, CardContent, Input, cn } from "@tsami/ui";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { attentionLabel, statusLabel, statusTone } from "@/lib/labels";
 import { useTRPC } from "@/trpc/client";
@@ -41,6 +41,16 @@ export function AppointmentsDay() {
   const setStatus = useMutation(trpc.appointments.setStatus.mutationOptions({ onSuccess: invalidate }));
   const [now] = useState(() => new Date());
   const attentionById = new Map(attention.data?.map((row) => [row.appointment.id, row.reasons]));
+
+  const highlightId = searchParams.get("appointmentId");
+  const scrolledTo = useRef<string>(null);
+  useEffect(() => {
+    if (!highlightId || !day.data || scrolledTo.current === highlightId) return;
+    const el = document.getElementById(`appointment-${highlightId}`);
+    if (!el) return;
+    scrolledTo.current = highlightId;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [highlightId, day.data]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -94,7 +104,15 @@ export function AppointmentsDay() {
         {day.data?.map(({ appointment: a, patient, practitioner, treatment, createdBy }) => {
           const reasons = attentionById.get(a.id);
           return (
-            <Card size="sm" key={a.id} className={cn(reasons && "ring-danger/30 bg-danger/5")}>
+            <Card
+              size="sm"
+              key={a.id}
+              id={`appointment-${a.id}`}
+              className={cn(
+                reasons && "ring-danger/30 bg-danger/5",
+                a.id === highlightId && "ring-2 ring-brand",
+              )}
+            >
               <CardContent className="flex flex-col gap-3">
                 {reasons && (
                   <p className="text-sm text-danger">
