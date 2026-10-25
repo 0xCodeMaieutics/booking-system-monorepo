@@ -163,7 +163,7 @@ export function AppointmentForm({
                     className={cn(
                       "rounded-lg border px-3 py-1.5 text-sm",
                       startsAt?.getTime() === s.getTime()
-                        ? "border-accent bg-accent text-paper"
+                        ? "border-brand bg-brand text-paper"
                         : "border-ink/15 bg-paper",
                     )}
                   >

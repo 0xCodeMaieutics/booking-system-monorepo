@@ -40,7 +40,7 @@ export default function PractitionersPage() {
       <div className="grid gap-3">
         {practitioners.data?.map((p) => (
           <Link key={p.id} href={`/practitioners/${p.id}`}>
-            <Card className={`p-4 hover:border-accent ${p.archivedAt ? "opacity-50" : ""}`}>
+            <Card className={`p-4 hover:border-brand ${p.archivedAt ? "opacity-50" : ""}`}>
               <p className="font-medium">
                 {p.titleKa ? `${p.titleKa} ` : ""}
                 {p.nameKa} {p.archivedAt && "· დაარქივებული"}

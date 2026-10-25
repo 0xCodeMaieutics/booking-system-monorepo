@@ -26,7 +26,7 @@ export default function PatientsPage() {
         {results.data?.length === 0 && <p className="text-ink-soft">ვერ მოიძებნა.</p>}
         {results.data?.map((p) => (
           <Link key={p.id} href={`/patients/${p.id}`}>
-            <Card className="p-4 hover:border-accent">
+            <Card className="p-4 hover:border-brand">
               <p className="font-medium">{p.fullName}</p>
               <p className="text-sm text-ink-soft">{p.phone}</p>
             </Card>

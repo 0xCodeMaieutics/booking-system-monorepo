@@ -5,7 +5,7 @@ import { cn } from "./cn";
 // No width here: controls stretch inside a Field (flex column); elsewhere pass a width class.
 const control =
   "rounded-xl border border-ink/15 bg-paper px-3 py-2 text-ink placeholder:text-ink-soft/60 " +
-  "focus:border-accent focus:outline-none disabled:opacity-60";
+  "focus:border-brand focus:outline-none disabled:opacity-60";
 
 export function Field({
   label,
