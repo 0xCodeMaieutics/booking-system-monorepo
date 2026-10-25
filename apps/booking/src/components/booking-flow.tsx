@@ -14,8 +14,15 @@ import {
   cn,
 } from "@tsami/ui";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { type FormEvent, useId, useMemo, useState } from "react";
 
+import {
+  ANY_PRACTITIONER as ANY,
+  type BookingSelection,
+  bookingPath,
+  parseBookingPathname,
+} from "@/booking-path";
 import { type Locale, dictionaries, localePath } from "@/i18n";
 import { bookingCodeOf, useTRPC } from "@/trpc/client";
 
@@ -29,33 +36,37 @@ type Treatment = {
   priceFromGel: number | null;
 };
 
-const ANY = "any";
-
 export function BookingFlow({
   locale,
   treatments,
   clinicPhone,
-  initialTreatmentId,
 }: {
   locale: Locale;
   treatments: Treatment[];
   clinicPhone: string;
-  initialTreatmentId?: string;
 }) {
   const t = dictionaries[locale];
   const trpc = useTRPC();
   const name = (x: { nameKa: string; nameEn: string }) => (locale === "ka" ? x.nameKa : x.nameEn);
 
-  const [treatmentId, setTreatmentId] = useState(initialTreatmentId);
-  const [practitionerId, setPractitionerId] = useState<string>();
-  const [date, setDate] = useState<string>();
-  const [startsAt, setStartsAt] = useState<Date>();
+  const selection = parseBookingPathname(usePathname());
   const [booked, setBooked] = useState<{ manageToken: string }>();
 
-  const treatment = treatments.find((x) => x.id === treatmentId);
+  function navigate(next: BookingSelection, { replace = false } = {}) {
+    const url = localePath(locale, bookingPath(next));
+    if (replace) window.history.replaceState(null, "", url);
+    else window.history.pushState(null, "", url);
+  }
+
+  const treatment = treatments.find((x) => x.id === selection.treatmentId);
+  const treatmentId = treatment?.id;
 
   const practitioners = useQuery(trpc.practitioners.queryOptions(treatmentId ? { treatmentId } : skipToken));
-  const practitioner = practitioners.data?.find((p) => p.id === practitionerId);
+  const practitioner = practitioners.data?.find((p) => p.id === selection.practitionerId);
+  const practitionerId =
+    practitioners.data && (selection.practitionerId === ANY || practitioner)
+      ? selection.practitionerId
+      : undefined;
 
   const [today] = useState(() => toLocalDate(new Date()));
   const slots = useQuery(
@@ -79,11 +90,13 @@ export function BookingFlow({
     return map;
   }, [slots.data]);
 
+  const date = practitionerId ? selection.date : undefined;
+  const startsAt = date ? slotsByDate.get(date)?.find((s) => formatTime(s) === selection.time) : undefined;
+
   function reset(step: "treatment" | "practitioner" | "time") {
-    if (step === "treatment") setTreatmentId(undefined);
-    if (step !== "time") setPractitionerId(undefined);
-    setDate(undefined);
-    setStartsAt(undefined);
+    if (step === "treatment") navigate({});
+    if (step === "practitioner") navigate({ treatmentId });
+    if (step === "time") navigate({ treatmentId, practitionerId });
   }
 
   if (booked) {
@@ -104,7 +117,7 @@ export function BookingFlow({
               variant="outline"
               onClick={() => {
                 setBooked(undefined);
-                reset("treatment");
+                navigate({}, { replace: true });
               }}
             >
               {t.done.another}
@@ -155,7 +168,7 @@ export function BookingFlow({
               <button
                 key={x.id}
                 type="button"
-                onClick={() => setTreatmentId(x.id)}
+                onClick={() => navigate({ treatmentId: x.id })}
                 className="flex flex-col gap-1 rounded-2xl border border-ink/10 bg-paper p-5 text-left transition-colors hover:border-brand"
               >
                 <span className="text-lg font-medium">{name(x)}</span>
@@ -184,7 +197,7 @@ export function BookingFlow({
                 <Choice
                   title={t.practitioner.any}
                   hint={t.practitioner.anyHint}
-                  onClick={() => setPractitionerId(ANY)}
+                  onClick={() => navigate({ treatmentId, practitionerId: ANY })}
                 />
               )}
               {practitioners.data?.map((p) => (
@@ -192,7 +205,7 @@ export function BookingFlow({
                   key={p.id}
                   title={name(p)}
                   hint={(locale === "ka" ? p.titleKa : p.titleEn) ?? undefined}
-                  onClick={() => setPractitionerId(p.id)}
+                  onClick={() => navigate({ treatmentId, practitionerId: p.id })}
                 />
               ))}
             </div>
@@ -216,7 +229,7 @@ export function BookingFlow({
                     <button
                       key={d}
                       type="button"
-                      onClick={() => setDate(d)}
+                      onClick={() => navigate({ treatmentId, practitionerId, date: d }, { replace: !!date })}
                       className={cn(
                         "shrink-0 rounded-xl border px-4 py-2 text-sm whitespace-nowrap",
                         d === date ? "border-brand bg-brand text-paper" : "border-ink/15 bg-paper",
@@ -235,7 +248,7 @@ export function BookingFlow({
                       size="lg"
                       key={s.getTime()}
                       variant="outline"
-                      onClick={() => setStartsAt(s)}
+                      onClick={() => navigate({ treatmentId, practitionerId, date, time: formatTime(s) })}
                     >
                       {formatTime(s)}
                     </Button>
@@ -255,9 +268,12 @@ export function BookingFlow({
             practitionerId: practitionerId === ANY ? null : practitionerId,
             startsAt,
           }}
-          onBooked={setBooked}
+          onBooked={(result) => {
+            setBooked(result);
+            navigate({}, { replace: true });
+          }}
           onSlotGone={() => {
-            setStartsAt(undefined);
+            navigate({ treatmentId, practitionerId, date }, { replace: true });
             void slots.refetch();
           }}
         />
