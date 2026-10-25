@@ -1,6 +1,6 @@
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 
-import { cn } from "./cn";
+import { cn } from "./lib/utils";
 
 // No width here: controls stretch inside a Field (flex column); elsewhere pass a width class.
 const control =

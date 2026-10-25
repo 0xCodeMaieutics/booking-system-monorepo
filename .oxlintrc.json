@@ -18,5 +18,11 @@
     "typescript/no-explicit-any": "error",
     "typescript/consistent-type-imports": "error"
   },
-  "ignorePatterns": ["apps/landing/**", "packages/db/migrations/**", "**/.next/**", "**/next-env.d.ts"]
+  "ignorePatterns": [
+    "apps/landing/**",
+    "packages/db/migrations/**",
+    "packages/ui/src/components/**",
+    "**/.next/**",
+    "**/next-env.d.ts"
+  ]
 }

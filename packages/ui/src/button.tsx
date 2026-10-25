@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
 
-import { cn } from "./cn";
+import { cn } from "./lib/utils";
 
 const variants = {
   primary: "bg-brand text-paper hover:bg-ink",
