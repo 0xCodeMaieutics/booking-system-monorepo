@@ -10,9 +10,7 @@ import superjson from "superjson";
 export const { TRPCProvider, useTRPC } = createTRPCContext<BookingRouter>();
 
 export function Providers({ children }: { children: ReactNode }) {
-  const [queryClient] = useState(
-    () => new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } }),
-  );
+  const [queryClient] = useState(() => new QueryClient());
   const [trpcClient] = useState(() =>
     createTRPCClient<BookingRouter>({
       links: [httpBatchLink({ url: "/api/trpc", transformer: superjson })],
