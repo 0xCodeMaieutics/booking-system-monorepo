@@ -112,6 +112,7 @@ CREATE TABLE "practitioner" (
 	"name_en" text NOT NULL,
 	"title_ka" text,
 	"title_en" text,
+	"photo_key" text,
 	"sort_order" integer DEFAULT 0 NOT NULL,
 	"archived_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -181,4 +182,16 @@ CREATE INDEX "appointment_starts_at_index" ON "appointment" USING btree ("starts
 CREATE INDEX "phone_verification_phone_created_at_index" ON "phone_verification" USING btree ("phone","created_at");--> statement-breakpoint
 CREATE INDEX "phone_verification_ip_address_created_at_index" ON "phone_verification" USING btree ("ip_address","created_at");--> statement-breakpoint
 CREATE INDEX "schedule_range_practitioner_id_index" ON "schedule_range" USING btree ("practitioner_id");--> statement-breakpoint
-CREATE INDEX "time_off_practitioner_id_starts_at_index" ON "time_off" USING btree ("practitioner_id","starts_at");
+CREATE INDEX "time_off_practitioner_id_starts_at_index" ON "time_off" USING btree ("practitioner_id","starts_at");--> statement-breakpoint
+-- See docs/adr/0001-database-guards-against-double-booking.md
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+--> statement-breakpoint
+ALTER TABLE "appointment"
+  ADD CONSTRAINT "appointment_no_overlap"
+  EXCLUDE USING gist (
+    "practitioner_id" WITH =,
+    tstzrange("starts_at", "ends_at", '[)') WITH &&
+  )
+  WHERE ("status" = 'booked');
+--> statement-breakpoint
+INSERT INTO "clinic_settings" ("id") VALUES (1) ON CONFLICT DO NOTHING;

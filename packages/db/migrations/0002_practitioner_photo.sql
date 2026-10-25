@@ -1,1 +1,0 @@
-ALTER TABLE "practitioner" ADD COLUMN "photo_key" text;
