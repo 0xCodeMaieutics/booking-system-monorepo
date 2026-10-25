@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start --port 3002",
     "typecheck": "tsc --noEmit",
-    "admin:create": "tsx --env-file-if-exists=../../.env scripts/create-admin.ts"
+    "admin:create": "tsx --env-file-if-exists=../../.env scripts/create-admin.ts",
+    "admin:create-dev": "tsx --env-file-if-exists=../../.env scripts/create-dev-admin.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.5",

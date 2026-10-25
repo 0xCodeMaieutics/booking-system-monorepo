@@ -6,12 +6,15 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useId, useState } from "react";
 
 import { authClient } from "@/lib/auth-client";
+import { DEV_ADMIN } from "@/lib/dev-admin";
+
+const isDev = process.env.NODE_ENV === "development";
 
 export default function SignInPage() {
   const fieldId = useId();
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState(isDev ? DEV_ADMIN.email : "");
+  const [password, setPassword] = useState(isDev ? DEV_ADMIN.password : "");
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
 
