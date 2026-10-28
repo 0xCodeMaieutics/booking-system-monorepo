@@ -10,6 +10,7 @@ import {
   addDays,
   manageUrl,
   moveAppointment,
+  reportSmsFailure,
   setStatusByAdmin,
   smsText,
 } from "@tsami/booking";
@@ -39,7 +40,13 @@ async function notifyPatient(
     await ctx.sms.send(details.patient.phone, body);
     return true;
   } catch (error) {
-    console.error(`SMS (${message}) for appointment ${a.id} failed`, error);
+    await reportSmsFailure(ctx.alerts, {
+      message,
+      clinicName: summary.clinicName,
+      appointmentId: a.id,
+      phone: details.patient.phone,
+      error,
+    });
     return false;
   }
 }
