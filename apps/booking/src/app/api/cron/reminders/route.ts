@@ -1,7 +1,7 @@
 import { createSmsSender, sendDueReminders } from "@tsami/booking";
 import { getDb } from "@tsami/db";
 
-/** Called every 15 minutes by Vercel Cron (see vercel.json). */
+/** Called hourly by Vercel Cron (see vercel.json). */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
   if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
