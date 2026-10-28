@@ -414,6 +414,8 @@ function DetailsStep({
   const t = dictionaries[locale];
   const trpc = useTRPC();
   const [form, setForm] = useState({ fullName: "", phone: "", email: "", note: "" });
+  const [channel, setChannel] = useState<"sms" | "email">("sms");
+  const contact = channel === "sms" ? { channel, phone: form.phone } : { channel, email: form.email };
   const [verificationId, setVerificationId] = useState<string>();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string>();
@@ -433,7 +435,7 @@ function DetailsStep({
     e.preventDefault();
     setError(undefined);
     try {
-      const requested = await requestCode.mutateAsync({ handle, phone: form.phone, locale });
+      const requested = await requestCode.mutateAsync({ handle, contact, locale });
       setVerificationId(requested.verificationId);
     } catch (err) {
       showError(err);
@@ -445,8 +447,15 @@ function DetailsStep({
     if (!verificationId) return;
     setError(undefined);
     try {
-      await checkCode.mutateAsync({ handle, verificationId, phone: form.phone, code });
-      const result = await book.mutateAsync({ handle, ...booking, ...form, locale, verificationId });
+      await checkCode.mutateAsync({ handle, verificationId, contact, code });
+      const result = await book.mutateAsync({
+        handle,
+        ...booking,
+        ...form,
+        channel,
+        locale,
+        verificationId,
+      });
       onBooked(result);
     } catch (err) {
       showError(err);
@@ -472,30 +481,69 @@ function DetailsStep({
               onChange={set("fullName")}
             />
           </Field>
-          <Field>
-            <FieldLabel htmlFor={`${fieldId}-2`}>{t.details.phone}</FieldLabel>
-            <Input
-              id={`${fieldId}-2`}
-              required
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="5XX XX XX XX"
-              value={form.phone}
-              onChange={set("phone")}
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={channel === "email"}
+              onChange={(e) => setChannel(e.target.checked ? "email" : "sms")}
             />
-            <FieldDescription>{t.details.phoneHint}</FieldDescription>
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${fieldId}-3`}>{t.details.email}</FieldLabel>
-            <Input
-              id={`${fieldId}-3`}
-              type="email"
-              autoComplete="email"
-              value={form.email}
-              onChange={set("email")}
-            />
-          </Field>
+            {t.details.noGeorgianNumber}
+          </label>
+          {channel === "sms" ? (
+            <>
+              <Field>
+                <FieldLabel htmlFor={`${fieldId}-2`}>{t.details.phone}</FieldLabel>
+                <Input
+                  id={`${fieldId}-2`}
+                  required
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="5XX XX XX XX"
+                  value={form.phone}
+                  onChange={set("phone")}
+                />
+                <FieldDescription>{t.details.phoneHint}</FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor={`${fieldId}-3`}>{t.details.email}</FieldLabel>
+                <Input
+                  id={`${fieldId}-3`}
+                  type="email"
+                  autoComplete="email"
+                  value={form.email}
+                  onChange={set("email")}
+                />
+              </Field>
+            </>
+          ) : (
+            <>
+              <Field>
+                <FieldLabel htmlFor={`${fieldId}-3`}>{t.details.emailRequired}</FieldLabel>
+                <Input
+                  id={`${fieldId}-3`}
+                  required
+                  type="email"
+                  autoComplete="email"
+                  value={form.email}
+                  onChange={set("email")}
+                />
+                <FieldDescription>{t.details.emailHint}</FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor={`${fieldId}-2`}>{t.details.phoneAnyCountry}</FieldLabel>
+                <Input
+                  id={`${fieldId}-2`}
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="+44 …"
+                  value={form.phone}
+                  onChange={set("phone")}
+                />
+              </Field>
+            </>
+          )}
           <Field>
             <FieldLabel htmlFor={`${fieldId}-4`}>{t.details.note}</FieldLabel>
             <Textarea id={`${fieldId}-4`} value={form.note} onChange={set("note")} maxLength={1000} />
@@ -508,10 +556,12 @@ function DetailsStep({
       ) : (
         <form onSubmit={onConfirm} className="flex flex-col gap-4">
           <p className="text-sm text-ink-soft">
-            {t.details.codeSentTo} {form.phone}
+            {t.details.codeSentTo} {channel === "sms" ? form.phone : form.email}
           </p>
           <Field>
-            <FieldLabel htmlFor={`${fieldId}-5`}>{t.details.code}</FieldLabel>
+            <FieldLabel htmlFor={`${fieldId}-5`}>
+              {channel === "sms" ? t.details.code : t.details.emailCode}
+            </FieldLabel>
             <Input
               id={`${fieldId}-5`}
               required
@@ -530,7 +580,7 @@ function DetailsStep({
               {t.details.confirm}
             </Button>
             <Button type="button" size="lg" variant="ghost" onClick={() => setVerificationId(undefined)}>
-              {t.details.resend}
+              {channel === "sms" ? t.details.resend : t.details.resendEmail}
             </Button>
           </div>
         </form>

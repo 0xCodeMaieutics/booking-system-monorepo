@@ -10,16 +10,17 @@ import {
   findAvailableSlots,
   getAppointmentDetails,
   manageUrl,
+  patientContact,
+  patientMessages,
   practitionersForTreatment,
-  reportSmsFailure,
+  reportMessageFailure,
   requestVerificationCode,
-  smsText,
   toLocalDate,
 } from "@tsami/booking";
 import { and, asc, eq, isNull, schema } from "@tsami/db";
 import { z } from "zod";
 
-import { zLocalDate, zLocale } from "../shared";
+import { zChannel, zContact, zLocalDate, zLocale } from "../shared";
 import {
   type BookingContext,
   clinicProcedure,
@@ -103,25 +104,30 @@ export const bookingRouter = router({
     }),
 
   requestCode: openClinicProcedure
-    .input(z.object({ phone: z.string().min(5).max(32), locale: zLocale }))
+    .input(z.object({ contact: zContact, locale: zLocale }))
     .mutation(async ({ ctx, input }) => {
-      const { verificationId, phone, code } = await requestVerificationCode(ctx.db, {
-        phone: input.phone,
+      const { verificationId, contact, code } = await requestVerificationCode(ctx.db, {
+        contact: input.contact,
         ipAddress: ctx.ipAddress,
         now: ctx.now(),
       });
       const name = clinicName(ctx.clinic, input.locale);
       try {
-        await ctx.sms.send(phone, smsText.verificationCode(name, code, input.locale));
+        await ctx.messenger.send(contact, patientMessages.verificationCode(name, code, input.locale));
       } catch (error) {
-        await reportSmsFailure(ctx.alerts, { message: "verificationCode", clinicName: name, phone, error });
+        await reportMessageFailure(ctx.alerts, {
+          message: "verificationCode",
+          clinicName: name,
+          contact,
+          error,
+        });
         throw error;
       }
       return { verificationId };
     }),
 
   checkCode: openClinicProcedure
-    .input(z.object({ verificationId: z.uuid(), phone: z.string(), code: z.string().max(10) }))
+    .input(z.object({ verificationId: z.uuid(), contact: zContact, code: z.string().max(10) }))
     .mutation(async ({ ctx, input }) => {
       await checkVerificationCode(ctx.db, { ...input, now: ctx.now() });
       return { ok: true as const };
@@ -134,7 +140,8 @@ export const bookingRouter = router({
         practitionerId: z.uuid().nullable(),
         startsAt: z.date(),
         fullName: z.string().trim().min(2).max(120),
-        phone: z.string(),
+        channel: zChannel,
+        phone: z.string().max(32),
         email: z.email().max(200).optional().or(z.literal("")),
         note: z.string().max(1000).optional(),
         locale: zLocale,
@@ -148,7 +155,12 @@ export const bookingRouter = router({
         treatmentId: input.treatmentId,
         practitionerId: input.practitionerId,
         startsAt: input.startsAt,
-        patient: { phone: input.phone, fullName: input.fullName, email: input.email || null },
+        patient: {
+          channel: input.channel,
+          phone: input.phone || null,
+          email: input.email || null,
+          fullName: input.fullName,
+        },
         note: input.note,
         locale: input.locale,
         now: ctx.now(),
@@ -159,15 +171,16 @@ export const bookingRouter = router({
       if (!details) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       const summary = appointmentSummary(details, input.locale);
       const url = manageUrl(ctx.siteUrl, ctx.clinic.handle, input.locale, manageToken);
+      const contact = patientContact(details.patient);
       try {
-        await ctx.sms.send(details.patient.phone, smsText.confirmation(summary, url, input.locale));
+        await ctx.messenger.send(contact, patientMessages.confirmation(summary, url, input.locale));
       } catch (error) {
-        // The Appointment exists; a failed SMS must not make the Patient book twice.
-        await reportSmsFailure(ctx.alerts, {
+        // The Appointment exists; a failed message must not make the Patient book twice.
+        await reportMessageFailure(ctx.alerts, {
           message: "confirmation",
           clinicName: summary.clinicName,
           appointmentId: appointment.id,
-          phone: details.patient.phone,
+          contact,
           error,
         });
       }

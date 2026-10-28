@@ -1,5 +1,6 @@
 CREATE TYPE "public"."appointment_status" AS ENUM('booked', 'cancelled', 'completed', 'no_show');--> statement-breakpoint
 CREATE TYPE "public"."cancelled_by" AS ENUM('patient', 'clinic');--> statement-breakpoint
+CREATE TYPE "public"."contact_channel" AS ENUM('sms', 'email');--> statement-breakpoint
 CREATE TYPE "public"."locale" AS ENUM('ka', 'en');--> statement-breakpoint
 CREATE TABLE "admin" (
 	"id" text PRIMARY KEY NOT NULL,
@@ -91,20 +92,10 @@ CREATE TABLE "clinic" (
 	CONSTRAINT "clinic_handle_format" CHECK ("clinic"."handle" ~ '^[a-z0-9]+(-[a-z0-9]+)*$')
 );
 --> statement-breakpoint
-CREATE TABLE "patient" (
+CREATE TABLE "contact_verification" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"clinic_id" uuid NOT NULL,
-	"phone" text NOT NULL,
-	"full_name" text NOT NULL,
-	"email" text,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "patient_clinicId_phone_unique" UNIQUE("clinic_id","phone")
-);
---> statement-breakpoint
-CREATE TABLE "phone_verification" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"phone" text NOT NULL,
+	"channel" "contact_channel" NOT NULL,
+	"destination" text NOT NULL,
 	"code_hash" text NOT NULL,
 	"ip_address" text,
 	"attempts" smallint DEFAULT 0 NOT NULL,
@@ -112,6 +103,18 @@ CREATE TABLE "phone_verification" (
 	"verified_at" timestamp with time zone,
 	"consumed_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "patient" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"clinic_id" uuid NOT NULL,
+	"channel" "contact_channel" DEFAULT 'sms' NOT NULL,
+	"phone" text,
+	"full_name" text NOT NULL,
+	"email" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "patient_contact" CHECK (("patient"."channel" = 'sms' and "patient"."phone" is not null) or ("patient"."channel" = 'email' and "patient"."email" is not null))
 );
 --> statement-breakpoint
 CREATE TABLE "practitioner" (
@@ -198,8 +201,10 @@ CREATE INDEX "appointment_practitioner_id_starts_at_index" ON "appointment" USIN
 CREATE INDEX "appointment_patient_id_index" ON "appointment" USING btree ("patient_id");--> statement-breakpoint
 CREATE INDEX "appointment_clinic_id_starts_at_index" ON "appointment" USING btree ("clinic_id","starts_at");--> statement-breakpoint
 CREATE INDEX "appointment_starts_at_index" ON "appointment" USING btree ("starts_at");--> statement-breakpoint
-CREATE INDEX "phone_verification_phone_created_at_index" ON "phone_verification" USING btree ("phone","created_at");--> statement-breakpoint
-CREATE INDEX "phone_verification_ip_address_created_at_index" ON "phone_verification" USING btree ("ip_address","created_at");--> statement-breakpoint
+CREATE INDEX "contact_verification_destination_created_at_index" ON "contact_verification" USING btree ("destination","created_at");--> statement-breakpoint
+CREATE INDEX "contact_verification_ip_address_created_at_index" ON "contact_verification" USING btree ("ip_address","created_at");--> statement-breakpoint
+CREATE UNIQUE INDEX "patient_sms_contact" ON "patient" USING btree ("clinic_id","phone") WHERE "patient"."channel" = 'sms';--> statement-breakpoint
+CREATE UNIQUE INDEX "patient_email_contact" ON "patient" USING btree ("clinic_id","email") WHERE "patient"."channel" = 'email';--> statement-breakpoint
 CREATE INDEX "practitioner_clinic_id_index" ON "practitioner" USING btree ("clinic_id");--> statement-breakpoint
 CREATE INDEX "schedule_range_practitioner_id_index" ON "schedule_range" USING btree ("practitioner_id");--> statement-breakpoint
 CREATE INDEX "time_off_clinic_id_starts_at_index" ON "time_off" USING btree ("clinic_id","starts_at");--> statement-breakpoint

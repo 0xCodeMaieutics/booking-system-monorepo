@@ -6,6 +6,7 @@ import { z } from "zod";
 const trpcCodeFor: Record<BookingErrorCode, TRPC_ERROR_CODE_KEY> = {
   NOT_FOUND: "NOT_FOUND",
   INVALID_PHONE: "BAD_REQUEST",
+  INVALID_EMAIL: "BAD_REQUEST",
   SLOT_UNAVAILABLE: "CONFLICT",
   SLOT_TAKEN: "CONFLICT",
   INVALID_CODE: "BAD_REQUEST",
@@ -34,3 +35,8 @@ export function rethrowBookingError(error: TRPCError): void {
 
 export const zLocalDate = z.string().refine(isLocalDate, "Expected YYYY-MM-DD");
 export const zLocale = z.enum(["ka", "en"]);
+export const zChannel = z.enum(["sms", "email"]);
+export const zContact = z.discriminatedUnion("channel", [
+  z.object({ channel: z.literal("sms"), phone: z.string().min(5).max(32) }),
+  z.object({ channel: z.literal("email"), email: z.string().max(200) }),
+]);

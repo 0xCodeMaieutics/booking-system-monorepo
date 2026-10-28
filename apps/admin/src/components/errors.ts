@@ -1,6 +1,7 @@
 const messages: Record<string, string> = {
   NOT_FOUND: "ვერ მოიძებნა.",
   INVALID_PHONE: "მობილურის ნომერი არასწორია.",
+  INVALID_EMAIL: "ელფოსტა არასწორია.",
   SLOT_UNAVAILABLE: "ეს დრო თავისუფალი არ არის. აირჩიეთ სხვა ან ჩართეთ „განრიგის გარეთ“.",
   SLOT_TAKEN: "სპეციალისტს ამ დროს უკვე აქვს ვიზიტი.",
   INVALID_STATE: "ამ ვიზიტზე ეს მოქმედება შეუძლებელია.",

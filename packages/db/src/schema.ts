@@ -10,7 +10,7 @@ import {
   smallint,
   text,
   timestamp,
-  unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -209,19 +209,38 @@ export const timeOff = pgTable(
 
 // Patients and Appointments
 
-/** A Patient belongs to one Clinic; the same phone at another Clinic is another Patient (ADR 0002). */
+/** How a Patient was verified and is notified: their Georgian mobile, or their email (ADR 0009). */
+export const contactChannel = pgEnum("contact_channel", ["sms", "email"]);
+
+/**
+ * A Patient belongs to one Clinic and is identified by their verified contact
+ * there; the same contact at another Clinic is another Patient (ADR 0002, 0009).
+ */
 export const patient = pgTable(
   "patient",
   {
     id: uuid().primaryKey().defaultRandom(),
     clinicId: clinicId(),
-    /** E.164, e.g. +995599123456. */
-    phone: text().notNull(),
+    channel: contactChannel().notNull().default("sms"),
+    /** E.164. Verified Georgian mobile for SMS Patients; optional, unverified and any country for email Patients. */
+    phone: text(),
     fullName: text().notNull(),
+    /** Lowercase. Verified for email Patients; optional and unverified for SMS Patients. */
     email: text(),
     ...timestamps,
   },
-  (t) => [unique().on(t.clinicId, t.phone)],
+  (t) => [
+    uniqueIndex("patient_sms_contact")
+      .on(t.clinicId, t.phone)
+      .where(sql`${t.channel} = 'sms'`),
+    uniqueIndex("patient_email_contact")
+      .on(t.clinicId, t.email)
+      .where(sql`${t.channel} = 'email'`),
+    check(
+      "patient_contact",
+      sql`(${t.channel} = 'sms' and ${t.phone} is not null) or (${t.channel} = 'email' and ${t.email} is not null)`,
+    ),
+  ],
 );
 
 export const appointmentStatus = pgEnum("appointment_status", [
@@ -276,12 +295,14 @@ export const appointment = pgTable(
   ],
 );
 
-/** Proves a Patient owns a phone number; it is Tsami-wide, not per Clinic. */
-export const phoneVerification = pgTable(
-  "phone_verification",
+/** Proves a Patient owns a phone number or email address; it is Tsami-wide, not per Clinic. */
+export const contactVerification = pgTable(
+  "contact_verification",
   {
     id: uuid().primaryKey().defaultRandom(),
-    phone: text().notNull(),
+    channel: contactChannel().notNull(),
+    /** A normalised phone number or email address, as stored on the Patient. */
+    destination: text().notNull(),
     codeHash: text().notNull(),
     ipAddress: text(),
     attempts: smallint().notNull().default(0),
@@ -292,5 +313,5 @@ export const phoneVerification = pgTable(
     consumedAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index().on(t.phone, t.createdAt), index().on(t.ipAddress, t.createdAt)],
+  (t) => [index().on(t.destination, t.createdAt), index().on(t.ipAddress, t.createdAt)],
 );

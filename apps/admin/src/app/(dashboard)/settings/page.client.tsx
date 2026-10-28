@@ -108,7 +108,7 @@ export function SettingsForm({
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
               />
-              <FieldDescription>ჩანს SMS-ებში და დაჯავშნის გვერდზე</FieldDescription>
+              <FieldDescription>ჩანს პაციენტის შეტყობინებებში და დაჯავშნის გვერდზე</FieldDescription>
             </Field>
             {save.error && <p className="text-sm text-danger">{errorMessage(save.error)}</p>}
             {save.isSuccess && <p className="text-sm text-success">შენახულია.</p>}

@@ -1,4 +1,4 @@
-import { maskPhone } from "./phone";
+import { type Contact, maskContact } from "./contact";
 
 /** Tells the Tsami team about failures that need a person to look at them. Never throws. */
 export interface OpsAlerts {
@@ -34,23 +34,27 @@ export function createOpsAlerts(
   };
 }
 
-export type SmsFailure = {
+export type MessageFailure = {
   message: string;
   clinicName: string;
   appointmentId?: string;
-  phone: string;
+  contact: Contact;
   error: unknown;
 };
 
-/** Logs a failed SMS and alerts the Tsami team. The phone number is masked. */
-export async function reportSmsFailure(alerts: OpsAlerts, f: SmsFailure): Promise<void> {
-  const subject = f.appointmentId ? `appointment ${f.appointmentId}` : maskPhone(f.phone);
-  console.error(`SMS (${f.message}) for ${subject} failed`, f.error);
+/** Logs a Message that failed to send and alerts the Tsami team. The contact is masked. */
+export async function reportMessageFailure(alerts: OpsAlerts, f: MessageFailure): Promise<void> {
+  const channel = f.contact.channel === "sms" ? "SMS" : "Email";
+  const masked = maskContact(f.contact);
+  console.error(
+    `${channel} (${f.message}) for ${f.appointmentId ? `appointment ${f.appointmentId}` : masked} failed`,
+    f.error,
+  );
   const lines = [
-    `SMS failed: ${f.message}`,
+    `${channel} failed: ${f.message}`,
     `Clinic: ${f.clinicName}`,
     ...(f.appointmentId ? [`Appointment: ${f.appointmentId}`] : []),
-    `Phone: ${maskPhone(f.phone)}`,
+    `To: ${masked}`,
     `Error: ${errorMessage(f.error)}`,
   ];
   await alerts.send(lines.join("\n"));

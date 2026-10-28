@@ -1,10 +1,10 @@
 import { type Db, and, count, eq, gte, schema, sql } from "@tsami/db";
 
+import { type Contact, contactDestination, normalizeContact } from "./contact";
 import { BookingError } from "./errors";
-import { normalizePhone } from "./phone";
 import { createVerificationCode, hashVerificationCode, safeEqualHex } from "./tokens";
 
-const { phoneVerification } = schema;
+const { contactVerification } = schema;
 
 const CODE_VALID_MINUTES = 10;
 const MAX_ATTEMPTS = 5;
@@ -12,34 +12,35 @@ const MAX_ATTEMPTS = 5;
 export const VERIFIED_FOR_MINUTES = 20;
 
 const LIMITS = {
-  perPhone15Min: 3,
-  perPhoneDay: 10,
+  perDestination15Min: 3,
+  perDestinationDay: 10,
   perIpHour: 10,
 };
 
 /**
- * Creates a one-time code for a Patient's phone, enforcing per-phone and
- * per-IP rate limits (skipped in development). The caller sends the code by SMS.
+ * Creates a one-time code for a Patient's phone or email, enforcing per-contact
+ * and per-IP rate limits (skipped in development). The caller sends the code.
  */
 export async function requestVerificationCode(
   db: Db,
-  input: { phone: string; ipAddress: string | null; now: Date },
-): Promise<{ verificationId: string; phone: string; code: string }> {
-  const phone = normalizePhone(input.phone);
+  input: { contact: Contact; ipAddress: string | null; now: Date },
+): Promise<{ verificationId: string; contact: Contact; code: string }> {
+  const contact = normalizeContact(input.contact);
+  const destination = contactDestination(contact);
   const ago = (minutes: number) => new Date(input.now.getTime() - minutes * 60_000);
 
-  const countSince = async (field: "phone" | "ipAddress", value: string, minutes: number) => {
+  const countSince = async (field: "destination" | "ipAddress", value: string, minutes: number) => {
     const [row] = await db
       .select({ n: count() })
-      .from(phoneVerification)
-      .where(and(eq(phoneVerification[field], value), gte(phoneVerification.createdAt, ago(minutes))));
+      .from(contactVerification)
+      .where(and(eq(contactVerification[field], value), gte(contactVerification.createdAt, ago(minutes))));
     return row?.n ?? 0;
   };
 
   if (
     process.env.NODE_ENV !== "development" &&
-    ((await countSince("phone", phone, 15)) >= LIMITS.perPhone15Min ||
-      (await countSince("phone", phone, 24 * 60)) >= LIMITS.perPhoneDay ||
+    ((await countSince("destination", destination, 15)) >= LIMITS.perDestination15Min ||
+      (await countSince("destination", destination, 24 * 60)) >= LIMITS.perDestinationDay ||
       (input.ipAddress && (await countSince("ipAddress", input.ipAddress, 60)) >= LIMITS.perIpHour))
   ) {
     throw new BookingError("RATE_LIMITED");
@@ -47,36 +48,48 @@ export async function requestVerificationCode(
 
   const code = createVerificationCode();
   const [row] = await db
-    .insert(phoneVerification)
+    .insert(contactVerification)
     .values({
-      phone,
-      codeHash: hashVerificationCode(phone, code),
+      channel: contact.channel,
+      destination,
+      codeHash: hashVerificationCode(destination, code),
       ipAddress: input.ipAddress,
       expiresAt: new Date(input.now.getTime() + CODE_VALID_MINUTES * 60_000),
       createdAt: input.now,
     })
-    .returning({ id: phoneVerification.id });
-  return { verificationId: row!.id, phone, code };
+    .returning({ id: contactVerification.id });
+  return { verificationId: row!.id, contact, code };
 }
 
 /** Checks a code the Patient typed. Wrong codes count towards the attempt limit. */
 export async function checkVerificationCode(
   db: Db,
-  input: { verificationId: string; phone: string; code: string; now: Date },
+  input: { verificationId: string; contact: Contact; code: string; now: Date },
 ): Promise<void> {
-  const phone = normalizePhone(input.phone);
-  const [v] = await db.select().from(phoneVerification).where(eq(phoneVerification.id, input.verificationId));
-  if (!v || v.phone !== phone || v.consumedAt || v.expiresAt < input.now || v.attempts >= MAX_ATTEMPTS) {
+  const contact = normalizeContact(input.contact);
+  const destination = contactDestination(contact);
+  const [v] = await db
+    .select()
+    .from(contactVerification)
+    .where(eq(contactVerification.id, input.verificationId));
+  if (
+    !v ||
+    v.channel !== contact.channel ||
+    v.destination !== destination ||
+    v.consumedAt ||
+    v.expiresAt < input.now ||
+    v.attempts >= MAX_ATTEMPTS
+  ) {
     throw new BookingError("INVALID_CODE");
   }
   if (v.verifiedAt) return;
 
-  if (!safeEqualHex(v.codeHash, hashVerificationCode(phone, input.code.trim()))) {
+  if (!safeEqualHex(v.codeHash, hashVerificationCode(destination, input.code.trim()))) {
     await db
-      .update(phoneVerification)
-      .set({ attempts: sql`${phoneVerification.attempts} + 1` })
-      .where(eq(phoneVerification.id, v.id));
+      .update(contactVerification)
+      .set({ attempts: sql`${contactVerification.attempts} + 1` })
+      .where(eq(contactVerification.id, v.id));
     throw new BookingError("INVALID_CODE");
   }
-  await db.update(phoneVerification).set({ verifiedAt: input.now }).where(eq(phoneVerification.id, v.id));
+  await db.update(contactVerification).set({ verifiedAt: input.now }).where(eq(contactVerification.id, v.id));
 }

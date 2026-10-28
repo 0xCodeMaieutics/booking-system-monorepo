@@ -1,6 +1,7 @@
 export type BookingErrorCode =
   | "NOT_FOUND"
   | "INVALID_PHONE"
+  | "INVALID_EMAIL"
   | "SLOT_UNAVAILABLE"
   | "SLOT_TAKEN"
   | "INVALID_CODE"

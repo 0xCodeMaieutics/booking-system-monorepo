@@ -1,4 +1,4 @@
-import { createOpsAlerts, createSmsSender, sendDueReminders } from "@tsami/booking";
+import { createMessenger, createOpsAlerts, sendDueReminders } from "@tsami/booking";
 import { getDb } from "@tsami/db";
 
 /** Called hourly by Vercel Cron (see vercel.json). */
@@ -7,6 +7,6 @@ export async function GET(req: Request) {
   if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
     return new Response("Unauthorized", { status: 401 });
   }
-  const sent = await sendDueReminders(getDb(), createSmsSender(), createOpsAlerts(), new Date());
+  const sent = await sendDueReminders(getDb(), createMessenger(), createOpsAlerts(), new Date());
   return Response.json({ sent });
 }

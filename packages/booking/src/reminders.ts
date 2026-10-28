@@ -2,21 +2,22 @@ import { type Db, and, eq, gt, inArray, isNull, lte, schema, sql } from "@tsami/
 
 import { type OpsAlerts, errorMessage } from "./alerts";
 import { appointmentSummary } from "./appointments";
-import { type SmsSender, smsText } from "./sms";
+import { patientContact } from "./contact";
+import { type Messenger, patientMessages } from "./messages";
 
 const { appointment, clinic, patient, practitioner, treatment } = schema;
 
 const REMINDER_HOURS = 24;
 
 /**
- * Sends an SMS reminder for Booked Appointments starting within 24 hours.
+ * Sends a reminder for Booked Appointments starting within 24 hours.
  * Appointments booked less than 24 hours ahead are skipped: their
  * confirmation is recent enough. Safe to run concurrently. Failures are sent
  * as one alert per run, so a provider outage doesn't flood the chat.
  */
 export async function sendDueReminders(
   db: Db,
-  sms: SmsSender,
+  messenger: Messenger,
   alerts: OpsAlerts,
   now: Date,
 ): Promise<number> {
@@ -56,8 +57,11 @@ export async function sendDueReminders(
     const locale = row.appointment.locale;
     const summary = appointmentSummary(row, locale);
     try {
-      // oxlint-disable-next-line no-await-in-loop -- one SMS at a time keeps us under provider rate limits
-      await sms.send(row.patient.phone, smsText.reminder(summary, row.clinic.phone, locale));
+      // oxlint-disable-next-line no-await-in-loop -- one message at a time keeps us under provider rate limits
+      await messenger.send(
+        patientContact(row.patient),
+        patientMessages.reminder(summary, row.clinic.phone, locale),
+      );
     } catch (error) {
       console.error(`Reminder for appointment ${row.appointment.id} failed`, error);
       failed.push(`${row.clinic.nameEn}, appointment ${row.appointment.id}: ${errorMessage(error)}`);
@@ -65,7 +69,7 @@ export async function sendDueReminders(
   }
   if (failed.length > 0) {
     await alerts.send(
-      [`SMS failed: ${failed.length} of ${rows.length} reminders`, ...failed.slice(0, 10)].join("\n"),
+      [`Reminders failed: ${failed.length} of ${rows.length}`, ...failed.slice(0, 10)].join("\n"),
     );
   }
   return rows.length;

@@ -1,9 +1,10 @@
-import { type Db, createDb, eq, inArray, like, schema } from "@tsami/db";
+import { type Db, createDb, eq, inArray, like, or, schema } from "@tsami/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { cancelByPatient, createAppointment, getAppointmentDetails } from "./appointments";
 import { findAvailableSlots } from "./availability";
 import type { Clinic } from "./clinics";
+import type { Contact } from "./contact";
 import { addDays, localInstant, toLocalDate, weekdayOf } from "./time";
 import { checkVerificationCode, requestVerificationCode } from "./verification";
 
@@ -27,8 +28,16 @@ describe.skipIf(!url)("Appointments against Postgres", () => {
 
   beforeAll(async () => {
     db = createDb(url);
-    // Verification rate limits count rows per phone, so earlier runs would lock these numbers out.
-    await db.delete(schema.phoneVerification).where(like(schema.phoneVerification.phone, "+99559900000%"));
+    // Verification rate limits count rows per contact, so earlier runs would lock these contacts out.
+    const { contactVerification } = schema;
+    await db
+      .delete(contactVerification)
+      .where(
+        or(
+          like(contactVerification.destination, "+99559900000%"),
+          like(contactVerification.destination, "%@example.test"),
+        ),
+      );
     const suffix = Date.now();
     [clinic, otherClinic] = (await db
       .insert(schema.clinic)
@@ -84,31 +93,38 @@ describe.skipIf(!url)("Appointments against Postgres", () => {
     await db.$client.end();
   });
 
-  async function verifiedPhone(phone: string) {
-    const { verificationId, code } = await requestVerificationCode(db, { phone, ipAddress: null, now });
-    await expect(checkVerificationCode(db, { verificationId, phone, code: "000000", now })).rejects.toThrow(
+  async function verified(contact: Contact) {
+    const { verificationId, code } = await requestVerificationCode(db, { contact, ipAddress: null, now });
+    await expect(checkVerificationCode(db, { verificationId, contact, code: "000000", now })).rejects.toThrow(
       "INVALID_CODE",
     );
-    await checkVerificationCode(db, { verificationId, phone, code, now });
+    await checkVerificationCode(db, { verificationId, contact, code, now });
     return verificationId;
   }
 
+  /** Books at ten as a Patient, verified by a Georgian mobile or by email. */
   const book = async (
-    phone: string,
+    who: string | { email: string; phone?: string },
     practitionerId: string | null,
     at: { clinic: Clinic; treatmentId: string } = { clinic, treatmentId },
-  ) =>
-    createAppointment(db, {
+  ) => {
+    const contact: Contact =
+      typeof who === "string" ? { channel: "sms", phone: who } : { channel: "email", email: who.email };
+    return createAppointment(db, {
       clinic: at.clinic,
       actor: { kind: "patient" },
       treatmentId: at.treatmentId,
       practitionerId,
       startsAt: tenAm,
-      patient: { phone, fullName: "Test Patient" },
+      patient:
+        typeof who === "string"
+          ? { channel: "sms", phone: who, fullName: "Test Patient" }
+          : { channel: "email", ...who, fullName: "Test Patient" },
       locale: "ka",
       now,
-      verificationId: await verifiedPhone(phone),
+      verificationId: await verified(contact),
     });
+  };
 
   const freeAtTen = async (at: Clinic, atTreatmentId: string, practitionerId: string) => {
     const { slots } = await findAvailableSlots(db, {
@@ -145,7 +161,7 @@ describe.skipIf(!url)("Appointments against Postgres", () => {
     const [owner] = await db.select().from(schema.patient).where(eq(schema.patient.id, annas!.patientId));
     // Manage tokens are only stored hashed, so book a fresh one to get a token.
     await db.delete(schema.appointment).where(eq(schema.appointment.practitionerId, annaId));
-    const { manageToken } = await book(owner!.phone.slice(4), annaId);
+    const { manageToken } = await book(owner!.phone!.slice(4), annaId);
 
     await cancelByPatient(db, clinic, manageToken, now);
     expect(await freeAtTen(clinic, treatmentId, annaId)).toBe(true);
@@ -183,5 +199,18 @@ describe.skipIf(!url)("Appointments against Postgres", () => {
       endsAt: localInstant(addDays(day, 1)),
     });
     expect(await freeAtTen(clinic, treatmentId, annaId)).toBe(true);
+  });
+
+  it("identifies a Patient without a Georgian number by their verified email", async () => {
+    const first = await book({ email: "Visitor@Example.test", phone: "+49 151 23456789" }, annaId);
+    await cancelByPatient(db, clinic, first.manageToken, now);
+    const second = await book({ email: "visitor@example.test" }, annaId);
+    expect(second.appointment.patientId).toBe(first.appointment.patientId);
+
+    const [p] = await db
+      .select()
+      .from(schema.patient)
+      .where(eq(schema.patient.id, first.appointment.patientId));
+    expect(p).toMatchObject({ channel: "email", email: "visitor@example.test", phone: "+4915123456789" });
   });
 });

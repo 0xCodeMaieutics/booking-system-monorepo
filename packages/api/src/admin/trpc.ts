@@ -1,5 +1,5 @@
 import { TRPCError, initTRPC } from "@trpc/server";
-import type { OpsAlerts, SmsSender } from "@tsami/booking";
+import type { Messenger, OpsAlerts } from "@tsami/booking";
 import type { Db } from "@tsami/db";
 
 import { rethrowBookingError, trpcOptions } from "../shared";
@@ -22,7 +22,7 @@ export interface PhotoStore {
 
 export type AdminContext = {
   db: Db;
-  sms: SmsSender;
+  messenger: Messenger;
   alerts: OpsAlerts;
   admin: SignedInAdmin | null;
   accounts: AdminAccounts;

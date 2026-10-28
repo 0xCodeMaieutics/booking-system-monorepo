@@ -120,7 +120,7 @@ export function AppointmentsDay({
                 {reasons && (
                   <p className="text-sm text-danger">
                     ყურადღება საჭიროა: {reasons.map((r) => attentionLabel[r]).join(", ")}. გადაიტანეთ ან
-                    გააუქმეთ — პაციენტი SMS-ს მიიღებს.
+                    გააუქმეთ — პაციენტი შეტყობინებას მიიღებს.
                   </p>
                 )}
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -133,7 +133,17 @@ export function AppointmentsDay({
                       <Link href={`/patients/${patient.id}`} className="underline">
                         {patient.fullName}
                       </Link>{" "}
-                      · <a href={`tel:${patient.phone}`}>{patient.phone}</a>
+                      {patient.phone && (
+                        <>
+                          · <a href={`tel:${patient.phone}`}>{patient.phone}</a>
+                        </>
+                      )}
+                      {patient.channel === "email" && (
+                        <>
+                          {" "}
+                          · <a href={`mailto:${patient.email}`}>{patient.email}</a>
+                        </>
+                      )}
                     </span>
                     {a.note && <span className="text-sm">„{a.note}“</span>}
                     <span className="text-xs text-ink-soft">
@@ -255,7 +265,7 @@ function CancelAppointmentDialog({ id }: { id: string }) {
         >
           <DialogHeader>
             <DialogTitle>ვიზიტის გაუქმება</DialogTitle>
-            <DialogDescription>პაციენტი SMS-ს მიიღებს.</DialogDescription>
+            <DialogDescription>პაციენტი შეტყობინებას მიიღებს.</DialogDescription>
           </DialogHeader>
           <Textarea
             value={reason}
