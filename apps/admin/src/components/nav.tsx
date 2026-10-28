@@ -1,19 +1,28 @@
 "use client";
 
 import { Button, cn, Wordmark } from "@tsami/ui";
+import {
+  CalendarDaysIcon,
+  CalendarOffIcon,
+  SettingsIcon,
+  ShieldUserIcon,
+  StethoscopeIcon,
+  SyringeIcon,
+  UsersIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { authClient } from "@/lib/auth-client";
 
 const links = [
-  { href: "/", label: "ვიზიტები" },
-  { href: "/practitioners", label: "სპეციალისტები" },
-  { href: "/treatments", label: "პროცედურები" },
-  { href: "/time-off", label: "არასამუშაო დრო" },
-  { href: "/patients", label: "პაციენტები" },
-  { href: "/admins", label: "ადმინისტრატორები" },
-  { href: "/settings", label: "პარამეტრები" },
+  { href: "/", label: "ვიზიტები", icon: CalendarDaysIcon },
+  { href: "/practitioners", label: "სპეციალისტები", icon: StethoscopeIcon },
+  { href: "/treatments", label: "პროცედურები", icon: SyringeIcon },
+  { href: "/time-off", label: "არასამუშაო დრო", icon: CalendarOffIcon },
+  { href: "/patients", label: "პაციენტები", icon: UsersIcon },
+  { href: "/admins", label: "ადმინისტრატორები", icon: ShieldUserIcon },
+  { href: "/settings", label: "პარამეტრები", icon: SettingsIcon },
 ];
 
 export function Nav({ adminName, clinicName }: { adminName: string; clinicName: string }) {
@@ -34,12 +43,13 @@ export function Nav({ adminName, clinicName }: { adminName: string; clinicName: 
             key={l.href}
             href={l.href}
             className={cn(
-              "rounded-xl px-3 py-2 text-sm",
+              "flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm",
               active(l.href)
                 ? "bg-mist font-medium text-ink"
                 : "text-ink-soft hover:bg-mist/60 hover:text-ink",
             )}
           >
+            <l.icon aria-hidden className="size-4 shrink-0" />
             {l.label}
           </Link>
         ))}
