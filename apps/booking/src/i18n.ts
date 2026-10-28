@@ -5,17 +5,42 @@ export function isLocale(value: string): value is Locale {
   return (locales as readonly string[]).includes(value);
 }
 
-/** Path on the public site for a locale: Georgian has no prefix. */
-export function localePath(locale: Locale, path = "/"): string {
-  return locale === "ka" ? path : `/en${path === "/" ? "" : path}`;
+/** Request header the proxy sets to the Locale it rewrote to. */
+export const LOCALE_HEADER = "x-tsami-locale";
+
+/**
+ * Public path on a Clinic's Booking Site: `/{handle}` in Georgian, `/{handle}/en` in English
+ * (docs/adr/0008).
+ */
+export function clinicPath(handle: string, locale: Locale, path = "/"): string {
+  const base = locale === "ka" ? `/${handle}` : `/${handle}/en`;
+  return path === "/" ? base : `${base}${path}`;
+}
+
+/**
+ * Splits a Booking Site pathname into its Handle, Locale and the segments after them. It accepts
+ * both the public form and the proxy's internal `/{locale}/{handle}/…` rewrite; a Handle is never
+ * a Locale, so the first segment tells them apart.
+ */
+export function parseSitePathname(pathname: string): { handle: string; locale: Locale; rest: string[] } {
+  const [first = "", ...others] = pathname.split("/").filter(Boolean);
+  if (isLocale(first)) {
+    const [handle = "", ...rest] = others;
+    return { handle, locale: first, rest };
+  }
+  const handle = first;
+  const rest = others;
+  if (rest[0] === "en") return { handle, locale: "en", rest: rest.slice(1) };
+  return { handle, locale: "ka", rest };
 }
 
 const ka = {
   meta: {
-    title: "ვიზიტის დაჯავშნა — ესთეტიკის ცენტრი ფეისი",
+    title: (clinic: string) => `ვიზიტის დაჯავშნა — ${clinic}`,
     description: "აირჩიეთ პროცედურა, სპეციალისტი და თქვენთვის სასურველი დრო.",
   },
-  clinic: "ესთეტიკის ცენტრი ფეისი",
+  notFound: "ეს გვერდი ვერ მოიძებნა.",
+  closed: (clinic: string) => `${clinic} ონლაინ ჯავშნებს აღარ იღებს. დაგვიკავშირდით:`,
   poweredBy: "ჯავშნის სისტემა",
   otherLocale: "English",
   steps: { treatment: "პროცედურა", practitioner: "სპეციალისტი", time: "დრო", details: "თქვენი მონაცემები" },
@@ -79,10 +104,11 @@ type Dictionary = typeof ka;
 
 const en: Dictionary = {
   meta: {
-    title: "Book an appointment — Face Aesthetic Centre",
+    title: (clinic: string) => `Book an appointment — ${clinic}`,
     description: "Choose a treatment, a practitioner and a time that suits you.",
   },
-  clinic: "Face Aesthetic Centre",
+  notFound: "We couldn't find this page.",
+  closed: (clinic: string) => `${clinic} no longer takes online bookings. Please call:`,
   poweredBy: "Bookings by",
   otherLocale: "ქართული",
   steps: { treatment: "Treatment", practitioner: "Practitioner", time: "Time", details: "Your details" },

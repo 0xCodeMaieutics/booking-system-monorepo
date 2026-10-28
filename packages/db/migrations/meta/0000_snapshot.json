@@ -1,5 +1,5 @@
 {
-  "id": "157ea380-ccb8-47e3-98f1-c827799fff46",
+  "id": "9f8b633d-0b1d-47f9-a65c-185d182277bf",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -12,6 +12,12 @@
           "name": "id",
           "type": "text",
           "primaryKey": true,
+          "notNull": true
+        },
+        "clinic_id": {
+          "name": "clinic_id",
+          "type": "uuid",
+          "primaryKey": false,
           "notNull": true
         },
         "name": {
@@ -60,8 +66,38 @@
           "default": "now()"
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "admin_clinic_id_index": {
+          "name": "admin_clinic_id_index",
+          "columns": [
+            {
+              "expression": "clinic_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "admin_clinic_id_clinic_id_fk": {
+          "name": "admin_clinic_id_clinic_id_fk",
+          "tableFrom": "admin",
+          "tableTo": "clinic",
+          "columnsFrom": [
+            "clinic_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "admin_email_unique": {
@@ -311,6 +347,12 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
+        "clinic_id": {
+          "name": "clinic_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
         "patient_id": {
           "name": "patient_id",
           "type": "uuid",
@@ -458,6 +500,27 @@
           "method": "btree",
           "with": {}
         },
+        "appointment_clinic_id_starts_at_index": {
+          "name": "appointment_clinic_id_starts_at_index",
+          "columns": [
+            {
+              "expression": "clinic_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "starts_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "appointment_starts_at_index": {
           "name": "appointment_starts_at_index",
           "columns": [
@@ -475,6 +538,19 @@
         }
       },
       "foreignKeys": {
+        "appointment_clinic_id_clinic_id_fk": {
+          "name": "appointment_clinic_id_clinic_id_fk",
+          "tableFrom": "appointment",
+          "tableTo": "clinic",
+          "columnsFrom": [
+            "clinic_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
         "appointment_patient_id_patient_id_fk": {
           "name": "appointment_patient_id_patient_id_fk",
           "tableFrom": "appointment",
@@ -611,16 +687,41 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.clinic_settings": {
-      "name": "clinic_settings",
+    "public.clinic": {
+      "name": "clinic",
       "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "smallint",
+          "type": "uuid",
           "primaryKey": true,
           "notNull": true,
-          "default": 1
+          "default": "gen_random_uuid()"
+        },
+        "handle": {
+          "name": "handle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_ka": {
+          "name": "name_ka",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_en": {
+          "name": "name_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
         },
         "min_notice_minutes": {
           "name": "min_notice_minutes",
@@ -643,12 +744,11 @@
           "notNull": true,
           "default": 24
         },
-        "clinic_phone": {
-          "name": "clinic_phone",
-          "type": "text",
+        "closed_at": {
+          "name": "closed_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": true,
-          "default": "''"
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -668,12 +768,20 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "clinic_handle_unique": {
+          "name": "clinic_handle_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "handle"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {
-        "clinic_settings_singleton": {
-          "name": "clinic_settings_singleton",
-          "value": "\"clinic_settings\".\"id\" = 1"
+        "clinic_handle_format": {
+          "name": "clinic_handle_format",
+          "value": "\"clinic\".\"handle\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$'"
         }
       },
       "isRLSEnabled": false
@@ -688,6 +796,12 @@
           "primaryKey": true,
           "notNull": true,
           "default": "gen_random_uuid()"
+        },
+        "clinic_id": {
+          "name": "clinic_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         },
         "phone": {
           "name": "phone",
@@ -723,13 +837,28 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "patient_clinic_id_clinic_id_fk": {
+          "name": "patient_clinic_id_clinic_id_fk",
+          "tableFrom": "patient",
+          "tableTo": "clinic",
+          "columnsFrom": [
+            "clinic_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "patient_phone_unique": {
-          "name": "patient_phone_unique",
+        "patient_clinicId_phone_unique": {
+          "name": "patient_clinicId_phone_unique",
           "nullsNotDistinct": false,
           "columns": [
+            "clinic_id",
             "phone"
           ]
         }
@@ -862,6 +991,12 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
+        "clinic_id": {
+          "name": "clinic_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
         "name_ka": {
           "name": "name_ka",
           "type": "text",
@@ -920,8 +1055,38 @@
           "default": "now()"
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "practitioner_clinic_id_index": {
+          "name": "practitioner_clinic_id_index",
+          "columns": [
+            {
+              "expression": "clinic_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "practitioner_clinic_id_clinic_id_fk": {
+          "name": "practitioner_clinic_id_clinic_id_fk",
+          "tableFrom": "practitioner",
+          "tableTo": "clinic",
+          "columnsFrom": [
+            "clinic_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -1082,6 +1247,12 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
+        "clinic_id": {
+          "name": "clinic_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
         "practitioner_id": {
           "name": "practitioner_id",
           "type": "uuid",
@@ -1128,6 +1299,27 @@
         }
       },
       "indexes": {
+        "time_off_clinic_id_starts_at_index": {
+          "name": "time_off_clinic_id_starts_at_index",
+          "columns": [
+            {
+              "expression": "clinic_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "starts_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "time_off_practitioner_id_starts_at_index": {
           "name": "time_off_practitioner_id_starts_at_index",
           "columns": [
@@ -1151,6 +1343,19 @@
         }
       },
       "foreignKeys": {
+        "time_off_clinic_id_clinic_id_fk": {
+          "name": "time_off_clinic_id_clinic_id_fk",
+          "tableFrom": "time_off",
+          "tableTo": "clinic",
+          "columnsFrom": [
+            "clinic_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
         "time_off_practitioner_id_practitioner_id_fk": {
           "name": "time_off_practitioner_id_practitioner_id_fk",
           "tableFrom": "time_off",
@@ -1199,6 +1404,12 @@
           "primaryKey": true,
           "notNull": true,
           "default": "gen_random_uuid()"
+        },
+        "clinic_id": {
+          "name": "clinic_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         },
         "name_ka": {
           "name": "name_ka",
@@ -1264,8 +1475,38 @@
           "default": "now()"
         }
       },
-      "indexes": {},
-      "foreignKeys": {},
+      "indexes": {
+        "treatment_clinic_id_index": {
+          "name": "treatment_clinic_id_index",
+          "columns": [
+            {
+              "expression": "clinic_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "treatment_clinic_id_clinic_id_fk": {
+          "name": "treatment_clinic_id_clinic_id_fk",
+          "tableFrom": "treatment",
+          "tableTo": "clinic",
+          "columnsFrom": [
+            "clinic_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},

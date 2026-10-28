@@ -16,7 +16,7 @@ const links = [
   { href: "/settings", label: "პარამეტრები" },
 ];
 
-export function Nav({ adminName }: { adminName: string }) {
+export function Nav({ adminName, clinicName }: { adminName: string; clinicName: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const active = (href: string) =>
@@ -26,7 +26,7 @@ export function Nav({ adminName }: { adminName: string }) {
     <aside className="flex flex-col gap-6 border-b border-ink/10 bg-paper px-4 py-6 md:w-60 md:border-r md:border-b-0">
       <div className="flex flex-col gap-0.5 px-3">
         <Wordmark className="text-xl" />
-        <span className="text-xs text-ink-soft">ესთეტიკის ცენტრი ფეისი</span>
+        <span className="text-xs text-ink-soft">{clinicName}</span>
       </div>
       <nav className="flex flex-wrap gap-1 md:flex-col">
         {links.map((l) => (

@@ -12,6 +12,7 @@ const trpcCodeFor: Record<BookingErrorCode, TRPC_ERROR_CODE_KEY> = {
   RATE_LIMITED: "TOO_MANY_REQUESTS",
   CUTOFF_PASSED: "FORBIDDEN",
   INVALID_STATE: "CONFLICT",
+  CLINIC_CLOSED: "FORBIDDEN",
 };
 
 /** Shared tRPC options: superjson for Dates, and `bookingCode` on domain errors. */

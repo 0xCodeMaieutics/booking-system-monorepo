@@ -25,19 +25,21 @@ import {
   parseBookingPathname,
 } from "@/booking-path";
 import { AppointmentDetails } from "@/components/appointment-details";
-import { type Locale, dictionaries, localePath } from "@/i18n";
+import { type Locale, clinicPath, dictionaries } from "@/i18n";
 import { forgetManageToken, rememberManageToken } from "@/manage-token";
 import { bookingCodeOf, useTRPC } from "@/trpc/client";
 import type { BookingOutputs } from "@/trpc/types";
 
 export function BookingFlow({
   locale,
+  handle,
   treatments,
   practitioners,
   slots,
   clinicPhone,
 }: {
   locale: Locale;
+  handle: string;
   treatments: BookingOutputs["treatments"];
   practitioners: BookingOutputs["practitioners"] | null;
   slots: BookingOutputs["slots"] | null;
@@ -55,7 +57,7 @@ export function BookingFlow({
    * or time only updates the URL, since the slots are already loaded.
    */
   function navigate(next: BookingSelection, { replace = false } = {}) {
-    const url = localePath(locale, bookingPath(next));
+    const url = clinicPath(handle, locale, bookingPath(next));
     const shallow =
       !next.confirmed &&
       next.treatmentId === selection.treatmentId &&
@@ -219,6 +221,7 @@ export function BookingFlow({
       {treatment && practitionerId && startsAt && (
         <DetailsStep
           locale={locale}
+          handle={handle}
           booking={{
             treatmentId: treatment.id,
             practitionerId: practitionerId === ANY ? null : practitionerId,
@@ -227,7 +230,7 @@ export function BookingFlow({
           disabled={isNavigating}
           onBooked={(result) => {
             const confirmed = { ...selection, confirmed: true };
-            rememberManageToken(localePath(locale, bookingPath(confirmed)), result.manageToken);
+            rememberManageToken(clinicPath(handle, locale, bookingPath(confirmed)), result.manageToken);
             navigate(confirmed, { replace: true });
           }}
           onSlotGone={() => {
@@ -242,16 +245,18 @@ export function BookingFlow({
 
 export function BookingConfirmation({
   locale,
+  handle,
   manageToken,
   appointment,
 }: {
   locale: Locale;
+  handle: string;
   manageToken: string;
   appointment: BookingOutputs["appointment"] | null;
 }) {
   const t = dictionaries[locale];
   const router = useRouter();
-  const confirmationUrl = localePath(locale, bookingPath(parseBookingPathname(usePathname())));
+  const confirmationUrl = clinicPath(handle, locale, bookingPath(parseBookingPathname(usePathname())));
 
   return (
     <Card>
@@ -260,7 +265,7 @@ export function BookingConfirmation({
         <p className="text-ink-soft">{t.done.body}</p>
         {appointment && <AppointmentDetails locale={locale} appointment={appointment} />}
         <div className="flex flex-wrap gap-3">
-          <Link href={localePath(locale, `/a/${manageToken}`)}>
+          <Link href={clinicPath(handle, locale, `/a/${manageToken}`)}>
             <Button type="button" size="lg">
               {t.done.manage}
             </Button>
@@ -271,7 +276,7 @@ export function BookingConfirmation({
             variant="outline"
             onClick={() => {
               forgetManageToken(confirmationUrl);
-              router.replace(localePath(locale));
+              router.replace(clinicPath(handle, locale));
             }}
           >
             {t.done.another}
@@ -392,12 +397,14 @@ function Choice({
 
 function DetailsStep({
   locale,
+  handle,
   booking,
   disabled,
   onBooked,
   onSlotGone,
 }: {
   locale: Locale;
+  handle: string;
   booking: { treatmentId: string; practitionerId: string | null; startsAt: Date };
   disabled: boolean;
   onBooked: (result: { manageToken: string }) => void;
@@ -426,7 +433,7 @@ function DetailsStep({
     e.preventDefault();
     setError(undefined);
     try {
-      const requested = await requestCode.mutateAsync({ phone: form.phone, locale });
+      const requested = await requestCode.mutateAsync({ handle, phone: form.phone, locale });
       setVerificationId(requested.verificationId);
     } catch (err) {
       showError(err);
@@ -438,8 +445,8 @@ function DetailsStep({
     if (!verificationId) return;
     setError(undefined);
     try {
-      await checkCode.mutateAsync({ verificationId, phone: form.phone, code });
-      const result = await book.mutateAsync({ ...booking, ...form, locale, verificationId });
+      await checkCode.mutateAsync({ handle, verificationId, phone: form.phone, code });
+      const result = await book.mutateAsync({ handle, ...booking, ...form, locale, verificationId });
       onBooked(result);
     } catch (err) {
       showError(err);

@@ -1,7 +1,7 @@
 import { type DbOrTx, and, asc, eq, gt, inArray, isNull, lt, ne, or, schema } from "@tsami/db";
 
+import { type Clinic, bookingWindow } from "./clinics";
 import { BookingError } from "./errors";
-import { bookingWindow, getClinicSettings } from "./settings";
 import { type Interval, type PractitionerAvailability, type Slot, computeAvailableSlots } from "./slots";
 import { type LocalDate, addDays, datesBetween, localInstant, toLocalDate } from "./time";
 
@@ -9,17 +9,19 @@ const { appointment, practitioner, practitionerTreatment, scheduleRange, timeOff
 
 export type Actor = { kind: "patient" } | { kind: "admin"; adminId: string };
 
-export async function getBookableTreatment(db: DbOrTx, treatmentId: string) {
+export async function getBookableTreatment(db: DbOrTx, clinicId: string, treatmentId: string) {
   const [row] = await db
     .select()
     .from(treatment)
-    .where(and(eq(treatment.id, treatmentId), isNull(treatment.archivedAt)));
+    .where(
+      and(eq(treatment.id, treatmentId), eq(treatment.clinicId, clinicId), isNull(treatment.archivedAt)),
+    );
   if (!row) throw new BookingError("NOT_FOUND", "Treatment not found");
   return row;
 }
 
-/** Non-Archived Practitioners who perform the Treatment, in Admin sort order. */
-export async function practitionersForTreatment(db: DbOrTx, treatmentId: string) {
+/** Non-Archived Practitioners of the Clinic who perform the Treatment, in Admin sort order. */
+export async function practitionersForTreatment(db: DbOrTx, clinicId: string, treatmentId: string) {
   return db
     .select({
       id: practitioner.id,
@@ -32,7 +34,13 @@ export async function practitionersForTreatment(db: DbOrTx, treatmentId: string)
     })
     .from(practitioner)
     .innerJoin(practitionerTreatment, eq(practitionerTreatment.practitionerId, practitioner.id))
-    .where(and(eq(practitionerTreatment.treatmentId, treatmentId), isNull(practitioner.archivedAt)))
+    .where(
+      and(
+        eq(practitionerTreatment.treatmentId, treatmentId),
+        eq(practitioner.clinicId, clinicId),
+        isNull(practitioner.archivedAt),
+      ),
+    )
     .orderBy(asc(practitioner.sortOrder), asc(practitioner.nameEn));
 }
 
@@ -43,6 +51,7 @@ export async function practitionersForTreatment(db: DbOrTx, treatmentId: string)
 export async function findAvailableSlots(
   db: DbOrTx,
   input: {
+    clinic: Clinic;
     treatmentId: string;
     /** Restrict to one Practitioner; omit for Any Practitioner. */
     practitionerId?: string;
@@ -54,8 +63,9 @@ export async function findAvailableSlots(
     excludeAppointmentId?: string;
   },
 ): Promise<{ slots: Slot[]; practitioners: Awaited<ReturnType<typeof practitionersForTreatment>> }> {
-  const t = await getBookableTreatment(db, input.treatmentId);
-  let candidates = await practitionersForTreatment(db, t.id);
+  const clinicId = input.clinic.id;
+  const t = await getBookableTreatment(db, clinicId, input.treatmentId);
+  let candidates = await practitionersForTreatment(db, clinicId, t.id);
   if (input.practitionerId) candidates = candidates.filter((p) => p.id === input.practitionerId);
   if (candidates.length === 0) return { slots: [], practitioners: [] };
 
@@ -63,7 +73,7 @@ export async function findAvailableSlots(
   let earliest: Date | null = null;
   let latest: Date | null = null;
   if (input.actor.kind === "patient") {
-    const window = bookingWindow(await getClinicSettings(db), input.now);
+    const window = bookingWindow(input.clinic, input.now);
     earliest = window.earliest;
     latest = window.latest;
     from = maxDate(from, toLocalDate(earliest));
@@ -98,6 +108,7 @@ export async function findAvailableSlots(
       .from(timeOff)
       .where(
         and(
+          eq(timeOff.clinicId, clinicId),
           or(isNull(timeOff.practitionerId), inArray(timeOff.practitionerId, ids)),
           lt(timeOff.startsAt, rangeEnd),
           gt(timeOff.endsAt, rangeStart),

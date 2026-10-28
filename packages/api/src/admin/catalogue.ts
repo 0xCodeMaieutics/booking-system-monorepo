@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { appointmentsNeedingAttention } from "@tsami/booking";
-import { and, asc, eq, gt, isNull, or, schema } from "@tsami/db";
+import { type DbOrTx, and, asc, eq, gt, inArray, isNull, or, schema } from "@tsami/db";
 import { z } from "zod";
 
 import { deletePhotos, isPendingPhotoKey, savedPhotoKey } from "./photos";
@@ -41,23 +41,51 @@ const rangeInput = z
 
 const archive = z.object({ id: z.uuid(), archived: z.boolean() });
 
+/** Throws unless the Practitioner belongs to the Clinic, so its Weekly Schedule and Treatments are safe to touch. */
+async function assertOwnPractitioner(db: DbOrTx, clinicId: string, practitionerId: string) {
+  const [row] = await db
+    .select({ id: practitioner.id })
+    .from(practitioner)
+    .where(and(eq(practitioner.id, practitionerId), eq(practitioner.clinicId, clinicId)));
+  if (!row) throw new TRPCError({ code: "NOT_FOUND" });
+}
+
+async function assertOwnTreatments(db: DbOrTx, clinicId: string, treatmentIds: string[]) {
+  if (treatmentIds.length === 0) return;
+  const rows = await db
+    .select({ id: treatment.id })
+    .from(treatment)
+    .where(and(inArray(treatment.id, treatmentIds), eq(treatment.clinicId, clinicId)));
+  if (rows.length !== new Set(treatmentIds).size) throw new TRPCError({ code: "NOT_FOUND" });
+}
+
 export const treatmentsRouter = router({
   list: adminProcedure.query(({ ctx }) =>
-    ctx.db.select().from(treatment).orderBy(asc(treatment.sortOrder), asc(treatment.nameEn)),
+    ctx.db
+      .select()
+      .from(treatment)
+      .where(eq(treatment.clinicId, ctx.admin.clinicId))
+      .orderBy(asc(treatment.sortOrder), asc(treatment.nameEn)),
   ),
   create: adminProcedure.input(treatmentInput).mutation(async ({ ctx, input }) => {
-    const [row] = await ctx.db.insert(treatment).values(input).returning();
+    const [row] = await ctx.db
+      .insert(treatment)
+      .values({ ...input, clinicId: ctx.admin.clinicId })
+      .returning();
     return row!;
   }),
   update: adminProcedure.input(treatmentInput.extend({ id: z.uuid() })).mutation(async ({ ctx, input }) => {
     const { id, ...values } = input;
-    await ctx.db.update(treatment).set(values).where(eq(treatment.id, id));
+    await ctx.db
+      .update(treatment)
+      .set(values)
+      .where(and(eq(treatment.id, id), eq(treatment.clinicId, ctx.admin.clinicId)));
   }),
   setArchived: adminProcedure.input(archive).mutation(async ({ ctx, input }) => {
     await ctx.db
       .update(treatment)
       .set({ archivedAt: input.archived ? ctx.now() : null })
-      .where(eq(treatment.id, input.id));
+      .where(and(eq(treatment.id, input.id), eq(treatment.clinicId, ctx.admin.clinicId)));
   }),
 });
 
@@ -66,8 +94,19 @@ const photoUrl = (photos: PhotoStore, key: string | null) => (key ? photos.publi
 export const practitionersRouter = router({
   list: adminProcedure.query(async ({ ctx }) => {
     const [rows, links] = await Promise.all([
-      ctx.db.select().from(practitioner).orderBy(asc(practitioner.sortOrder), asc(practitioner.nameEn)),
-      ctx.db.select().from(practitionerTreatment),
+      ctx.db
+        .select()
+        .from(practitioner)
+        .where(eq(practitioner.clinicId, ctx.admin.clinicId))
+        .orderBy(asc(practitioner.sortOrder), asc(practitioner.nameEn)),
+      ctx.db
+        .select({
+          practitionerId: practitionerTreatment.practitionerId,
+          treatmentId: practitionerTreatment.treatmentId,
+        })
+        .from(practitionerTreatment)
+        .innerJoin(practitioner, eq(practitioner.id, practitionerTreatment.practitionerId))
+        .where(eq(practitioner.clinicId, ctx.admin.clinicId)),
     ]);
     return rows.map((p) => ({
       ...p,
@@ -77,7 +116,10 @@ export const practitionersRouter = router({
   }),
 
   get: adminProcedure.input(z.object({ id: z.uuid() })).query(async ({ ctx, input }) => {
-    const [p] = await ctx.db.select().from(practitioner).where(eq(practitioner.id, input.id));
+    const [p] = await ctx.db
+      .select()
+      .from(practitioner)
+      .where(and(eq(practitioner.id, input.id), eq(practitioner.clinicId, ctx.admin.clinicId)));
     if (!p) throw new TRPCError({ code: "NOT_FOUND" });
     const [links, ranges] = await Promise.all([
       ctx.db.select().from(practitionerTreatment).where(eq(practitionerTreatment.practitionerId, p.id)),
@@ -97,8 +139,12 @@ export const practitionersRouter = router({
 
   create: adminProcedure.input(practitionerInput).mutation(async ({ ctx, input }) => {
     const { treatmentIds, ...values } = input;
+    await assertOwnTreatments(ctx.db, ctx.admin.clinicId, treatmentIds);
     return ctx.db.transaction(async (tx) => {
-      const [row] = await tx.insert(practitioner).values(values).returning();
+      const [row] = await tx
+        .insert(practitioner)
+        .values({ ...values, clinicId: ctx.admin.clinicId })
+        .returning();
       if (treatmentIds.length > 0) {
         await tx
           .insert(practitionerTreatment)
@@ -119,8 +165,9 @@ export const practitionersRouter = router({
       const [current] = await ctx.db
         .select({ photoKey: practitioner.photoKey })
         .from(practitioner)
-        .where(eq(practitioner.id, id));
+        .where(and(eq(practitioner.id, id), eq(practitioner.clinicId, ctx.admin.clinicId)));
       if (!current) throw new TRPCError({ code: "NOT_FOUND" });
+      await assertOwnTreatments(ctx.db, ctx.admin.clinicId, treatmentIds);
 
       let photoKey = requestedPhotoKey;
       if (photoKey && photoKey !== current.photoKey) {
@@ -166,6 +213,7 @@ export const practitionersRouter = router({
           }
         }
       }
+      await assertOwnPractitioner(ctx.db, ctx.admin.clinicId, input.id);
       await ctx.db.transaction(async (tx) => {
         await tx.delete(scheduleRange).where(eq(scheduleRange.practitionerId, input.id));
         if (input.ranges.length > 0) {
@@ -180,7 +228,7 @@ export const practitionersRouter = router({
     await ctx.db
       .update(practitioner)
       .set({ archivedAt: input.archived ? ctx.now() : null })
-      .where(eq(practitioner.id, input.id));
+      .where(and(eq(practitioner.id, input.id), eq(practitioner.clinicId, ctx.admin.clinicId)));
   }),
 });
 
@@ -193,6 +241,7 @@ export const timeOffRouter = router({
       .leftJoin(practitioner, eq(practitioner.id, timeOff.practitionerId))
       .where(
         and(
+          eq(timeOff.clinicId, ctx.admin.clinicId),
           gt(timeOff.endsAt, ctx.now()),
           input.practitionerId
             ? or(eq(timeOff.practitionerId, input.practitionerId), isNull(timeOff.practitionerId))
@@ -214,16 +263,23 @@ export const timeOffRouter = router({
         .refine((v) => v.startsAt < v.endsAt, "Time Off must end after it starts"),
     )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.insert(timeOff).values({ ...input, createdByAdminId: ctx.admin.id });
+      if (input.practitionerId) await assertOwnPractitioner(ctx.db, ctx.admin.clinicId, input.practitionerId);
+      await ctx.db
+        .insert(timeOff)
+        .values({ ...input, clinicId: ctx.admin.clinicId, createdByAdminId: ctx.admin.id });
     }),
 
   delete: adminProcedure.input(z.object({ id: z.uuid() })).mutation(async ({ ctx, input }) => {
-    await ctx.db.delete(timeOff).where(eq(timeOff.id, input.id));
+    await ctx.db
+      .delete(timeOff)
+      .where(and(eq(timeOff.id, input.id), eq(timeOff.clinicId, ctx.admin.clinicId)));
   }),
 });
 
 export const attentionRouter = router({
   list: adminProcedure
     .input(z.object({ practitionerId: z.uuid().optional() }).optional())
-    .query(({ ctx, input }) => appointmentsNeedingAttention(ctx.db, ctx.now(), input?.practitionerId)),
+    .query(({ ctx, input }) =>
+      appointmentsNeedingAttention(ctx.db, ctx.admin.clinicId, ctx.now(), input?.practitionerId),
+    ),
 });

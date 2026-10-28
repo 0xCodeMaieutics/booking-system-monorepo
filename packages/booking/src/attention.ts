@@ -1,4 +1,4 @@
-import { type DbOrTx, and, eq, gt, gte, schema } from "@tsami/db";
+import { type DbOrTx, and, eq, gt, gte, inArray, schema } from "@tsami/db";
 
 import { fitsWeeklySchedule, overlaps } from "./slots";
 
@@ -16,7 +16,12 @@ export type AttentionReason =
  * after Time Off was added or a Weekly Schedule changed. Changes never touch
  * existing Appointments, so an Admin resolves these by hand.
  */
-export async function appointmentsNeedingAttention(db: DbOrTx, now: Date, practitionerId?: string) {
+export async function appointmentsNeedingAttention(
+  db: DbOrTx,
+  clinicId: string,
+  now: Date,
+  practitionerId?: string,
+) {
   const rows = await db
     .select({ appointment, patient, practitioner, treatment })
     .from(appointment)
@@ -25,6 +30,7 @@ export async function appointmentsNeedingAttention(db: DbOrTx, now: Date, practi
     .innerJoin(treatment, eq(treatment.id, appointment.treatmentId))
     .where(
       and(
+        eq(appointment.clinicId, clinicId),
         eq(appointment.status, "booked"),
         gte(appointment.startsAt, now),
         practitionerId ? eq(appointment.practitionerId, practitionerId) : undefined,
@@ -33,10 +39,17 @@ export async function appointmentsNeedingAttention(db: DbOrTx, now: Date, practi
     .orderBy(appointment.startsAt);
   if (rows.length === 0) return [];
 
+  const practitionerIds = [...new Set(rows.map((r) => r.appointment.practitionerId))];
   const [ranges, offered, offs] = await Promise.all([
-    db.select().from(scheduleRange),
-    db.select().from(practitionerTreatment),
-    db.select().from(timeOff).where(gt(timeOff.endsAt, now)),
+    db.select().from(scheduleRange).where(inArray(scheduleRange.practitionerId, practitionerIds)),
+    db
+      .select()
+      .from(practitionerTreatment)
+      .where(inArray(practitionerTreatment.practitionerId, practitionerIds)),
+    db
+      .select()
+      .from(timeOff)
+      .where(and(eq(timeOff.clinicId, clinicId), gt(timeOff.endsAt, now))),
   ]);
   const offeredSet = new Set(offered.map((o) => `${o.practitionerId}:${o.treatmentId}`));
 

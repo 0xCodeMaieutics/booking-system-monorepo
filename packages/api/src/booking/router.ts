@@ -1,41 +1,46 @@
 import { TRPCError } from "@trpc/server";
 import {
   addDays,
+  appointmentSummary,
   canPatientCancel,
   cancelByPatient,
   checkVerificationCode,
+  clinicName,
   createAppointment,
   findAvailableSlots,
   getAppointmentDetails,
-  getClinicSettings,
+  manageUrl,
   practitionersForTreatment,
   requestVerificationCode,
   smsText,
   toLocalDate,
 } from "@tsami/booking";
-import { asc, isNull, schema } from "@tsami/db";
+import { and, asc, eq, isNull, schema } from "@tsami/db";
 import { z } from "zod";
 
 import { zLocalDate, zLocale } from "../shared";
-import { type BookingContext, createCallerFactory, publicProcedure, router } from "./trpc";
+import {
+  type BookingContext,
+  clinicProcedure,
+  createCallerFactory,
+  openClinicProcedure,
+  router,
+} from "./trpc";
 
 const { treatment } = schema;
 
-function manageUrl(ctx: BookingContext, locale: "ka" | "en", token: string) {
-  return `${ctx.siteUrl}${locale === "en" ? "/en" : ""}/a/${token}`;
-}
-
 export const bookingRouter = router({
-  clinic: publicProcedure.query(async ({ ctx }) => {
-    const settings = await getClinicSettings(ctx.db);
-    return {
-      clinicPhone: settings.clinicPhone,
-      cancellationCutoffHours: settings.cancellationCutoffHours,
-      bookingWindowDays: settings.bookingWindowDays,
-    };
-  }),
+  clinic: clinicProcedure.query(({ ctx: { clinic } }) => ({
+    handle: clinic.handle,
+    nameKa: clinic.nameKa,
+    nameEn: clinic.nameEn,
+    clinicPhone: clinic.phone,
+    cancellationCutoffHours: clinic.cancellationCutoffHours,
+    bookingWindowDays: clinic.bookingWindowDays,
+    closed: clinic.closedAt !== null,
+  })),
 
-  treatments: publicProcedure.query(({ ctx }) =>
+  treatments: clinicProcedure.query(({ ctx }) =>
     ctx.db
       .select({
         id: treatment.id,
@@ -47,30 +52,33 @@ export const bookingRouter = router({
         priceFromGel: treatment.priceFromGel,
       })
       .from(treatment)
-      .where(isNull(treatment.archivedAt))
+      .where(and(eq(treatment.clinicId, ctx.clinic.id), isNull(treatment.archivedAt)))
       .orderBy(asc(treatment.sortOrder), asc(treatment.nameEn)),
   ),
 
   /** Practitioners who perform the Treatment and have at least one Available Slot. */
-  practitioners: publicProcedure.input(z.object({ treatmentId: z.uuid() })).query(async ({ ctx, input }) => {
-    const now = ctx.now();
-    const today = toLocalDate(now);
-    const { slots } = await findAvailableSlots(ctx.db, {
-      treatmentId: input.treatmentId,
-      from: today,
-      to: addDays(today, 366),
-      actor: { kind: "patient" },
-      now,
-    });
-    const withSlots = new Set(slots.map((s) => s.practitionerId));
-    const all = await practitionersForTreatment(ctx.db, input.treatmentId);
-    return all
-      .filter((p) => withSlots.has(p.id))
-      .map(({ photoKey, ...p }) => ({ ...p, photoUrl: photoKey ? `${ctx.photosUrl}/${photoKey}` : null }));
-  }),
+  practitioners: openClinicProcedure
+    .input(z.object({ treatmentId: z.uuid() }))
+    .query(async ({ ctx, input }) => {
+      const now = ctx.now();
+      const today = toLocalDate(now);
+      const { slots } = await findAvailableSlots(ctx.db, {
+        clinic: ctx.clinic,
+        treatmentId: input.treatmentId,
+        from: today,
+        to: addDays(today, 366),
+        actor: { kind: "patient" },
+        now,
+      });
+      const withSlots = new Set(slots.map((s) => s.practitionerId));
+      const all = await practitionersForTreatment(ctx.db, ctx.clinic.id, input.treatmentId);
+      return all
+        .filter((p) => withSlots.has(p.id))
+        .map(({ photoKey, ...p }) => ({ ...p, photoUrl: photoKey ? `${ctx.photosUrl}/${photoKey}` : null }));
+    }),
 
   /** Available start times. Without a Practitioner, times are combined across everyone (Any Practitioner). */
-  slots: publicProcedure
+  slots: openClinicProcedure
     .input(
       z.object({
         treatmentId: z.uuid(),
@@ -81,6 +89,7 @@ export const bookingRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const { slots } = await findAvailableSlots(ctx.db, {
+        clinic: ctx.clinic,
         treatmentId: input.treatmentId,
         practitionerId: input.practitionerId ?? undefined,
         from: input.from,
@@ -92,7 +101,7 @@ export const bookingRouter = router({
       return [...unique.values()];
     }),
 
-  requestCode: publicProcedure
+  requestCode: openClinicProcedure
     .input(z.object({ phone: z.string().min(5).max(32), locale: zLocale }))
     .mutation(async ({ ctx, input }) => {
       const { verificationId, phone, code } = await requestVerificationCode(ctx.db, {
@@ -100,18 +109,21 @@ export const bookingRouter = router({
         ipAddress: ctx.ipAddress,
         now: ctx.now(),
       });
-      await ctx.sms.send(phone, smsText.verificationCode(code, input.locale));
+      await ctx.sms.send(
+        phone,
+        smsText.verificationCode(clinicName(ctx.clinic, input.locale), code, input.locale),
+      );
       return { verificationId };
     }),
 
-  checkCode: publicProcedure
+  checkCode: openClinicProcedure
     .input(z.object({ verificationId: z.uuid(), phone: z.string(), code: z.string().max(10) }))
     .mutation(async ({ ctx, input }) => {
       await checkVerificationCode(ctx.db, { ...input, now: ctx.now() });
       return { ok: true as const };
     }),
 
-  book: publicProcedure
+  book: openClinicProcedure
     .input(
       z.object({
         treatmentId: z.uuid(),
@@ -127,6 +139,7 @@ export const bookingRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const { appointment, manageToken } = await createAppointment(ctx.db, {
+        clinic: ctx.clinic,
         actor: { kind: "patient" },
         treatmentId: input.treatmentId,
         practitionerId: input.practitionerId,
@@ -138,14 +151,10 @@ export const bookingRouter = router({
         verificationId: input.verificationId,
       });
 
-      const details = await getAppointmentDetails(ctx.db, { id: appointment.id });
+      const details = await getAppointmentDetails(ctx.db, ctx.clinic.id, { id: appointment.id });
       if (!details) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      const summary = {
-        treatmentName: input.locale === "ka" ? details.treatment.nameKa : details.treatment.nameEn,
-        practitionerName: input.locale === "ka" ? details.practitioner.nameKa : details.practitioner.nameEn,
-        startsAt: appointment.startsAt,
-      };
-      const url = manageUrl(ctx, input.locale, manageToken);
+      const summary = appointmentSummary(details, input.locale);
+      const url = manageUrl(ctx.siteUrl, ctx.clinic.handle, input.locale, manageToken);
       try {
         await ctx.sms.send(details.patient.phone, smsText.confirmation(summary, url, input.locale));
       } catch (error) {
@@ -155,12 +164,12 @@ export const bookingRouter = router({
       return { manageToken, ...summary };
     }),
 
-  appointment: publicProcedure
+  appointment: clinicProcedure
     .input(z.object({ token: z.string().min(16) }))
     .query(async ({ ctx, input }) => {
-      const details = await getAppointmentDetails(ctx.db, { manageToken: input.token });
+      const details = await getAppointmentDetails(ctx.db, ctx.clinic.id, { manageToken: input.token });
       if (!details) throw new TRPCError({ code: "NOT_FOUND" });
-      const settings = await getClinicSettings(ctx.db);
+      const { clinic } = ctx;
       const a = details.appointment;
       return {
         status: a.status,
@@ -169,14 +178,14 @@ export const bookingRouter = router({
         treatment: { nameKa: details.treatment.nameKa, nameEn: details.treatment.nameEn },
         practitioner: { nameKa: details.practitioner.nameKa, nameEn: details.practitioner.nameEn },
         patientName: details.patient.fullName,
-        canCancel: canPatientCancel(a, settings.cancellationCutoffHours, ctx.now()),
-        cancellationCutoffHours: settings.cancellationCutoffHours,
-        clinicPhone: settings.clinicPhone,
+        canCancel: canPatientCancel(a, clinic.cancellationCutoffHours, ctx.now()),
+        cancellationCutoffHours: clinic.cancellationCutoffHours,
+        clinicPhone: clinic.phone,
       };
     }),
 
-  cancel: publicProcedure.input(z.object({ token: z.string().min(16) })).mutation(async ({ ctx, input }) => {
-    await cancelByPatient(ctx.db, input.token, ctx.now());
+  cancel: clinicProcedure.input(z.object({ token: z.string().min(16) })).mutation(async ({ ctx, input }) => {
+    await cancelByPatient(ctx.db, ctx.clinic, input.token, ctx.now());
     return { ok: true as const };
   }),
 });

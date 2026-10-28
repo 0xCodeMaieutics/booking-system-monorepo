@@ -15,7 +15,10 @@ export async function createAdminContext(headers: Headers): Promise<AdminContext
   return {
     db: getDb(),
     sms,
-    admin: user && !user.deactivatedAt ? { id: user.id, name: user.name, email: user.email } : null,
+    admin:
+      user && !user.deactivatedAt
+        ? { id: user.id, clinicId: user.clinicId, name: user.name, email: user.email }
+        : null,
     accounts: adminAccounts,
     photos: photoStore,
     bookingSiteUrl: process.env.BOOKING_SITE_URL ?? "http://localhost:3000",

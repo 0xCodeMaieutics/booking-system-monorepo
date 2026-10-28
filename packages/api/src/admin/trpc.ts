@@ -4,11 +4,11 @@ import type { Db } from "@tsami/db";
 
 import { rethrowBookingError, trpcOptions } from "../shared";
 
-export type SignedInAdmin = { id: string; name: string; email: string };
+export type SignedInAdmin = { id: string; clinicId: string; name: string; email: string };
 
 /** Admin account operations, implemented by the Admin Dashboard's auth setup. */
 export interface AdminAccounts {
-  invite(input: { name: string; email: string }): Promise<void>;
+  invite(input: { clinicId: string; name: string; email: string }): Promise<void>;
   deactivate(adminId: string): Promise<void>;
   reactivate(adminId: string): Promise<void>;
 }

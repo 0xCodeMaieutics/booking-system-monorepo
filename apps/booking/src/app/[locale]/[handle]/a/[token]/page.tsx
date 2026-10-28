@@ -4,25 +4,33 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AppointmentDetails } from "@/components/appointment-details";
-import { type Locale, dictionaries, isLocale, localePath } from "@/i18n";
-import { findOrNull, serverCaller } from "@/server/caller";
+import { type Locale, clinicPath, dictionaries, isLocale } from "@/i18n";
+import { findClinic, findOrNull, serverCaller } from "@/server/caller";
 
 import { CancelAppointment } from "./page.client";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
-export default async function ManagePage({ params }: { params: Promise<{ locale: string; token: string }> }) {
-  const { locale, token } = await params;
-  if (!isLocale(locale)) notFound();
+export default async function ManagePage({
+  params,
+}: {
+  params: Promise<{ locale: string; handle: string; token: string }>;
+}) {
+  const { locale, handle, token } = await params;
+  const clinic = await findClinic(handle);
+  if (!isLocale(locale) || !clinic) notFound();
   const t = dictionaries[locale];
-  const a = token.length >= 16 ? await findOrNull((await serverCaller()).appointment({ token })) : null;
+  const a =
+    token.length >= 16 ? await findOrNull((await serverCaller()).appointment({ handle, token })) : null;
+  // A Closed Clinic takes no new Bookings, so there is nothing to book again.
+  const bookAgain = clinic.closed ? null : <BookAgain locale={locale} handle={handle} />;
 
   if (!a) {
     return (
       <Card>
         <CardContent className="flex flex-col items-start gap-4">
           <p>{t.manage.notFound}</p>
-          <BookAgain locale={locale} />
+          {bookAgain}
         </CardContent>
       </Card>
     );
@@ -39,7 +47,7 @@ export default async function ManagePage({ params }: { params: Promise<{ locale:
 
         {a.status === "booked" &&
           (a.canCancel ? (
-            <CancelAppointment locale={locale} token={token} />
+            <CancelAppointment locale={locale} handle={handle} token={token} />
           ) : (
             <p className="text-sm text-ink-soft">
               {t.manage.tooLate(a.cancellationCutoffHours)}{" "}
@@ -48,15 +56,15 @@ export default async function ManagePage({ params }: { params: Promise<{ locale:
               </a>
             </p>
           ))}
-        {a.status === "cancelled" && <BookAgain locale={locale} />}
+        {a.status === "cancelled" && bookAgain}
       </CardContent>
     </Card>
   );
 }
 
-function BookAgain({ locale }: { locale: Locale }) {
+function BookAgain({ locale, handle }: { locale: Locale; handle: string }) {
   return (
-    <Link href={localePath(locale)}>
+    <Link href={clinicPath(handle, locale)}>
       <Button type="button" size="lg" variant="outline">
         {dictionaries[locale].manage.bookAgain}
       </Button>
