@@ -35,10 +35,39 @@ jobs:
 
       - run: pnpm ${{ matrix.check.script }}
 
+  migrations:
+    name: Migrations up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter @tsami/db exec drizzle-kit check
+
+      - run: pnpm --filter @tsami/db exec drizzle-kit generate < /dev/null
+
+      - name: Fail if schema has unmigrated changes
+        run: |
+          changes=$(git status --porcelain -- packages/db/migrations)
+          if [ -n "$changes" ]; then
+            echo "::error::packages/db/src/schema.ts differs from packages/db/migrations. Run 'pnpm db:generate' and commit the result."
+            echo "$changes"
+            git diff -- packages/db/migrations
+            exit 1
+          fi
+
   migrate:
     name: Migrate database
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: checks
+    needs: [checks, migrations]
     runs-on: ubuntu-latest
     environment: production
     concurrency:
