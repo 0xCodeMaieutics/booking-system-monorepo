@@ -6,7 +6,8 @@ export type BookingErrorCode =
   | "INVALID_CODE"
   | "RATE_LIMITED"
   | "CUTOFF_PASSED"
-  | "INVALID_STATE";
+  | "INVALID_STATE"
+  | "CLINIC_CLOSED";
 
 export class BookingError extends Error {
   constructor(

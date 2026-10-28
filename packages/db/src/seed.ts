@@ -1,5 +1,5 @@
-// Development seed data. Durations, prices and the Practitioner "Anna" are
-// placeholders for the Clinic to replace in the Admin Dashboard.
+// Development seed data: Face, the first Clinic. Durations, prices and the
+// Practitioner "Anna" are placeholders for the Clinic to replace in the Admin Dashboard.
 import { createDb } from "./index";
 import * as s from "./schema";
 
@@ -24,34 +24,44 @@ const treatments = [
     durationMinutes: 60,
     priceFromGel: 120,
   },
-].map((t, i) => ({ ...t, sortOrder: i }));
+];
 
 await db.transaction(async (tx) => {
-  const existing = await tx.select({ id: s.treatment.id }).from(s.treatment).limit(1);
+  const existing = await tx.select({ id: s.clinic.id }).from(s.clinic).limit(1);
   if (existing.length > 0) {
     console.log("Database already has data; skipping seed.");
     return;
   }
 
-  await tx
-    .insert(s.clinicSettings)
-    .values({ id: 1, clinicPhone: "+995599446450" })
-    .onConflictDoUpdate({ target: s.clinicSettings.id, set: { clinicPhone: "+995599446450" } });
+  const [face] = await tx
+    .insert(s.clinic)
+    .values({
+      handle: "face-kutaisi",
+      nameKa: "ესთეტიკის ცენტრი ფეისი",
+      nameEn: "Face Aesthetic Centre",
+      phone: "+995599446450",
+    })
+    .returning();
+  if (!face) throw new Error("Failed to insert the Clinic");
 
-  const insertedTreatments = await tx.insert(s.treatment).values(treatments).returning();
+  const insertedTreatments = await tx
+    .insert(s.treatment)
+    .values(treatments.map((t, i) => ({ ...t, clinicId: face.id, sortOrder: i })))
+    .returning();
   const byName = new Map(insertedTreatments.map((t) => [t.nameEn, t.id]));
 
   const [khatuna, anna] = await tx
     .insert(s.practitioner)
     .values([
       {
+        clinicId: face.id,
         nameKa: "ხათუნა რობაქიძე",
         nameEn: "Khatuna Robakidze",
         titleKa: "ექიმი",
         titleEn: "Dr.",
         sortOrder: 0,
       },
-      { nameKa: "ანა", nameEn: "Anna", sortOrder: 1 },
+      { clinicId: face.id, nameKa: "ანა", nameEn: "Anna", sortOrder: 1 },
     ])
     .returning();
   if (!khatuna || !anna) throw new Error("Failed to insert Practitioners");
@@ -73,7 +83,7 @@ await db.transaction(async (tx) => {
     ),
   );
 
-  console.log("Seeded Treatments, Practitioners and Weekly Schedules.");
+  console.log("Seeded Face (face-kutaisi) with Treatments, Practitioners and Weekly Schedules.");
 });
 
 await db.$client.end();

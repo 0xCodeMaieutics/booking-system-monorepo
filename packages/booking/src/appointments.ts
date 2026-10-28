@@ -1,9 +1,9 @@
 import { type Db, type DbOrTx, and, eq, gte, isExclusionViolation, isNull, lt, schema, sql } from "@tsami/db";
 
 import { type Actor, findAvailableSlots, getBookableTreatment } from "./availability";
+import { type Clinic, clinicName } from "./clinics";
 import { BookingError } from "./errors";
 import { normalizePhone } from "./phone";
-import { getClinicSettings } from "./settings";
 import { rankForAnyPractitioner } from "./slots";
 import { addDays, localInstant, toLocalDate } from "./time";
 import { createManageToken, sha256 } from "./tokens";
@@ -16,6 +16,7 @@ const NO_OVERLAP = "appointment_no_overlap";
 export type Appointment = typeof appointment.$inferSelect;
 
 export type CreateAppointmentInput = {
+  clinic: Clinic;
   actor: Actor;
   treatmentId: string;
   /** Null means Any Practitioner. */
@@ -35,7 +36,8 @@ export async function createAppointment(
   db: Db,
   input: CreateAppointmentInput,
 ): Promise<{ appointment: Appointment; manageToken: string }> {
-  const t = await getBookableTreatment(db, input.treatmentId);
+  const clinicId = input.clinic.id;
+  const t = await getBookableTreatment(db, clinicId, input.treatmentId);
   const phone = normalizePhone(input.patient.phone);
   const override = input.actor.kind === "admin" && input.override === true;
 
@@ -46,15 +48,13 @@ export async function createAppointment(
   let candidateIds: string[];
   if (override) {
     if (!input.practitionerId) throw new BookingError("SLOT_UNAVAILABLE", "Pick a Practitioner to override");
-    const [p] = await db
-      .select({ id: practitioner.id })
-      .from(practitioner)
-      .where(and(eq(practitioner.id, input.practitionerId), isNull(practitioner.archivedAt)));
-    if (!p) throw new BookingError("NOT_FOUND", "Practitioner not found");
+    const p = await findPractitioner(db, clinicId, input.practitionerId);
+    if (!p || p.archivedAt) throw new BookingError("NOT_FOUND", "Practitioner not found");
     candidateIds = [p.id];
   } else {
     const day = toLocalDate(input.startsAt);
     const { slots, practitioners } = await findAvailableSlots(db, {
+      clinic: input.clinic,
       treatmentId: t.id,
       practitionerId: input.practitionerId ?? undefined,
       from: day,
@@ -67,7 +67,9 @@ export async function createAppointment(
     );
     const free = practitioners.filter((p) => freeIds.has(p.id));
     if (free.length === 0) throw new BookingError("SLOT_UNAVAILABLE");
-    candidateIds = rankForAnyPractitioner(free, await appointmentCountsOn(db, day)).map((p) => p.id);
+    candidateIds = rankForAnyPractitioner(free, await appointmentCountsOn(db, clinicId, day)).map(
+      (p) => p.id,
+    );
   }
 
   const endsAt = new Date(input.startsAt.getTime() + t.durationMinutes * 60_000);
@@ -79,9 +81,14 @@ export async function createAppointment(
 
     const [p] = await tx
       .insert(patient)
-      .values({ phone, fullName: input.patient.fullName.trim(), email: input.patient.email || null })
+      .values({
+        clinicId,
+        phone,
+        fullName: input.patient.fullName.trim(),
+        email: input.patient.email || null,
+      })
       .onConflictDoUpdate({
-        target: patient.phone,
+        target: [patient.clinicId, patient.phone],
         set: { email: sql`coalesce(excluded.email, ${patient.email})` },
       })
       .returning({ id: patient.id });
@@ -94,6 +101,7 @@ export async function createAppointment(
           const [row] = await sp
             .insert(appointment)
             .values({
+              clinicId,
               patientId: p.id,
               practitionerId,
               treatmentId: t.id,
@@ -117,12 +125,21 @@ export async function createAppointment(
   return { appointment: created, manageToken: token };
 }
 
-async function appointmentCountsOn(db: DbOrTx, day: string): Promise<Map<string, number>> {
+async function findPractitioner(db: DbOrTx, clinicId: string, practitionerId: string) {
+  const [row] = await db
+    .select({ id: practitioner.id, archivedAt: practitioner.archivedAt })
+    .from(practitioner)
+    .where(and(eq(practitioner.id, practitionerId), eq(practitioner.clinicId, clinicId)));
+  return row ?? null;
+}
+
+async function appointmentCountsOn(db: DbOrTx, clinicId: string, day: string): Promise<Map<string, number>> {
   const rows = await db
     .select({ practitionerId: appointment.practitionerId, count: sql<number>`count(*)::int` })
     .from(appointment)
     .where(
       and(
+        eq(appointment.clinicId, clinicId),
         eq(appointment.status, "booked"),
         gte(appointment.startsAt, localInstant(day)),
         lt(appointment.startsAt, localInstant(addDays(day, 1))),
@@ -148,18 +165,44 @@ async function consumeVerification(tx: DbOrTx, id: string, phone: string, now: D
   if (consumed.length === 0) throw new BookingError("INVALID_CODE", "Verification is no longer valid");
 }
 
-/** Details needed to describe an Appointment to its Patient. */
-export async function getAppointmentDetails(db: DbOrTx, where: { id: string } | { manageToken: string }) {
+/** Details needed to describe an Appointment to its Patient, found within one Clinic. */
+export async function getAppointmentDetails(
+  db: DbOrTx,
+  clinicId: string,
+  where: { id: string } | { manageToken: string },
+) {
   const condition =
     "id" in where ? eq(appointment.id, where.id) : eq(appointment.manageTokenHash, sha256(where.manageToken));
   const [row] = await db
-    .select({ appointment, patient, practitioner, treatment })
+    .select({ appointment, clinic: schema.clinic, patient, practitioner, treatment })
     .from(appointment)
+    .innerJoin(schema.clinic, eq(schema.clinic.id, appointment.clinicId))
     .innerJoin(patient, eq(patient.id, appointment.patientId))
     .innerJoin(practitioner, eq(practitioner.id, appointment.practitionerId))
     .innerJoin(treatment, eq(treatment.id, appointment.treatmentId))
-    .where(condition);
+    .where(and(condition, eq(appointment.clinicId, clinicId)));
   return row ?? null;
+}
+
+type Named = { nameKa: string; nameEn: string };
+
+/** What an SMS says about an Appointment, in the Patient's Locale. */
+export function appointmentSummary(
+  details: {
+    appointment: Pick<Appointment, "startsAt">;
+    clinic: Named;
+    practitioner: Named;
+    treatment: Named;
+  },
+  locale: "ka" | "en",
+) {
+  const name = (x: Named) => (locale === "ka" ? x.nameKa : x.nameEn);
+  return {
+    clinicName: clinicName(details.clinic, locale),
+    treatmentName: name(details.treatment),
+    practitionerName: name(details.practitioner),
+    startsAt: details.appointment.startsAt,
+  };
 }
 
 export function canPatientCancel(
@@ -170,12 +213,16 @@ export function canPatientCancel(
   return a.status === "booked" && a.startsAt.getTime() - now.getTime() >= cutoffHours * 3_600_000;
 }
 
-export async function cancelByPatient(db: Db, manageToken: string, now: Date): Promise<Appointment> {
-  const details = await getAppointmentDetails(db, { manageToken });
+export async function cancelByPatient(
+  db: Db,
+  clinic: Clinic,
+  manageToken: string,
+  now: Date,
+): Promise<Appointment> {
+  const details = await getAppointmentDetails(db, clinic.id, { manageToken });
   if (!details) throw new BookingError("NOT_FOUND");
-  const settings = await getClinicSettings(db);
   if (details.appointment.status !== "booked") throw new BookingError("INVALID_STATE");
-  if (!canPatientCancel(details.appointment, settings.cancellationCutoffHours, now)) {
+  if (!canPatientCancel(details.appointment, clinic.cancellationCutoffHours, now)) {
     throw new BookingError("CUTOFF_PASSED");
   }
   const [row] = await db
@@ -192,9 +239,19 @@ export async function cancelByPatient(db: Db, manageToken: string, now: Date): P
   return row;
 }
 
+async function findAppointment(db: DbOrTx, clinicId: string, appointmentId: string) {
+  const [row] = await db
+    .select()
+    .from(appointment)
+    .where(and(eq(appointment.id, appointmentId), eq(appointment.clinicId, clinicId)));
+  if (!row) throw new BookingError("NOT_FOUND");
+  return row;
+}
+
 export async function setStatusByAdmin(
   db: Db,
   input: {
+    clinicId: string;
     appointmentId: string;
     status: "cancelled" | "completed" | "no_show" | "booked";
     adminId: string;
@@ -202,8 +259,7 @@ export async function setStatusByAdmin(
     now: Date;
   },
 ): Promise<Appointment> {
-  const [current] = await db.select().from(appointment).where(eq(appointment.id, input.appointmentId));
-  if (!current) throw new BookingError("NOT_FOUND");
+  const current = await findAppointment(db, input.clinicId, input.appointmentId);
   if (current.status === input.status) return current;
   if ((input.status === "completed" || input.status === "no_show") && current.startsAt > input.now) {
     throw new BookingError("INVALID_STATE", "Only past Appointments can be marked Completed or No-show");
@@ -233,6 +289,7 @@ export async function setStatusByAdmin(
 export async function moveAppointment(
   db: Db,
   input: {
+    clinic: Clinic;
     appointmentId: string;
     practitionerId: string;
     startsAt: Date;
@@ -241,14 +298,18 @@ export async function moveAppointment(
     now: Date;
   },
 ): Promise<Appointment> {
-  const [current] = await db.select().from(appointment).where(eq(appointment.id, input.appointmentId));
-  if (!current) throw new BookingError("NOT_FOUND");
+  const current = await findAppointment(db, input.clinic.id, input.appointmentId);
   if (current.status !== "booked")
     throw new BookingError("INVALID_STATE", "Only Booked Appointments can move");
 
-  if (!input.override) {
+  if (input.override) {
+    if (!(await findPractitioner(db, input.clinic.id, input.practitionerId))) {
+      throw new BookingError("NOT_FOUND", "Practitioner not found");
+    }
+  } else {
     const day = toLocalDate(input.startsAt);
     const { slots } = await findAvailableSlots(db, {
+      clinic: input.clinic,
       treatmentId: current.treatmentId,
       practitionerId: input.practitionerId,
       from: day,
@@ -261,7 +322,6 @@ export async function moveAppointment(
       throw new BookingError("SLOT_UNAVAILABLE");
     }
   }
-
   const duration = current.endsAt.getTime() - current.startsAt.getTime();
   try {
     const [row] = await db

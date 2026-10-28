@@ -1,12 +1,14 @@
 import { TRPCError } from "@trpc/server";
 import {
   type Appointment,
+  appointmentSummary,
   createAppointment,
   findAvailableSlots,
   getAppointmentDetails,
-  getClinicSettings,
+  getClinic,
   localInstant,
   addDays,
+  manageUrl,
   moveAppointment,
   setStatusByAdmin,
   smsText,
@@ -23,22 +25,17 @@ async function notifyPatient(
   ctx: AdminContext,
   a: Appointment,
   message: "cancelledByClinic" | "moved" | "confirmation",
-  manageUrl?: string,
+  manageLink?: string,
 ): Promise<boolean> {
-  const details = await getAppointmentDetails(ctx.db, { id: a.id });
+  const details = await getAppointmentDetails(ctx.db, a.clinicId, { id: a.id });
   if (!details) return false;
-  const settings = await getClinicSettings(ctx.db);
   const locale = a.locale;
-  const summary = {
-    treatmentName: locale === "ka" ? details.treatment.nameKa : details.treatment.nameEn,
-    practitionerName: locale === "ka" ? details.practitioner.nameKa : details.practitioner.nameEn,
-    startsAt: a.startsAt,
-  };
+  const summary = appointmentSummary(details, locale);
   try {
     const body =
       message === "confirmation"
-        ? smsText.confirmation(summary, manageUrl ?? "", locale)
-        : smsText[message](summary, settings.clinicPhone, locale);
+        ? smsText.confirmation(summary, manageLink ?? "", locale)
+        : smsText[message](summary, details.clinic.phone, locale);
     await ctx.sms.send(details.patient.phone, body);
     return true;
   } catch (error) {
@@ -65,6 +62,7 @@ export const appointmentsRouter = router({
       .leftJoin(admin, eq(admin.id, appointment.createdByAdminId))
       .where(
         and(
+          eq(appointment.clinicId, ctx.admin.clinicId),
           gte(appointment.startsAt, localInstant(input.date)),
           lt(appointment.startsAt, localInstant(addDays(input.date, 1))),
         ),
@@ -84,6 +82,7 @@ export const appointmentsRouter = router({
     )
     .query(async ({ ctx, input }) => {
       const { slots } = await findAvailableSlots(ctx.db, {
+        clinic: await getClinic(ctx.db, ctx.admin.clinicId),
         treatmentId: input.treatmentId,
         practitionerId: input.practitionerId ?? undefined,
         from: input.date,
@@ -110,7 +109,9 @@ export const appointmentsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const clinic = await getClinic(ctx.db, ctx.admin.clinicId);
       const { appointment: created, manageToken } = await createAppointment(ctx.db, {
+        clinic,
         actor: { kind: "admin", adminId: ctx.admin.id },
         treatmentId: input.treatmentId,
         practitionerId: input.practitionerId,
@@ -121,10 +122,10 @@ export const appointmentsRouter = router({
         now: ctx.now(),
         override: input.override,
       });
-      const manageUrl = `${ctx.bookingSiteUrl}${created.locale === "en" ? "/en" : ""}/a/${manageToken}`;
+      const link = manageUrl(ctx.bookingSiteUrl, clinic.handle, created.locale, manageToken);
       // Appointments recorded after the fact (walk-ins) don't need a confirmation.
       const smsSent =
-        created.startsAt > ctx.now() ? await notifyPatient(ctx, created, "confirmation", manageUrl) : false;
+        created.startsAt > ctx.now() ? await notifyPatient(ctx, created, "confirmation", link) : false;
       return { ...created, smsSent };
     }),
 
@@ -139,6 +140,7 @@ export const appointmentsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const moved = await moveAppointment(ctx.db, {
+        clinic: await getClinic(ctx.db, ctx.admin.clinicId),
         appointmentId: input.id,
         practitionerId: input.practitionerId,
         startsAt: input.startsAt,
@@ -159,6 +161,7 @@ export const appointmentsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const updated = await setStatusByAdmin(ctx.db, {
+        clinicId: ctx.admin.clinicId,
         appointmentId: input.id,
         status: input.status,
         adminId: ctx.admin.id,
@@ -175,7 +178,12 @@ export const appointmentsRouter = router({
 
 export const patientsRouter = router({
   recent: adminProcedure.query(({ ctx }) =>
-    ctx.db.select().from(patient).orderBy(desc(patient.createdAt)).limit(20),
+    ctx.db
+      .select()
+      .from(patient)
+      .where(eq(patient.clinicId, ctx.admin.clinicId))
+      .orderBy(desc(patient.createdAt))
+      .limit(20),
   ),
 
   search: adminProcedure.input(z.object({ q: z.string().trim().min(2).max(100) })).query(({ ctx, input }) => {
@@ -184,9 +192,12 @@ export const patientsRouter = router({
       .select()
       .from(patient)
       .where(
-        or(
-          ilike(patient.fullName, `%${input.q}%`),
-          digits.length >= 3 ? ilike(patient.phone, `%${digits}%`) : undefined,
+        and(
+          eq(patient.clinicId, ctx.admin.clinicId),
+          or(
+            ilike(patient.fullName, `%${input.q}%`),
+            digits.length >= 3 ? ilike(patient.phone, `%${digits}%`) : undefined,
+          ),
         ),
       )
       .orderBy(asc(patient.fullName))
@@ -194,7 +205,10 @@ export const patientsRouter = router({
   }),
 
   get: adminProcedure.input(z.object({ id: z.uuid() })).query(async ({ ctx, input }) => {
-    const [p] = await ctx.db.select().from(patient).where(eq(patient.id, input.id));
+    const [p] = await ctx.db
+      .select()
+      .from(patient)
+      .where(and(eq(patient.id, input.id), eq(patient.clinicId, ctx.admin.clinicId)));
     if (!p) throw new TRPCError({ code: "NOT_FOUND" });
     const history = await ctx.db
       .select({
@@ -222,6 +236,6 @@ export const patientsRouter = router({
       await ctx.db
         .update(patient)
         .set({ fullName: input.fullName, email: input.email || null })
-        .where(eq(patient.id, input.id));
+        .where(and(eq(patient.id, input.id), eq(patient.clinicId, ctx.admin.clinicId)));
     }),
 });

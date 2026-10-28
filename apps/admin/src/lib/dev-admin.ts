@@ -3,4 +3,6 @@ export const DEV_ADMIN = {
   email: "dev@tsami.local",
   name: "Dev Admin",
   password: "dev-password",
+  /** The seeded Clinic the development Admin belongs to. */
+  clinicHandle: "face-kutaisi",
 };

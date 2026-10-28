@@ -18,3 +18,8 @@ export async function findOrNull<T>(lookup: Promise<T>): Promise<T | null> {
     throw error;
   }
 }
+
+/** The Clinic behind a Handle, once per request; `null` when no Clinic has it. */
+export const findClinic = cache(async (handle: string) =>
+  findOrNull((await serverCaller()).clinic({ handle })),
+);

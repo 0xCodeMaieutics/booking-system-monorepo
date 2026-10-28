@@ -22,9 +22,19 @@ Requires Docker. `make setup` creates `.env` from `.env.example` if missing, ins
 ```sh
 make setup
 pnpm dev:landing   # serves apps/landing on http://localhost:4173
-pnpm dev:booking   # Booking Site on http://localhost:3000
+pnpm dev:booking   # Booking Site; the seeded Clinic is at http://localhost:3000/face-kutaisi
 pnpm dev:admin     # Admin Dashboard
 pnpm dev:marketing # Marketing Site on http://localhost:3003
+```
+
+## Onboarding a Clinic
+
+Tsami onboards Clinics by hand (see `CONTEXT.md` and `docs/adr/0008`). This creates the Clinic with its permanent Handle and emails its first Admin an invitation:
+
+```sh
+pnpm clinic:onboard --handle face-kutaisi --name-ka "ესთეტიკის ცენტრი ფეისი" --name-en "Face Aesthetic Centre" \
+  --phone +995599446450 --admin-email owner@example.com --admin-name "Owner Name"
+pnpm clinic:close face-kutaisi   # stops new Bookings; Manage Links and Admin sign-in keep working
 ```
 
 ## Deploying the Landing Page

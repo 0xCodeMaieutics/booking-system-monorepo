@@ -10,6 +10,7 @@ import {
   smallint,
   text,
   timestamp,
+  unique,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -23,17 +24,47 @@ const timestamps = {
 
 export const locale = pgEnum("locale", ["ka", "en"]);
 
+// Clinics. Everything below belongs to exactly one Clinic.
+
+export const clinic = pgTable(
+  "clinic",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    /** The Clinic's permanent Booking Site address, e.g. `face-kutaisi` (see docs/adr/0008). */
+    handle: text().notNull().unique(),
+    nameKa: text().notNull(),
+    nameEn: text().notNull(),
+    phone: text().notNull().default(""),
+    minNoticeMinutes: integer().notNull().default(120),
+    bookingWindowDays: integer().notNull().default(60),
+    cancellationCutoffHours: integer().notNull().default(24),
+    closedAt: timestamp({ withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [check("clinic_handle_format", sql`${t.handle} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`)],
+);
+
+const clinicId = () =>
+  uuid()
+    .notNull()
+    .references(() => clinic.id);
+
 // Admins and their sessions. Shape is dictated by Better Auth.
 
-export const admin = pgTable("admin", {
-  id: text().primaryKey(),
-  name: text().notNull(),
-  email: text().notNull().unique(),
-  emailVerified: boolean().notNull().default(false),
-  image: text(),
-  deactivatedAt: timestamp({ withTimezone: true }),
-  ...timestamps,
-});
+export const admin = pgTable(
+  "admin",
+  {
+    id: text().primaryKey(),
+    clinicId: clinicId(),
+    name: text().notNull(),
+    email: text().notNull().unique(),
+    emailVerified: boolean().notNull().default(false),
+    image: text(),
+    deactivatedAt: timestamp({ withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [index().on(t.clinicId)],
+);
 
 export const adminSession = pgTable(
   "admin_session",
@@ -82,23 +113,29 @@ export const authVerification = pgTable("auth_verification", {
 
 // Catalogue
 
-export const practitioner = pgTable("practitioner", {
-  id: uuid().primaryKey().defaultRandom(),
-  nameKa: text().notNull(),
-  nameEn: text().notNull(),
-  titleKa: text(),
-  titleEn: text(),
-  /** Object key of the Practitioner Photo in the photo bucket, e.g. `practitioners/<uuid>.webp`. */
-  photoKey: text(),
-  sortOrder: integer().notNull().default(0),
-  archivedAt: timestamp({ withTimezone: true }),
-  ...timestamps,
-});
+export const practitioner = pgTable(
+  "practitioner",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    clinicId: clinicId(),
+    nameKa: text().notNull(),
+    nameEn: text().notNull(),
+    titleKa: text(),
+    titleEn: text(),
+    /** Object key of the Practitioner Photo in the photo bucket, e.g. `practitioners/<uuid>.webp`. */
+    photoKey: text(),
+    sortOrder: integer().notNull().default(0),
+    archivedAt: timestamp({ withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [index().on(t.clinicId)],
+);
 
 export const treatment = pgTable(
   "treatment",
   {
     id: uuid().primaryKey().defaultRandom(),
+    clinicId: clinicId(),
     nameKa: text().notNull(),
     nameEn: text().notNull(),
     descriptionKa: text(),
@@ -109,7 +146,7 @@ export const treatment = pgTable(
     archivedAt: timestamp({ withTimezone: true }),
     ...timestamps,
   },
-  (t) => [check("treatment_duration_positive", sql`${t.durationMinutes} > 0`)],
+  (t) => [index().on(t.clinicId), check("treatment_duration_positive", sql`${t.durationMinutes} > 0`)],
 );
 
 export const practitionerTreatment = pgTable(
@@ -155,6 +192,7 @@ export const timeOff = pgTable(
   "time_off",
   {
     id: uuid().primaryKey().defaultRandom(),
+    clinicId: clinicId(),
     practitionerId: uuid().references(() => practitioner.id, { onDelete: "cascade" }),
     startsAt: timestamp({ withTimezone: true }).notNull(),
     endsAt: timestamp({ withTimezone: true }).notNull(),
@@ -163,34 +201,28 @@ export const timeOff = pgTable(
     ...timestamps,
   },
   (t) => [
+    index().on(t.clinicId, t.startsAt),
     index().on(t.practitionerId, t.startsAt),
     check("time_off_bounds", sql`${t.startsAt} < ${t.endsAt}`),
   ],
 );
 
-export const clinicSettings = pgTable(
-  "clinic_settings",
-  {
-    id: smallint().primaryKey().default(1),
-    minNoticeMinutes: integer().notNull().default(120),
-    bookingWindowDays: integer().notNull().default(60),
-    cancellationCutoffHours: integer().notNull().default(24),
-    clinicPhone: text().notNull().default(""),
-    ...timestamps,
-  },
-  (t) => [check("clinic_settings_singleton", sql`${t.id} = 1`)],
-);
-
 // Patients and Appointments
 
-export const patient = pgTable("patient", {
-  id: uuid().primaryKey().defaultRandom(),
-  /** E.164, e.g. +995599123456. */
-  phone: text().notNull().unique(),
-  fullName: text().notNull(),
-  email: text(),
-  ...timestamps,
-});
+/** A Patient belongs to one Clinic; the same phone at another Clinic is another Patient (ADR 0002). */
+export const patient = pgTable(
+  "patient",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    clinicId: clinicId(),
+    /** E.164, e.g. +995599123456. */
+    phone: text().notNull(),
+    fullName: text().notNull(),
+    email: text(),
+    ...timestamps,
+  },
+  (t) => [unique().on(t.clinicId, t.phone)],
+);
 
 export const appointmentStatus = pgEnum("appointment_status", [
   "booked",
@@ -209,6 +241,7 @@ export const appointment = pgTable(
   "appointment",
   {
     id: uuid().primaryKey().defaultRandom(),
+    clinicId: clinicId(),
     patientId: uuid()
       .notNull()
       .references(() => patient.id),
@@ -237,11 +270,13 @@ export const appointment = pgTable(
   (t) => [
     index().on(t.practitionerId, t.startsAt),
     index().on(t.patientId),
+    index().on(t.clinicId, t.startsAt),
     index().on(t.startsAt),
     check("appointment_bounds", sql`${t.startsAt} < ${t.endsAt}`),
   ],
 );
 
+/** Proves a Patient owns a phone number; it is Tsami-wide, not per Clinic. */
 export const phoneVerification = pgTable(
   "phone_verification",
   {

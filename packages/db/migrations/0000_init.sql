@@ -3,6 +3,7 @@ CREATE TYPE "public"."cancelled_by" AS ENUM('patient', 'clinic');--> statement-b
 CREATE TYPE "public"."locale" AS ENUM('ka', 'en');--> statement-breakpoint
 CREATE TABLE "admin" (
 	"id" text PRIMARY KEY NOT NULL,
+	"clinic_id" uuid NOT NULL,
 	"name" text NOT NULL,
 	"email" text NOT NULL,
 	"email_verified" boolean DEFAULT false NOT NULL,
@@ -43,6 +44,7 @@ CREATE TABLE "admin_session" (
 --> statement-breakpoint
 CREATE TABLE "appointment" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"clinic_id" uuid NOT NULL,
 	"patient_id" uuid NOT NULL,
 	"practitioner_id" uuid NOT NULL,
 	"treatment_id" uuid NOT NULL,
@@ -73,25 +75,31 @@ CREATE TABLE "auth_verification" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "clinic_settings" (
-	"id" smallint PRIMARY KEY DEFAULT 1 NOT NULL,
+CREATE TABLE "clinic" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"handle" text NOT NULL,
+	"name_ka" text NOT NULL,
+	"name_en" text NOT NULL,
+	"phone" text DEFAULT '' NOT NULL,
 	"min_notice_minutes" integer DEFAULT 120 NOT NULL,
 	"booking_window_days" integer DEFAULT 60 NOT NULL,
 	"cancellation_cutoff_hours" integer DEFAULT 24 NOT NULL,
-	"clinic_phone" text DEFAULT '' NOT NULL,
+	"closed_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "clinic_settings_singleton" CHECK ("clinic_settings"."id" = 1)
+	CONSTRAINT "clinic_handle_unique" UNIQUE("handle"),
+	CONSTRAINT "clinic_handle_format" CHECK ("clinic"."handle" ~ '^[a-z0-9]+(-[a-z0-9]+)*$')
 );
 --> statement-breakpoint
 CREATE TABLE "patient" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"clinic_id" uuid NOT NULL,
 	"phone" text NOT NULL,
 	"full_name" text NOT NULL,
 	"email" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "patient_phone_unique" UNIQUE("phone")
+	CONSTRAINT "patient_clinicId_phone_unique" UNIQUE("clinic_id","phone")
 );
 --> statement-breakpoint
 CREATE TABLE "phone_verification" (
@@ -108,6 +116,7 @@ CREATE TABLE "phone_verification" (
 --> statement-breakpoint
 CREATE TABLE "practitioner" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"clinic_id" uuid NOT NULL,
 	"name_ka" text NOT NULL,
 	"name_en" text NOT NULL,
 	"title_ka" text,
@@ -137,6 +146,7 @@ CREATE TABLE "schedule_range" (
 --> statement-breakpoint
 CREATE TABLE "time_off" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"clinic_id" uuid NOT NULL,
 	"practitioner_id" uuid,
 	"starts_at" timestamp with time zone NOT NULL,
 	"ends_at" timestamp with time zone NOT NULL,
@@ -149,6 +159,7 @@ CREATE TABLE "time_off" (
 --> statement-breakpoint
 CREATE TABLE "treatment" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"clinic_id" uuid NOT NULL,
 	"name_ka" text NOT NULL,
 	"name_en" text NOT NULL,
 	"description_ka" text,
@@ -162,27 +173,38 @@ CREATE TABLE "treatment" (
 	CONSTRAINT "treatment_duration_positive" CHECK ("treatment"."duration_minutes" > 0)
 );
 --> statement-breakpoint
+ALTER TABLE "admin" ADD CONSTRAINT "admin_clinic_id_clinic_id_fk" FOREIGN KEY ("clinic_id") REFERENCES "public"."clinic"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "admin_account" ADD CONSTRAINT "admin_account_admin_id_admin_id_fk" FOREIGN KEY ("admin_id") REFERENCES "public"."admin"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "admin_session" ADD CONSTRAINT "admin_session_admin_id_admin_id_fk" FOREIGN KEY ("admin_id") REFERENCES "public"."admin"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "appointment" ADD CONSTRAINT "appointment_clinic_id_clinic_id_fk" FOREIGN KEY ("clinic_id") REFERENCES "public"."clinic"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "appointment" ADD CONSTRAINT "appointment_patient_id_patient_id_fk" FOREIGN KEY ("patient_id") REFERENCES "public"."patient"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "appointment" ADD CONSTRAINT "appointment_practitioner_id_practitioner_id_fk" FOREIGN KEY ("practitioner_id") REFERENCES "public"."practitioner"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "appointment" ADD CONSTRAINT "appointment_treatment_id_treatment_id_fk" FOREIGN KEY ("treatment_id") REFERENCES "public"."treatment"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "appointment" ADD CONSTRAINT "appointment_created_by_admin_id_admin_id_fk" FOREIGN KEY ("created_by_admin_id") REFERENCES "public"."admin"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "appointment" ADD CONSTRAINT "appointment_status_changed_by_admin_id_admin_id_fk" FOREIGN KEY ("status_changed_by_admin_id") REFERENCES "public"."admin"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "patient" ADD CONSTRAINT "patient_clinic_id_clinic_id_fk" FOREIGN KEY ("clinic_id") REFERENCES "public"."clinic"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "practitioner" ADD CONSTRAINT "practitioner_clinic_id_clinic_id_fk" FOREIGN KEY ("clinic_id") REFERENCES "public"."clinic"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "practitioner_treatment" ADD CONSTRAINT "practitioner_treatment_practitioner_id_practitioner_id_fk" FOREIGN KEY ("practitioner_id") REFERENCES "public"."practitioner"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "practitioner_treatment" ADD CONSTRAINT "practitioner_treatment_treatment_id_treatment_id_fk" FOREIGN KEY ("treatment_id") REFERENCES "public"."treatment"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "schedule_range" ADD CONSTRAINT "schedule_range_practitioner_id_practitioner_id_fk" FOREIGN KEY ("practitioner_id") REFERENCES "public"."practitioner"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "time_off" ADD CONSTRAINT "time_off_clinic_id_clinic_id_fk" FOREIGN KEY ("clinic_id") REFERENCES "public"."clinic"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "time_off" ADD CONSTRAINT "time_off_practitioner_id_practitioner_id_fk" FOREIGN KEY ("practitioner_id") REFERENCES "public"."practitioner"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "time_off" ADD CONSTRAINT "time_off_created_by_admin_id_admin_id_fk" FOREIGN KEY ("created_by_admin_id") REFERENCES "public"."admin"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "treatment" ADD CONSTRAINT "treatment_clinic_id_clinic_id_fk" FOREIGN KEY ("clinic_id") REFERENCES "public"."clinic"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "admin_clinic_id_index" ON "admin" USING btree ("clinic_id");--> statement-breakpoint
 CREATE INDEX "admin_account_admin_id_index" ON "admin_account" USING btree ("admin_id");--> statement-breakpoint
 CREATE INDEX "admin_session_admin_id_index" ON "admin_session" USING btree ("admin_id");--> statement-breakpoint
 CREATE INDEX "appointment_practitioner_id_starts_at_index" ON "appointment" USING btree ("practitioner_id","starts_at");--> statement-breakpoint
 CREATE INDEX "appointment_patient_id_index" ON "appointment" USING btree ("patient_id");--> statement-breakpoint
+CREATE INDEX "appointment_clinic_id_starts_at_index" ON "appointment" USING btree ("clinic_id","starts_at");--> statement-breakpoint
 CREATE INDEX "appointment_starts_at_index" ON "appointment" USING btree ("starts_at");--> statement-breakpoint
 CREATE INDEX "phone_verification_phone_created_at_index" ON "phone_verification" USING btree ("phone","created_at");--> statement-breakpoint
 CREATE INDEX "phone_verification_ip_address_created_at_index" ON "phone_verification" USING btree ("ip_address","created_at");--> statement-breakpoint
+CREATE INDEX "practitioner_clinic_id_index" ON "practitioner" USING btree ("clinic_id");--> statement-breakpoint
 CREATE INDEX "schedule_range_practitioner_id_index" ON "schedule_range" USING btree ("practitioner_id");--> statement-breakpoint
+CREATE INDEX "time_off_clinic_id_starts_at_index" ON "time_off" USING btree ("clinic_id","starts_at");--> statement-breakpoint
 CREATE INDEX "time_off_practitioner_id_starts_at_index" ON "time_off" USING btree ("practitioner_id","starts_at");--> statement-breakpoint
+CREATE INDEX "treatment_clinic_id_index" ON "treatment" USING btree ("clinic_id");--> statement-breakpoint
 -- See docs/adr/0001-database-guards-against-double-booking.md
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 --> statement-breakpoint
@@ -193,5 +215,3 @@ ALTER TABLE "appointment"
     tstzrange("starts_at", "ends_at", '[)') WITH &&
   )
   WHERE ("status" = 'booked');
---> statement-breakpoint
-INSERT INTO "clinic_settings" ("id") VALUES (1) ON CONFLICT DO NOTHING;

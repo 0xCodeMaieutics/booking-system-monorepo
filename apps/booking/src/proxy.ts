@@ -1,22 +1,26 @@
 import { type NextRequest, NextResponse } from "next/server";
 
+import { LOCALE_HEADER } from "@/i18n";
+
+const MARKETING_SITE_URL = "https://tsami.ge";
+
 /**
- * Georgian is served at `/`, English at `/en/`. Internally every page lives
- * under `/[locale]`, so un-prefixed paths are rewritten to `/ka`.
+ * Each Clinic's Booking Site lives under its Handle: Georgian at `/{handle}`, English at
+ * `/{handle}/en` (docs/adr/0008). Internally every page lives under `/[locale]/[handle]`,
+ * so public paths are rewritten there. `/` and `/en` belong to no Clinic.
  */
 export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const [handle, ...rest] = request.nextUrl.pathname.split("/").filter(Boolean);
+  if (!handle || (handle === "en" && rest.length === 0)) return NextResponse.redirect(MARKETING_SITE_URL);
 
-  if (pathname === "/ka" || pathname.startsWith("/ka/")) {
-    const url = request.nextUrl.clone();
-    url.pathname = pathname.slice(3) || "/";
-    return NextResponse.redirect(url);
-  }
-  if (pathname === "/en" || pathname.startsWith("/en/")) return NextResponse.next();
+  const locale = rest[0] === "en" ? "en" : "ka";
+  if (locale === "en") rest.shift();
 
   const url = request.nextUrl.clone();
-  url.pathname = `/ka${pathname}`;
-  return NextResponse.rewrite(url);
+  url.pathname = `/${[locale, handle, ...rest].join("/")}`;
+  const headers = new Headers(request.headers);
+  headers.set(LOCALE_HEADER, locale);
+  return NextResponse.rewrite(url, { request: { headers } });
 }
 
 export const config = {

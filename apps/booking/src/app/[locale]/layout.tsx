@@ -1,33 +1,15 @@
 import "../globals.css";
 import { Wordmark } from "@tsami/ui";
-import type { Metadata } from "next";
 import { Noto_Sans_Georgian } from "next/font/google";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { LocaleSwitch } from "@/components/locale-switch";
-import { dictionaries, isLocale, localePath } from "@/i18n";
+import { dictionaries, isLocale } from "@/i18n";
 import { Providers } from "@/trpc/client";
 
 const sans = Noto_Sans_Georgian({ subsets: ["georgian", "latin"], variable: "--font-noto-sans" });
 export function generateStaticParams() {
   return [{ locale: "ka" }, { locale: "en" }];
-}
-
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
-  const { locale } = await params;
-  if (!isLocale(locale)) return {};
-  const t = dictionaries[locale];
-  return {
-    title: t.meta.title,
-    description: t.meta.description,
-    alternates: { languages: { ka: "/", en: "/en" } },
-  };
 }
 
 export default async function LocaleLayout({
@@ -44,17 +26,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} className={sans.variable}>
       <body className="min-h-dvh">
-        <header className="border-b border-ink/10 bg-paper/70">
-          <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
-            <Link href={localePath(locale)} className="text-lg font-semibold">
-              {t.clinic}
-            </Link>
-            <LocaleSwitch locale={locale} />
-          </div>
-        </header>
-        <main className="mx-auto max-w-3xl px-6 py-10">
-          <Providers>{children}</Providers>
-        </main>
+        <Providers>{children}</Providers>
         <footer className="mx-auto flex max-w-3xl items-center gap-1.5 px-6 pb-8 text-xs text-ink-soft">
           {t.poweredBy}{" "}
           <a href="https://tsami.ge" className="hover:underline">

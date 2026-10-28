@@ -14,7 +14,9 @@ export function SettingsForm({
     minNoticeMinutes: number;
     bookingWindowDays: number;
     cancellationCutoffHours: number;
-    clinicPhone: string;
+    phone: string;
+    nameKa: string;
+    bookingSiteUrl: string;
   };
 }) {
   const fieldId = useId();
@@ -23,7 +25,7 @@ export function SettingsForm({
     minNoticeHours: initial.minNoticeMinutes / 60,
     bookingWindowDays: initial.bookingWindowDays,
     cancellationCutoffHours: initial.cancellationCutoffHours,
-    clinicPhone: initial.clinicPhone,
+    phone: initial.phone,
   });
   const save = useRefreshingMutation(trpc.settings.update.mutationOptions());
 
@@ -33,7 +35,7 @@ export function SettingsForm({
       minNoticeMinutes: Math.round(form.minNoticeHours * 60),
       bookingWindowDays: form.bookingWindowDays,
       cancellationCutoffHours: form.cancellationCutoffHours,
-      clinicPhone: form.clinicPhone,
+      phone: form.phone,
     });
   }
 
@@ -43,6 +45,22 @@ export function SettingsForm({
   return (
     <div className="flex max-w-2xl flex-col gap-6">
       <h1 className="text-3xl">პარამეტრები</h1>
+      <Card>
+        <CardContent className="flex flex-col gap-1">
+          <span className="text-lg font-medium">{initial.nameKa}</span>
+          <a
+            href={initial.bookingSiteUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm text-ink-soft underline underline-offset-2"
+          >
+            {initial.bookingSiteUrl}
+          </a>
+          <span className="text-xs text-ink-soft">
+            დაჯავშნის გვერდის ბმული. სახელის ან ბმულის შესაცვლელად დაუკავშირდით წამს.
+          </span>
+        </CardContent>
+      </Card>
       <Card>
         <CardContent>
           <form onSubmit={onSubmit} className="flex flex-col gap-4">
@@ -87,8 +105,8 @@ export function SettingsForm({
               <FieldLabel htmlFor={`${fieldId}-4`}>კლინიკის ტელეფონი</FieldLabel>
               <Input
                 id={`${fieldId}-4`}
-                value={form.clinicPhone}
-                onChange={(e) => setForm({ ...form, clinicPhone: e.target.value })}
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
               />
               <FieldDescription>ჩანს SMS-ებში და დაჯავშნის გვერდზე</FieldDescription>
             </Field>

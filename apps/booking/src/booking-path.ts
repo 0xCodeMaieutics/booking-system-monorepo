@@ -1,4 +1,4 @@
-import { isLocale } from "@/i18n";
+import { parseSitePathname } from "@/i18n";
 
 export const ANY_PRACTITIONER = "any";
 
@@ -50,7 +50,5 @@ export function parseBookingSteps(segments: string[]): BookingSelection | undefi
 }
 
 export function parseBookingPathname(pathname: string): BookingSelection {
-  const segments = pathname.split("/").filter(Boolean);
-  if (segments[0] && isLocale(segments[0])) segments.shift();
-  return parseBookingSteps(segments) ?? {};
+  return parseBookingSteps(parseSitePathname(pathname).rest) ?? {};
 }

@@ -29,7 +29,10 @@ export const auth = betterAuth({
   }),
   user: {
     modelName: "admin",
-    additionalFields: { deactivatedAt: { type: "date", required: false, input: false } },
+    additionalFields: {
+      clinicId: { type: "string", required: true, input: false },
+      deactivatedAt: { type: "date", required: false, input: false },
+    },
   },
   session: { modelName: "adminSession", fields: { userId: "adminId" } },
   account: { modelName: "adminAccount", fields: { userId: "adminId" } },
@@ -74,14 +77,19 @@ export const auth = betterAuth({
   plugins: [nextCookies()],
 });
 
-async function createAdminWithPassword(input: { name: string; email: string; password?: string }) {
+async function createAdminWithPassword(input: {
+  clinicId: string;
+  name: string;
+  email: string;
+  password?: string;
+}) {
   const ctx = await auth.$context;
   const email = input.email.toLowerCase();
   if (await ctx.internalAdapter.findUserByEmail(email)) {
     throw new APIError("CONFLICT", { message: "An Admin with this email already exists" });
   }
   const user = await ctx.internalAdapter.createUser(
-    { name: input.name, email, emailVerified: true },
+    { clinicId: input.clinicId, name: input.name, email, emailVerified: true },
     { method: "admin" },
   );
   await ctx.internalAdapter.linkAccount({
@@ -99,8 +107,8 @@ export const adminAccounts: AdminAccounts & {
 } = {
   create: createAdminWithPassword,
 
-  async invite({ name, email }) {
-    await createAdminWithPassword({ name, email });
+  async invite({ clinicId, name, email }) {
+    await createAdminWithPassword({ clinicId, name, email });
     await auth.api.requestPasswordReset({
       body: { email: email.toLowerCase(), redirectTo: `${baseURL}/set-password` },
     });
