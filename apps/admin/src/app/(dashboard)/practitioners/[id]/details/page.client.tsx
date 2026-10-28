@@ -1,6 +1,18 @@
 "use client";
 
-import { Avatar, Button, Field, FieldDescription, FieldLabel, Input } from "@tsami/ui";
+import {
+  Avatar,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Field,
+  FieldDescription,
+  FieldLabel,
+  Input,
+} from "@tsami/ui";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 
@@ -257,22 +269,45 @@ function PractitionerPhotoField({
   return (
     <div className="flex flex-col gap-3">
       <span className="text-sm font-medium">ფოტო</span>
-      {source ? (
-        <div className="flex flex-col gap-3">
-          <div className="relative h-72 overflow-hidden rounded-2xl bg-ink">
-            <Cropper
-              image={source}
-              crop={crop}
-              zoom={zoom}
-              aspect={1}
-              cropShape="round"
-              showGrid={false}
-              onCropChange={setCrop}
-              onZoomChange={setZoom}
-              onCropComplete={(_, pixels) => setArea(pixels)}
-              onMediaLoaded={() => setError(null)}
-            />
-          </div>
+      <div className="flex items-center gap-4">
+        <Avatar src={value.previewUrl} name={name} className="size-24 text-2xl" />
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" onClick={() => fileInput.current?.click()}>
+            {value.key ? "შეცვლა" : "ფოტოს ატვირთვა"}
+          </Button>
+          {value.key && (
+            <Button type="button" variant="ghost" onClick={() => onChange({ key: null, previewUrl: null })}>
+              წაშლა
+            </Button>
+          )}
+        </div>
+      </div>
+      <Dialog
+        open={source !== null}
+        onOpenChange={(open) => {
+          if (!open && !uploading) setSource(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>ფოტოს მოჭრა</DialogTitle>
+          </DialogHeader>
+          {source && (
+            <div className="relative h-72 overflow-hidden rounded-2xl bg-ink">
+              <Cropper
+                image={source}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={(_, pixels) => setArea(pixels)}
+                onMediaLoaded={() => setError(null)}
+              />
+            </div>
+          )}
           <label className="flex items-center gap-3 text-sm">
             მასშტაბი
             <input
@@ -285,30 +320,17 @@ function PractitionerPhotoField({
               className="flex-1"
             />
           </label>
-          <div className="flex gap-3">
-            <Button type="button" onClick={apply} disabled={uploading || !area}>
-              {uploading ? "იტვირთება…" : "გამოყენება"}
-            </Button>
+          {error && <p className="text-sm text-danger">{error}</p>}
+          <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setSource(null)} disabled={uploading}>
               გაუქმება
             </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center gap-4">
-          <Avatar src={value.previewUrl} name={name} className="size-24 text-2xl" />
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={() => fileInput.current?.click()}>
-              {value.key ? "შეცვლა" : "ფოტოს ატვირთვა"}
+            <Button type="button" onClick={apply} disabled={uploading || !area}>
+              {uploading ? "იტვირთება…" : "ატვირთვა"}
             </Button>
-            {value.key && (
-              <Button type="button" variant="ghost" onClick={() => onChange({ key: null, previewUrl: null })}>
-                წაშლა
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <input
         ref={fileInput}
         type="file"
@@ -319,7 +341,7 @@ function PractitionerPhotoField({
           e.target.value = "";
         }}
       />
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && !source && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
 }
