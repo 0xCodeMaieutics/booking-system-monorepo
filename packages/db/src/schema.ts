@@ -24,6 +24,18 @@ const timestamps = {
 
 export const locale = pgEnum("locale", ["ka", "en"]);
 
+/** Tsami-wide switches, set by Tsami's scripts. A single row; no row means the defaults. */
+export const tsamiSettings = pgTable(
+  "tsami_settings",
+  {
+    id: smallint().primaryKey().default(1),
+    /** Set while SMS is switched off for every Clinic, e.g. during a provider outage (ADR 0010). */
+    smsDisabledAt: timestamp({ withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [check("tsami_settings_single_row", sql`${t.id} = 1`)],
+);
+
 // Clinics. Everything below belongs to exactly one Clinic.
 
 export const clinic = pgTable(

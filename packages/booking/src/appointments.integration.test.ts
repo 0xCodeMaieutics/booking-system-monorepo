@@ -5,6 +5,7 @@ import { cancelByPatient, createAppointment, getAppointmentDetails } from "./app
 import { findAvailableSlots } from "./availability";
 import type { Clinic } from "./clinics";
 import type { Contact } from "./contact";
+import { isSmsDisabled, setSmsDisabled } from "./sms-switch";
 import { addDays, localInstant, toLocalDate, weekdayOf } from "./time";
 import { checkVerificationCode, requestVerificationCode } from "./verification";
 
@@ -212,5 +213,29 @@ describe.skipIf(!url)("Appointments against Postgres", () => {
       .from(schema.patient)
       .where(eq(schema.patient.id, first.appointment.patientId));
     expect(p).toMatchObject({ channel: "email", email: "visitor@example.test", phone: "+4915123456789" });
+  });
+
+  it("refuses SMS codes while SMS is switched off, but still sends email codes", async () => {
+    expect(await setSmsDisabled(db, true, now)).toBe(true);
+    try {
+      expect(await setSmsDisabled(db, true, now)).toBe(false);
+      await expect(
+        requestVerificationCode(db, {
+          contact: { channel: "sms", phone: "599000006" },
+          ipAddress: null,
+          now,
+        }),
+      ).rejects.toMatchObject({ code: "SMS_UNAVAILABLE" });
+      await expect(
+        requestVerificationCode(db, {
+          contact: { channel: "email", email: "outage@example.test" },
+          ipAddress: null,
+          now,
+        }),
+      ).resolves.toHaveProperty("verificationId");
+    } finally {
+      await setSmsDisabled(db, false, now);
+    }
+    expect(await isSmsDisabled(db)).toBe(false);
   });
 });

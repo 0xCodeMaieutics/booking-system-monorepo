@@ -2,6 +2,7 @@ import { type Db, and, count, eq, gte, schema, sql } from "@tsami/db";
 
 import { type Contact, contactDestination, normalizeContact } from "./contact";
 import { BookingError } from "./errors";
+import { isSmsDisabled } from "./sms-switch";
 import { createVerificationCode, hashVerificationCode, safeEqualHex } from "./tokens";
 
 const { contactVerification } = schema;
@@ -26,6 +27,7 @@ export async function requestVerificationCode(
   input: { contact: Contact; ipAddress: string | null; now: Date },
 ): Promise<{ verificationId: string; contact: Contact; code: string }> {
   const contact = normalizeContact(input.contact);
+  if (contact.channel === "sms" && (await isSmsDisabled(db))) throw new BookingError("SMS_UNAVAILABLE");
   const destination = contactDestination(contact);
   const ago = (minutes: number) => new Date(input.now.getTime() - minutes * 60_000);
 

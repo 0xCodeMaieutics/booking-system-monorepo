@@ -21,6 +21,8 @@
     "db:reset": "pnpm --filter @tsami/db reset",
     "clinic:onboard": "pnpm --filter @tsami/admin clinic:onboard",
     "clinic:close": "pnpm --filter @tsami/admin clinic:close",
+    "sms:disable": "pnpm --filter @tsami/admin sms:disable",
+    "sms:enable": "pnpm --filter @tsami/admin sms:enable",
     "admin:create-dev": "pnpm --filter @tsami/admin admin:create-dev"
   },
   "devDependencies": {

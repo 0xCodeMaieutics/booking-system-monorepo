@@ -37,6 +37,7 @@ export function BookingFlow({
   practitioners,
   slots,
   clinicPhone,
+  smsAvailable,
 }: {
   locale: Locale;
   handle: string;
@@ -44,6 +45,7 @@ export function BookingFlow({
   practitioners: BookingOutputs["practitioners"] | null;
   slots: BookingOutputs["slots"] | null;
   clinicPhone: string;
+  smsAvailable: boolean;
 }) {
   const t = dictionaries[locale];
   const router = useRouter();
@@ -222,6 +224,7 @@ export function BookingFlow({
         <DetailsStep
           locale={locale}
           handle={handle}
+          smsAvailable={smsAvailable}
           booking={{
             treatmentId: treatment.id,
             practitionerId: practitionerId === ANY ? null : practitionerId,
@@ -398,6 +401,7 @@ function Choice({
 function DetailsStep({
   locale,
   handle,
+  smsAvailable,
   booking,
   disabled,
   onBooked,
@@ -405,6 +409,7 @@ function DetailsStep({
 }: {
   locale: Locale;
   handle: string;
+  smsAvailable: boolean;
   booking: { treatmentId: string; practitionerId: string | null; startsAt: Date };
   disabled: boolean;
   onBooked: (result: { manageToken: string }) => void;
@@ -414,7 +419,7 @@ function DetailsStep({
   const t = dictionaries[locale];
   const trpc = useTRPC();
   const [form, setForm] = useState({ fullName: "", phone: "", email: "", note: "" });
-  const [channel, setChannel] = useState<"sms" | "email">("sms");
+  const [channel, setChannel] = useState<"sms" | "email">(smsAvailable ? "sms" : "email");
   const contact = channel === "sms" ? { channel, phone: form.phone } : { channel, email: form.email };
   const [verificationId, setVerificationId] = useState<string>();
   const [code, setCode] = useState("");
@@ -481,14 +486,18 @@ function DetailsStep({
               onChange={set("fullName")}
             />
           </Field>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={channel === "email"}
-              onChange={(e) => setChannel(e.target.checked ? "email" : "sms")}
-            />
-            {t.details.noGeorgianNumber}
-          </label>
+          {smsAvailable ? (
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={channel === "email"}
+                onChange={(e) => setChannel(e.target.checked ? "email" : "sms")}
+              />
+              {t.details.noGeorgianNumber}
+            </label>
+          ) : (
+            <p className="text-sm text-ink-soft">{t.details.smsUnavailable}</p>
+          )}
           {channel === "sms" ? (
             <>
               <Field>

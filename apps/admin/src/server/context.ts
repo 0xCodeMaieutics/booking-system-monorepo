@@ -1,6 +1,6 @@
 import "server-only";
 import type { AdminContext } from "@tsami/api/admin";
-import { createMessenger, createOpsAlerts } from "@tsami/booking";
+import { createMessenger, createOpsAlerts, isSmsDisabled } from "@tsami/booking";
 import { getDb } from "@tsami/db";
 
 import { adminAccounts, auth } from "./auth";
@@ -10,7 +10,7 @@ let messenger: ReturnType<typeof createMessenger> | undefined;
 let alerts: ReturnType<typeof createOpsAlerts> | undefined;
 
 export async function createAdminContext(headers: Headers): Promise<AdminContext> {
-  messenger ??= createMessenger();
+  messenger ??= createMessenger({ smsDisabled: () => isSmsDisabled(getDb()) });
   alerts ??= createOpsAlerts();
   const session = await auth.api.getSession({ headers });
   const user = session?.user;

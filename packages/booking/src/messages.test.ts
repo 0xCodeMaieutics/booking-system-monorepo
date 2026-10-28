@@ -5,10 +5,10 @@ import type { EmailSender } from "./email";
 import { createMessenger, patientMessages } from "./messages";
 import type { SmsSender } from "./sms";
 
-function senders() {
+function senders({ smsDisabled = false } = {}) {
   const sms = { send: vi.fn<SmsSender["send"]>(async () => {}) };
   const email = { send: vi.fn<EmailSender["send"]>(async () => {}) };
-  return { sms, email, messenger: createMessenger(sms, email) };
+  return { sms, email, messenger: createMessenger({ smsDisabled: async () => smsDisabled, sms, email }) };
 }
 
 describe("createMessenger", () => {
@@ -30,6 +30,25 @@ describe("createMessenger", () => {
       text: "Face: your code is 482113",
     });
     expect(sms.send).not.toHaveBeenCalled();
+  });
+
+  it("emails SMS Patients who gave an email while SMS is switched off", async () => {
+    const { sms, email, messenger } = senders({ smsDisabled: true });
+    await messenger.send(
+      { channel: "sms", phone: "+995599446450", fallbackEmail: "patient@example.com" },
+      message,
+    );
+    expect(email.send).toHaveBeenCalledWith(expect.objectContaining({ to: "patient@example.com" }));
+    expect(sms.send).not.toHaveBeenCalled();
+  });
+
+  it("skips SMS Patients without an email while SMS is switched off", async () => {
+    const { sms, email, messenger } = senders({ smsDisabled: true });
+    await expect(messenger.send({ channel: "sms", phone: "+995599446450" }, message)).rejects.toThrow(
+      "SMS is switched off",
+    );
+    expect(sms.send).not.toHaveBeenCalled();
+    expect(email.send).not.toHaveBeenCalled();
   });
 });
 

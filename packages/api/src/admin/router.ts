@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { getClinic } from "@tsami/booking";
+import { getClinic, isSmsDisabled } from "@tsami/booking";
 import { and, asc, eq, schema } from "@tsami/db";
 import { z } from "zod";
 
@@ -67,7 +67,12 @@ export const adminRouter = router({
   /** The signed-in Admin's Clinic. Its name and Handle are set by Tsami, not by Admins. */
   clinic: adminProcedure.query(async ({ ctx }) => {
     const c = await getClinic(ctx.db, ctx.admin.clinicId);
-    return { nameKa: c.nameKa, nameEn: c.nameEn, bookingSiteUrl: `${ctx.bookingSiteUrl}/${c.handle}` };
+    return {
+      nameKa: c.nameKa,
+      nameEn: c.nameEn,
+      bookingSiteUrl: `${ctx.bookingSiteUrl}/${c.handle}`,
+      smsAvailable: !(await isSmsDisabled(ctx.db)),
+    };
   }),
   settings: settingsRouter,
   admins: adminsRouter,

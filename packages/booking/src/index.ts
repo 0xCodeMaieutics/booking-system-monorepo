@@ -11,5 +11,6 @@ export * from "./phone";
 export * from "./reminders";
 export * from "./slots";
 export * from "./sms";
+export * from "./sms-switch";
 export * from "./time";
 export * from "./verification";

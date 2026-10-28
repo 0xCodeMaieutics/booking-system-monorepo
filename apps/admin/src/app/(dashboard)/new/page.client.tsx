@@ -10,10 +10,12 @@ export function NewAppointmentForm({
   date,
   treatments,
   practitioners,
+  smsAvailable,
 }: {
   date: string;
   treatments: AdminOutputs["treatments"]["list"];
   practitioners: AdminOutputs["practitioners"]["list"];
+  smsAvailable: boolean;
 }) {
   const router = useRouter();
   return (
@@ -21,6 +23,7 @@ export function NewAppointmentForm({
       initialDate={date}
       treatments={treatments}
       practitioners={practitioners}
+      smsAvailable={smsAvailable}
       onDone={(created) => router.push(`/?date=${toLocalDate(created.startsAt)}`)}
     />
   );

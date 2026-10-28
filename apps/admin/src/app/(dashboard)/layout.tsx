@@ -14,7 +14,15 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
       <Nav adminName={session.user.name} clinicName={clinic.nameKa} />
-      <main className="flex-1 px-6 py-8 md:px-10">{children}</main>
+      <main className="flex-1 px-6 py-8 md:px-10">
+        {!clinic.smsAvailable && (
+          <p className="mb-6 rounded-lg border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
+            SMS დროებით გამორთულია. პაციენტებს შეტყობინებები ელფოსტით მიდის; ვისაც ელფოსტა არ აქვს,
+            შეტყობინებას ვერ მიიღებს — დაურეკეთ.
+          </p>
+        )}
+        {children}
+      </main>
     </div>
   );
 }

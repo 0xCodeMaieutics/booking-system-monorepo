@@ -82,6 +82,7 @@ export default async function BookPage({
       practitioners={practitioners}
       slots={slots}
       clinicPhone={clinic.clinicPhone}
+      smsAvailable={clinic.smsAvailable}
     />
   );
 }
