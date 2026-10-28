@@ -51,11 +51,14 @@ export function AppointmentForm({
   const [manualTime, setManualTime] = useState("");
   const [patient, setPatient] = useState({
     fullName: "",
+    channel: "sms" as "sms" | "email",
     phone: "",
     email: "",
     note: "",
     locale: "ka" as "ka" | "en",
   });
+
+  const byEmail = patient.channel === "email";
 
   const qualified = practitioners.filter(
     (p) => !p.archivedAt && (!treatmentId || p.treatmentIds.includes(treatmentId)),
@@ -211,28 +214,48 @@ export function AppointmentForm({
               onChange={(e) => setPatient({ ...patient, fullName: e.target.value })}
             />
           </Field>
+          <label className="flex items-center gap-2 text-sm sm:col-span-2">
+            <input
+              type="checkbox"
+              checked={byEmail}
+              onChange={(e) => setPatient({ ...patient, channel: e.target.checked ? "email" : "sms" })}
+            />
+            პაციენტს არ აქვს ქართული მობილურის ნომერი (შეტყობინებები ელფოსტით)
+          </label>
           <Field>
-            <FieldLabel htmlFor={`${fieldId}-6`}>მობილური</FieldLabel>
+            <FieldLabel htmlFor={`${fieldId}-6`}>
+              {byEmail ? "ტელეფონი (არასავალდებულო, ნებისმიერი ქვეყნის)" : "მობილური"}
+            </FieldLabel>
             <Input
               id={`${fieldId}-6`}
-              required
+              required={!byEmail}
               type="tel"
               value={patient.phone}
               onChange={(e) => setPatient({ ...patient, phone: e.target.value })}
             />
-            <FieldDescription>არსებული ნომრის შემთხვევაში ვიზიტი იმავე პაციენტს მიებმება</FieldDescription>
+            {!byEmail && (
+              <FieldDescription>არსებული ნომრის შემთხვევაში ვიზიტი იმავე პაციენტს მიებმება</FieldDescription>
+            )}
           </Field>
           <Field>
-            <FieldLabel htmlFor={`${fieldId}-7`}>ელფოსტა (არასავალდებულო)</FieldLabel>
+            <FieldLabel htmlFor={`${fieldId}-7`}>
+              {byEmail ? "ელფოსტა" : "ელფოსტა (არასავალდებულო)"}
+            </FieldLabel>
             <Input
               id={`${fieldId}-7`}
+              required={byEmail}
               type="email"
               value={patient.email}
               onChange={(e) => setPatient({ ...patient, email: e.target.value })}
             />
+            {byEmail && (
+              <FieldDescription>
+                არსებული ელფოსტის შემთხვევაში ვიზიტი იმავე პაციენტს მიებმება
+              </FieldDescription>
+            )}
           </Field>
           <Field>
-            <FieldLabel htmlFor={`${fieldId}-8`}>SMS-ის ენა</FieldLabel>
+            <FieldLabel htmlFor={`${fieldId}-8`}>შეტყობინებების ენა</FieldLabel>
             <NativeSelect
               id={`${fieldId}-8`}
               value={patient.locale}
@@ -255,7 +278,7 @@ export function AppointmentForm({
 
       {mutation.error && <p className="text-sm text-danger">{errorMessage(mutation.error)}</p>}
       <Button size="lg" type="submit" disabled={!chosenStart || mutation.isPending} className="self-start">
-        {move ? "გადატანა (პაციენტი SMS-ს მიიღებს)" : "ვიზიტის შექმნა"}
+        {move ? "გადატანა (პაციენტი შეტყობინებას მიიღებს)" : "ვიზიტის შექმნა"}
       </Button>
     </form>
   );

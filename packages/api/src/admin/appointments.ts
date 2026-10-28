@@ -10,14 +10,15 @@ import {
   addDays,
   manageUrl,
   moveAppointment,
-  reportSmsFailure,
+  patientContact,
+  patientMessages,
+  reportMessageFailure,
   setStatusByAdmin,
-  smsText,
 } from "@tsami/booking";
-import { and, asc, desc, eq, gte, ilike, lt, or, schema } from "@tsami/db";
+import { and, asc, desc, eq, gte, ilike, lt, or, schema, sql } from "@tsami/db";
 import { z } from "zod";
 
-import { zLocalDate, zLocale } from "../shared";
+import { zChannel, zLocalDate, zLocale } from "../shared";
 import { type AdminContext, adminProcedure, router } from "./trpc";
 
 const { admin, appointment, patient, practitioner, treatment } = schema;
@@ -32,19 +33,20 @@ async function notifyPatient(
   if (!details) return false;
   const locale = a.locale;
   const summary = appointmentSummary(details, locale);
+  const contact = patientContact(details.patient);
   try {
     const body =
       message === "confirmation"
-        ? smsText.confirmation(summary, manageLink ?? "", locale)
-        : smsText[message](summary, details.clinic.phone, locale);
-    await ctx.sms.send(details.patient.phone, body);
+        ? patientMessages.confirmation(summary, manageLink ?? "", locale)
+        : patientMessages[message](summary, details.clinic.phone, locale);
+    await ctx.messenger.send(contact, body);
     return true;
   } catch (error) {
-    await reportSmsFailure(ctx.alerts, {
+    await reportMessageFailure(ctx.alerts, {
       message,
       clinicName: summary.clinicName,
       appointmentId: a.id,
-      phone: details.patient.phone,
+      contact,
       error,
     });
     return false;
@@ -108,8 +110,9 @@ export const appointmentsRouter = router({
         practitionerId: z.uuid().nullable(),
         startsAt: z.date(),
         fullName: z.string().trim().min(2).max(120),
-        phone: z.string(),
-        email: z.email().optional().or(z.literal("")),
+        channel: zChannel,
+        phone: z.string().max(32),
+        email: z.email().max(200).optional().or(z.literal("")),
         note: z.string().max(1000).optional(),
         locale: zLocale,
         override: z.boolean(),
@@ -123,7 +126,12 @@ export const appointmentsRouter = router({
         treatmentId: input.treatmentId,
         practitionerId: input.practitionerId,
         startsAt: input.startsAt,
-        patient: { phone: input.phone, fullName: input.fullName, email: input.email || null },
+        patient: {
+          channel: input.channel,
+          phone: input.phone || null,
+          email: input.email || null,
+          fullName: input.fullName,
+        },
         note: input.note,
         locale: input.locale,
         now: ctx.now(),
@@ -203,6 +211,7 @@ export const patientsRouter = router({
           eq(patient.clinicId, ctx.admin.clinicId),
           or(
             ilike(patient.fullName, `%${input.q}%`),
+            ilike(patient.email, `%${input.q}%`),
             digits.length >= 3 ? ilike(patient.phone, `%${digits}%`) : undefined,
           ),
         ),
@@ -242,7 +251,11 @@ export const patientsRouter = router({
     .mutation(async ({ ctx, input }) => {
       await ctx.db
         .update(patient)
-        .set({ fullName: input.fullName, email: input.email || null })
+        .set({
+          fullName: input.fullName,
+          // An email Patient's email identifies them, so it never changes.
+          email: sql`case when ${patient.channel} = 'sms' then ${input.email || null} else ${patient.email} end`,
+        })
         .where(and(eq(patient.id, input.id), eq(patient.clinicId, ctx.admin.clinicId)));
     }),
 });

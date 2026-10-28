@@ -2,14 +2,15 @@ import { type Db, type DbOrTx, and, eq, gte, isExclusionViolation, isNull, lt, s
 
 import { type Actor, findAvailableSlots, getBookableTreatment } from "./availability";
 import { type Clinic, clinicName } from "./clinics";
+import { type ContactChannel, contactDestination, normalizeEmail, patientContact } from "./contact";
 import { BookingError } from "./errors";
-import { normalizePhone } from "./phone";
+import { normalizeAnyPhone, normalizePhone } from "./phone";
 import { rankForAnyPractitioner } from "./slots";
 import { addDays, localInstant, toLocalDate } from "./time";
 import { createManageToken, sha256 } from "./tokens";
 import { VERIFIED_FOR_MINUTES } from "./verification";
 
-const { appointment, patient, phoneVerification, practitioner, treatment } = schema;
+const { appointment, contactVerification, patient, practitioner, treatment } = schema;
 
 const NO_OVERLAP = "appointment_no_overlap";
 
@@ -22,7 +23,11 @@ export type CreateAppointmentInput = {
   /** Null means Any Practitioner. */
   practitionerId: string | null;
   startsAt: Date;
-  patient: { phone: string; fullName: string; email?: string | null };
+  /**
+   * The channel's own contact is required and identifies the Patient; the other is
+   * optional. An email Patient's phone may be from any country.
+   */
+  patient: { channel: ContactChannel; phone?: string | null; email?: string | null; fullName: string };
   note?: string | null;
   locale: "ka" | "en";
   now: Date;
@@ -38,11 +43,11 @@ export async function createAppointment(
 ): Promise<{ appointment: Appointment; manageToken: string }> {
   const clinicId = input.clinic.id;
   const t = await getBookableTreatment(db, clinicId, input.treatmentId);
-  const phone = normalizePhone(input.patient.phone);
+  const contact = patientContactValues(input.patient);
   const override = input.actor.kind === "admin" && input.override === true;
 
   if (input.actor.kind === "patient" && !input.verificationId) {
-    throw new BookingError("INVALID_CODE", "Phone verification is required");
+    throw new BookingError("INVALID_CODE", "Contact verification is required");
   }
 
   let candidateIds: string[];
@@ -77,20 +82,24 @@ export async function createAppointment(
   const adminId = input.actor.kind === "admin" ? input.actor.adminId : null;
 
   const created = await db.transaction(async (tx) => {
-    if (input.verificationId) await consumeVerification(tx, input.verificationId, phone, input.now);
+    if (input.verificationId) await consumeVerification(tx, input.verificationId, contact, input.now);
 
     const [p] = await tx
       .insert(patient)
-      .values({
-        clinicId,
-        phone,
-        fullName: input.patient.fullName.trim(),
-        email: input.patient.email || null,
-      })
-      .onConflictDoUpdate({
-        target: [patient.clinicId, patient.phone],
-        set: { email: sql`coalesce(excluded.email, ${patient.email})` },
-      })
+      .values({ clinicId, ...contact, fullName: input.patient.fullName.trim() })
+      .onConflictDoUpdate(
+        contact.channel === "sms"
+          ? {
+              target: [patient.clinicId, patient.phone],
+              targetWhere: sql`${patient.channel} = 'sms'`,
+              set: { email: sql`coalesce(excluded.email, ${patient.email})` },
+            }
+          : {
+              target: [patient.clinicId, patient.email],
+              targetWhere: sql`${patient.channel} = 'email'`,
+              set: { phone: sql`coalesce(excluded.phone, ${patient.phone})` },
+            },
+      )
       .returning({ id: patient.id });
     if (!p) throw new Error("Patient upsert returned nothing");
 
@@ -149,19 +158,39 @@ async function appointmentCountsOn(db: DbOrTx, clinicId: string, day: string): P
   return new Map(rows.map((r) => [r.practitionerId, r.count]));
 }
 
-async function consumeVerification(tx: DbOrTx, id: string, phone: string, now: Date) {
+function patientContactValues(p: CreateAppointmentInput["patient"]) {
+  return p.channel === "sms"
+    ? {
+        channel: p.channel,
+        phone: normalizePhone(p.phone ?? ""),
+        email: p.email ? normalizeEmail(p.email) : null,
+      }
+    : {
+        channel: p.channel,
+        email: normalizeEmail(p.email ?? ""),
+        phone: p.phone ? normalizeAnyPhone(p.phone) : null,
+      };
+}
+
+async function consumeVerification(
+  tx: DbOrTx,
+  id: string,
+  p: ReturnType<typeof patientContactValues>,
+  now: Date,
+) {
   const consumed = await tx
-    .update(phoneVerification)
+    .update(contactVerification)
     .set({ consumedAt: now })
     .where(
       and(
-        eq(phoneVerification.id, id),
-        eq(phoneVerification.phone, phone),
-        isNull(phoneVerification.consumedAt),
-        gte(phoneVerification.verifiedAt, new Date(now.getTime() - VERIFIED_FOR_MINUTES * 60_000)),
+        eq(contactVerification.id, id),
+        eq(contactVerification.channel, p.channel),
+        eq(contactVerification.destination, contactDestination(patientContact(p))),
+        isNull(contactVerification.consumedAt),
+        gte(contactVerification.verifiedAt, new Date(now.getTime() - VERIFIED_FOR_MINUTES * 60_000)),
       ),
     )
-    .returning({ id: phoneVerification.id });
+    .returning({ id: contactVerification.id });
   if (consumed.length === 0) throw new BookingError("INVALID_CODE", "Verification is no longer valid");
 }
 
@@ -186,7 +215,7 @@ export async function getAppointmentDetails(
 
 type Named = { nameKa: string; nameEn: string };
 
-/** What an SMS says about an Appointment, in the Patient's Locale. */
+/** What a Patient Message says about an Appointment, in the Patient's Locale. */
 export function appointmentSummary(
   details: {
     appointment: Pick<Appointment, "startsAt">;

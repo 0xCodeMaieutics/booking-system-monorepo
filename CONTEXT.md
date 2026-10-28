@@ -7,7 +7,7 @@ Tsami, an Appointment Booking product for clinics in Georgia, and the Landing Pa
 ### The product
 
 **Tsami**:
-The Appointment Booking product (წამი): the Booking Site and Admin Dashboard. It has its own name and styling, separate from any Clinic's brand, and serves clinics in Georgia only. Patients meet the Clinic's name first (heading the Booking Site and opening every SMS, which is sent under Tsami's name), with Tsami in the background; Admins meet Tsami first.
+The Appointment Booking product (წამი): the Booking Site and Admin Dashboard. It has its own name and styling, separate from any Clinic's brand, and serves clinics in Georgia only. Patients meet the Clinic's name first (heading the Booking Site and opening every Patient Message; SMS are sent under Tsami's name), with Tsami in the background; Admins meet Tsami first.
 _Avoid_: The booking system, the platform, the app
 
 ### The Clinic and its people
@@ -37,8 +37,16 @@ An optional square portrait of a Practitioner, set by an Admin and shown as a ci
 _Avoid_: Avatar, profile picture, image
 
 **Patient**:
-A person who receives, or wants to receive, Treatments at one Clinic. A Patient has no account and is identified by their mobile number within that Clinic; the same person at two Clinics is two Patients.
+A person who receives, or wants to receive, Treatments at one Clinic. A Patient has no account and is identified within that Clinic by their verified Georgian mobile number, or by their verified email if they don't have one; the same person at two Clinics is two Patients.
 _Avoid_: Client, customer, user, guest
+
+**Channel**:
+How a Patient was verified and receives Patient Messages: SMS to their Georgian mobile, or email for Patients without one. Each Patient has exactly one.
+_Avoid_: Contact method, notification preference
+
+**Patient Message**:
+A verification code, confirmation, reminder, cancellation or move notice sent to a Patient on their Channel. It opens with the Clinic's name.
+_Avoid_: Notification, SMS (when email is also meant)
 
 **Admin**:
 A person who signs in to manage one Clinic's Practitioners, Treatments and Appointments. Each Admin belongs to exactly one Clinic; a Clinic may have several Admins, invited by its other Admins and deactivated, never deleted. Practitioners are not Admins and have no sign-in.
@@ -117,5 +125,5 @@ Tsami's signed-in site where Admins manage Practitioners, Treatments, Weekly Sch
 _Avoid_: Admin panel, back office, CMS
 
 **Locale**:
-One of the languages public content (the Clinic's Landing Page, Booking Site and Patient SMS, and Tsami's Marketing Site) is published in: Georgian (`ka`) or English (`en`). The Admin Dashboard is Georgian only.
+One of the languages public content (the Clinic's Landing Page, Booking Site and Patient Messages, and Tsami's Marketing Site) is published in: Georgian (`ka`) or English (`en`). The Admin Dashboard is Georgian only.
 _Avoid_: Translation, language version

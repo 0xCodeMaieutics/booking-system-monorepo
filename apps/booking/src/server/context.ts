@@ -1,18 +1,18 @@
 import "server-only";
 import type { BookingContext } from "@tsami/api/booking";
-import { createOpsAlerts, createSmsSender } from "@tsami/booking";
+import { createMessenger, createOpsAlerts } from "@tsami/booking";
 import { getDb } from "@tsami/db";
 
-let sms: ReturnType<typeof createSmsSender> | undefined;
+let messenger: ReturnType<typeof createMessenger> | undefined;
 let alerts: ReturnType<typeof createOpsAlerts> | undefined;
 
 export function createBookingContext(headers: Headers): BookingContext {
-  sms ??= createSmsSender();
+  messenger ??= createMessenger();
   alerts ??= createOpsAlerts();
   const forwarded = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   return {
     db: getDb(),
-    sms,
+    messenger,
     alerts,
     ipAddress: forwarded || headers.get("x-real-ip") || null,
     siteUrl: process.env.BOOKING_BASE_URL ?? "http://localhost:3000",

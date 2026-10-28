@@ -1,5 +1,5 @@
 {
-  "id": "9f8b633d-0b1d-47f9-a65c-185d182277bf",
+  "id": "19392560-36f6-4c59-bc4c-a191c523ee64",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -786,8 +786,8 @@
       },
       "isRLSEnabled": false
     },
-    "public.patient": {
-      "name": "patient",
+    "public.contact_verification": {
+      "name": "contact_verification",
       "schema": "",
       "columns": {
         "id": {
@@ -797,89 +797,15 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "clinic_id": {
-          "name": "clinic_id",
-          "type": "uuid",
+        "channel": {
+          "name": "channel",
+          "type": "contact_channel",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
-        "phone": {
-          "name": "phone",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "full_name": {
-          "name": "full_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "email": {
-          "name": "email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "patient_clinic_id_clinic_id_fk": {
-          "name": "patient_clinic_id_clinic_id_fk",
-          "tableFrom": "patient",
-          "tableTo": "clinic",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "patient_clinicId_phone_unique": {
-          "name": "patient_clinicId_phone_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "clinic_id",
-            "phone"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.phone_verification": {
-      "name": "phone_verification",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "phone": {
-          "name": "phone",
+        "destination": {
+          "name": "destination",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -930,11 +856,11 @@
         }
       },
       "indexes": {
-        "phone_verification_phone_created_at_index": {
-          "name": "phone_verification_phone_created_at_index",
+        "contact_verification_destination_created_at_index": {
+          "name": "contact_verification_destination_created_at_index",
           "columns": [
             {
-              "expression": "phone",
+              "expression": "destination",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -951,8 +877,8 @@
           "method": "btree",
           "with": {}
         },
-        "phone_verification_ip_address_created_at_index": {
-          "name": "phone_verification_ip_address_created_at_index",
+        "contact_verification_ip_address_created_at_index": {
+          "name": "contact_verification_ip_address_created_at_index",
           "columns": [
             {
               "expression": "ip_address",
@@ -978,6 +904,136 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.patient": {
+      "name": "patient",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "clinic_id": {
+          "name": "clinic_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "channel": {
+          "name": "channel",
+          "type": "contact_channel",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'sms'"
+        },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "full_name": {
+          "name": "full_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "patient_sms_contact": {
+          "name": "patient_sms_contact",
+          "columns": [
+            {
+              "expression": "clinic_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "phone",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"patient\".\"channel\" = 'sms'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "patient_email_contact": {
+          "name": "patient_email_contact",
+          "columns": [
+            {
+              "expression": "clinic_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"patient\".\"channel\" = 'email'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "patient_clinic_id_clinic_id_fk": {
+          "name": "patient_clinic_id_clinic_id_fk",
+          "tableFrom": "patient",
+          "tableTo": "clinic",
+          "columnsFrom": [
+            "clinic_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "patient_contact": {
+          "name": "patient_contact",
+          "value": "(\"patient\".\"channel\" = 'sms' and \"patient\".\"phone\" is not null) or (\"patient\".\"channel\" = 'email' and \"patient\".\"email\" is not null)"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.practitioner": {
@@ -1536,6 +1592,14 @@
       "values": [
         "patient",
         "clinic"
+      ]
+    },
+    "public.contact_channel": {
+      "name": "contact_channel",
+      "schema": "public",
+      "values": [
+        "sms",
+        "email"
       ]
     },
     "public.locale": {

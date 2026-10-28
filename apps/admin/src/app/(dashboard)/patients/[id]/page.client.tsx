@@ -10,13 +10,20 @@ import { useRefreshingMutation } from "@/trpc/use-refreshing-mutation";
 export function PatientForm({
   patient,
 }: {
-  patient: { id: string; fullName: string; phone: string; email: string | null };
+  patient: {
+    id: string;
+    fullName: string;
+    channel: "sms" | "email";
+    phone: string | null;
+    email: string | null;
+  };
 }) {
   const fieldId = useId();
   const trpc = useTRPC();
   const [fullName, setFullName] = useState(patient.fullName);
   const [email, setEmail] = useState(patient.email ?? "");
   const update = useRefreshingMutation(trpc.patients.update.mutationOptions());
+  const byEmail = patient.channel === "email";
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -37,13 +44,24 @@ export function PatientForm({
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor={`${fieldId}-2`}>მობილური</FieldLabel>
-          <Input id={`${fieldId}-2`} value={patient.phone} disabled />
-          <FieldDescription>ნომერი პაციენტის იდენტიფიკატორია და არ იცვლება</FieldDescription>
+          <FieldLabel htmlFor={`${fieldId}-2`}>{byEmail ? "ტელეფონი" : "მობილური"}</FieldLabel>
+          <Input id={`${fieldId}-2`} value={patient.phone ?? ""} disabled />
+          {!byEmail && <FieldDescription>ნომერი პაციენტის იდენტიფიკატორია და არ იცვლება</FieldDescription>}
         </Field>
         <Field>
           <FieldLabel htmlFor={`${fieldId}-3`}>ელფოსტა</FieldLabel>
-          <Input id={`${fieldId}-3`} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Input
+            id={`${fieldId}-3`}
+            type="email"
+            value={email}
+            disabled={byEmail}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          {byEmail && (
+            <FieldDescription>
+              პაციენტს ქართული ნომერი არ აქვს: ელფოსტა მისი იდენტიფიკატორია და არ იცვლება
+            </FieldDescription>
+          )}
         </Field>
       </div>
       {update.error && <p className="text-sm text-danger">{errorMessage(update.error)}</p>}

@@ -1,5 +1,5 @@
 import { TRPCError, initTRPC } from "@trpc/server";
-import { BookingError, type OpsAlerts, type SmsSender, findClinicByHandle } from "@tsami/booking";
+import { BookingError, type Messenger, type OpsAlerts, findClinicByHandle } from "@tsami/booking";
 import type { Db } from "@tsami/db";
 import { z } from "zod";
 
@@ -7,7 +7,7 @@ import { rethrowBookingError, trpcOptions } from "../shared";
 
 export type BookingContext = {
   db: Db;
-  sms: SmsSender;
+  messenger: Messenger;
   alerts: OpsAlerts;
   ipAddress: string | null;
   /** Public origin of the Booking Site, used in Manage Links. */

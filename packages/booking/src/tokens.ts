@@ -13,8 +13,8 @@ export function createVerificationCode(): string {
   return String(randomInt(0, 1_000_000)).padStart(6, "0");
 }
 
-export function hashVerificationCode(phone: string, code: string): string {
-  return sha256(`${phone}:${code}`);
+export function hashVerificationCode(destination: string, code: string): string {
+  return sha256(`${destination}:${code}`);
 }
 
 export function safeEqualHex(a: string, b: string): boolean {

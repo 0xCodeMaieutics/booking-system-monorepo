@@ -21,7 +21,7 @@ export default async function PatientsPage({ searchParams }: { searchParams: Pro
             <Card size="sm" className="hover:ring-brand">
               <CardContent>
                 <p className="font-medium">{p.fullName}</p>
-                <p className="text-sm text-ink-soft">{p.phone}</p>
+                <p className="text-sm text-ink-soft">{p.channel === "sms" ? p.phone : p.email}</p>
               </CardContent>
             </Card>
           </Link>

@@ -4,5 +4,5 @@ The Admin Dashboard and Booking Site deploy as two Vercel projects in `fra1`, ba
 
 ## Consequences
 
-- The provider is Sender.ge. It only delivers to Georgian mobiles, so the Booking Site and Admin Dashboard accept only Georgian mobile numbers.
-- Failed SMS are reported to a Tsami Telegram chat, since a Patient who doesn't get their code or confirmation has no other way to tell us.
+- The provider is Sender.ge. It only delivers to Georgian mobiles, so Patients without one are verified and notified by email (ADR 0009).
+- Failed SMS and emails are reported to a Tsami Telegram chat, since a Patient who doesn't get their code or confirmation has no other way to tell us.
