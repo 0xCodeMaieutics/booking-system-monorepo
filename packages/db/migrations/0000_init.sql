@@ -176,6 +176,14 @@ CREATE TABLE "treatment" (
 	CONSTRAINT "treatment_duration_positive" CHECK ("treatment"."duration_minutes" > 0)
 );
 --> statement-breakpoint
+CREATE TABLE "tsami_settings" (
+	"id" smallint PRIMARY KEY DEFAULT 1 NOT NULL,
+	"sms_disabled_at" timestamp with time zone,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "tsami_settings_single_row" CHECK ("tsami_settings"."id" = 1)
+);
+--> statement-breakpoint
 ALTER TABLE "admin" ADD CONSTRAINT "admin_clinic_id_clinic_id_fk" FOREIGN KEY ("clinic_id") REFERENCES "public"."clinic"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "admin_account" ADD CONSTRAINT "admin_account_admin_id_admin_id_fk" FOREIGN KEY ("admin_id") REFERENCES "public"."admin"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "admin_session" ADD CONSTRAINT "admin_session_admin_id_admin_id_fk" FOREIGN KEY ("admin_id") REFERENCES "public"."admin"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

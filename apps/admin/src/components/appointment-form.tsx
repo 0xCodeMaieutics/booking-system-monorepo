@@ -31,12 +31,15 @@ export function AppointmentForm({
   initialDate,
   treatments,
   practitioners,
+  smsAvailable = true,
   onDone,
 }: {
   move?: { id: string; treatmentId: string; practitionerId: string };
   initialDate: string;
   treatments: AdminOutputs["treatments"]["list"];
   practitioners: AdminOutputs["practitioners"]["list"];
+  /** While SMS is switched off, new Appointments need the Patient's email (ADR 0010). */
+  smsAvailable?: boolean;
   onDone: (result: { startsAt: Date }) => void;
 }) {
   const fieldId = useId();
@@ -239,19 +242,25 @@ export function AppointmentForm({
           </Field>
           <Field>
             <FieldLabel htmlFor={`${fieldId}-7`}>
-              {byEmail ? "ელფოსტა" : "ელფოსტა (არასავალდებულო)"}
+              {byEmail || !smsAvailable ? "ელფოსტა" : "ელფოსტა (არასავალდებულო)"}
             </FieldLabel>
             <Input
               id={`${fieldId}-7`}
-              required={byEmail}
+              required={byEmail || !smsAvailable}
               type="email"
               value={patient.email}
               onChange={(e) => setPatient({ ...patient, email: e.target.value })}
             />
-            {byEmail && (
+            {byEmail ? (
               <FieldDescription>
                 არსებული ელფოსტის შემთხვევაში ვიზიტი იმავე პაციენტს მიებმება
               </FieldDescription>
+            ) : (
+              !smsAvailable && (
+                <FieldDescription>
+                  SMS დროებით გამორთულია: შეტყობინებები ელფოსტით გაიგზავნება
+                </FieldDescription>
+              )
             )}
           </Field>
           <Field>

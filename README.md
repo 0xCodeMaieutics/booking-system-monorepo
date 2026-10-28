@@ -37,6 +37,13 @@ pnpm clinic:onboard --handle face-kutaisi --name-ka "ესთეტიკის
 pnpm clinic:close face-kutaisi   # stops new Bookings; Manage Links and Admin sign-in keep working
 ```
 
+If Sender.ge is down, switch SMS off for every Clinic until it recovers (ADR 0010). Patients then verify by email, and SMS Patients get their messages by email when they've given one:
+
+```sh
+pnpm sms:disable
+pnpm sms:enable
+```
+
 ## Deploying the Landing Page
 
 Publish the `apps/landing/` directory as-is to any static host. `package.json` in that directory is only for local preview and can be excluded.

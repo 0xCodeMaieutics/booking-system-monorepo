@@ -8,20 +8,30 @@ export type Locale = "ka" | "en";
 /** A message to a Patient. SMS sends only the text; email adds the subject. */
 export type Message = { subject: string; text: string };
 
-/** Sends a Message on whichever channel the Patient was verified on (ADR 0009). */
+/**
+ * Sends a Message on whichever channel the Patient was verified on (ADR 0009).
+ * While SMS is switched off, SMS Patients get email if they gave one (ADR 0010).
+ */
 export interface Messenger {
   send(to: Contact, message: Message): Promise<void>;
 }
 
-export function createMessenger(
-  sms: SmsSender = createSmsSender(),
-  email: EmailSender = createEmailSender(),
-): Messenger {
+export function createMessenger({
+  smsDisabled,
+  sms = createSmsSender(),
+  email = createEmailSender(),
+}: {
+  smsDisabled: () => Promise<boolean>;
+  sms?: SmsSender;
+  email?: EmailSender;
+}): Messenger {
   return {
-    send: (to, message) =>
-      to.channel === "sms"
-        ? sms.send(to.phone, message.text)
-        : email.send({ to: to.email, subject: message.subject, text: message.text }),
+    async send(to, message) {
+      if (to.channel === "sms" && !(await smsDisabled())) return sms.send(to.phone, message.text);
+      const address = to.channel === "email" ? to.email : to.fallbackEmail;
+      if (!address) throw new Error("Not sent: SMS is switched off and the Patient has no email");
+      await email.send({ to: address, subject: message.subject, text: message.text });
+    },
   };
 }
 

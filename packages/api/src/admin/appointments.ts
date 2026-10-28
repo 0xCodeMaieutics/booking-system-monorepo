@@ -1,11 +1,13 @@
 import { TRPCError } from "@trpc/server";
 import {
   type Appointment,
+  BookingError,
   appointmentSummary,
   createAppointment,
   findAvailableSlots,
   getAppointmentDetails,
   getClinic,
+  isSmsDisabled,
   localInstant,
   addDays,
   manageUrl,
@@ -119,6 +121,10 @@ export const appointmentsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // While SMS is off, an SMS Patient's email is their only way to hear from the Clinic.
+      if (input.channel === "sms" && !input.email && (await isSmsDisabled(ctx.db))) {
+        throw new BookingError("SMS_UNAVAILABLE");
+      }
       const clinic = await getClinic(ctx.db, ctx.admin.clinicId);
       const { appointment: created, manageToken } = await createAppointment(ctx.db, {
         clinic,

@@ -14,7 +14,11 @@ export default async function NewAppointmentPage({
   const { date: dateParam } = await searchParams;
   const date = dateParamOrToday(dateParam);
   const api = await serverCaller();
-  const [treatments, practitioners] = await Promise.all([api.treatments.list(), api.practitioners.list()]);
+  const [treatments, practitioners, clinic] = await Promise.all([
+    api.treatments.list(),
+    api.practitioners.list(),
+    api.clinic(),
+  ]);
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
@@ -26,7 +30,12 @@ export default async function NewAppointmentPage({
       </div>
       <Card>
         <CardContent>
-          <NewAppointmentForm date={date} treatments={treatments} practitioners={practitioners} />
+          <NewAppointmentForm
+            date={date}
+            treatments={treatments}
+            practitioners={practitioners}
+            smsAvailable={clinic.smsAvailable}
+          />
         </CardContent>
       </Card>
     </div>

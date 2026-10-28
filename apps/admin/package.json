@@ -9,6 +9,8 @@
     "typecheck": "tsc --noEmit",
     "clinic:onboard": "tsx --env-file-if-exists=../../.env scripts/onboard-clinic.ts",
     "clinic:close": "tsx --env-file-if-exists=../../.env scripts/close-clinic.ts",
+    "sms:disable": "tsx --env-file-if-exists=../../.env scripts/set-sms.ts disable",
+    "sms:enable": "tsx --env-file-if-exists=../../.env scripts/set-sms.ts enable",
     "admin:create-dev": "tsx --env-file-if-exists=../../.env scripts/create-dev-admin.ts"
   },
   "dependencies": {

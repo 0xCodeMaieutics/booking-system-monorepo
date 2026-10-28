@@ -1,13 +1,13 @@
 import "server-only";
 import type { BookingContext } from "@tsami/api/booking";
-import { createMessenger, createOpsAlerts } from "@tsami/booking";
+import { createMessenger, createOpsAlerts, isSmsDisabled } from "@tsami/booking";
 import { getDb } from "@tsami/db";
 
 let messenger: ReturnType<typeof createMessenger> | undefined;
 let alerts: ReturnType<typeof createOpsAlerts> | undefined;
 
 export function createBookingContext(headers: Headers): BookingContext {
-  messenger ??= createMessenger();
+  messenger ??= createMessenger({ smsDisabled: () => isSmsDisabled(getDb()) });
   alerts ??= createOpsAlerts();
   const forwarded = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   return {

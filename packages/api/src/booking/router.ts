@@ -9,6 +9,7 @@ import {
   createAppointment,
   findAvailableSlots,
   getAppointmentDetails,
+  isSmsDisabled,
   manageUrl,
   patientContact,
   patientMessages,
@@ -32,7 +33,8 @@ import {
 const { treatment } = schema;
 
 export const bookingRouter = router({
-  clinic: clinicProcedure.query(({ ctx: { clinic } }) => ({
+  clinic: clinicProcedure.query(async ({ ctx: { clinic, db } }) => ({
+    smsAvailable: !(await isSmsDisabled(db)),
     handle: clinic.handle,
     nameKa: clinic.nameKa,
     nameEn: clinic.nameEn,

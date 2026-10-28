@@ -59,6 +59,7 @@ const ka = {
     phoneHint: "გამოგიგზავნით SMS კოდს დასადასტურებლად",
     email: "ელფოსტა (არასავალდებულო)",
     noGeorgianNumber: "არ მაქვს ქართული მობილურის ნომერი",
+    smsUnavailable: "SMS დროებით მიუწვდომელია, ამიტომ კოდს ელფოსტაზე გამოგიგზავნით.",
     emailRequired: "ელფოსტა",
     emailHint: "დასადასტურებლად კოდს ელფოსტაზე გამოგიგზავნით",
     phoneAnyCountry: "ტელეფონი (არასავალდებულო, ნებისმიერი ქვეყნის)",
@@ -83,6 +84,7 @@ const ka = {
   errors: {
     INVALID_PHONE: "გთხოვთ, შეიყვანოთ სწორი ქართული მობილურის ნომერი.",
     INVALID_EMAIL: "გთხოვთ, შეიყვანოთ სწორი ელფოსტა.",
+    SMS_UNAVAILABLE: "SMS დროებით მიუწვდომელია. გთხოვთ, განაახლოთ გვერდი და გამოიყენოთ ელფოსტა.",
     INVALID_CODE: "კოდი არასწორია ან ვადაგასულია.",
     RATE_LIMITED: "ძალიან ბევრი მცდელობა. სცადეთ მოგვიანებით.",
     SLOT_UNAVAILABLE: "ეს დრო უკვე დაკავებულია. გთხოვთ, აირჩიოთ სხვა.",
@@ -138,6 +140,7 @@ const en: Dictionary = {
     phoneHint: "We'll text you a code to confirm",
     email: "Email (optional)",
     noGeorgianNumber: "I don't have a Georgian mobile number",
+    smsUnavailable: "SMS is temporarily unavailable, so we'll email you a code.",
     emailRequired: "Email",
     emailHint: "We'll email you a code to confirm",
     phoneAnyCountry: "Phone (optional, any country)",
@@ -162,6 +165,7 @@ const en: Dictionary = {
   errors: {
     INVALID_PHONE: "Please enter a valid Georgian mobile number.",
     INVALID_EMAIL: "Please enter a valid email address.",
+    SMS_UNAVAILABLE: "SMS is temporarily unavailable. Please reload the page and use your email.",
     INVALID_CODE: "That code is wrong or has expired.",
     RATE_LIMITED: "Too many attempts. Please try again later.",
     SLOT_UNAVAILABLE: "That time is no longer available. Please pick another.",

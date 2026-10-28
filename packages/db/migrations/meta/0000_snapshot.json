@@ -1,5 +1,5 @@
 {
-  "id": "19392560-36f6-4c59-bc4c-a191c523ee64",
+  "id": "d88e7f76-192f-47b2-b806-456aa314dc31",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1570,6 +1570,51 @@
         "treatment_duration_positive": {
           "name": "treatment_duration_positive",
           "value": "\"treatment\".\"duration_minutes\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.tsami_settings": {
+      "name": "tsami_settings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "smallint",
+          "primaryKey": true,
+          "notNull": true,
+          "default": 1
+        },
+        "sms_disabled_at": {
+          "name": "sms_disabled_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "tsami_settings_single_row": {
+          "name": "tsami_settings_single_row",
+          "value": "\"tsami_settings\".\"id\" = 1"
         }
       },
       "isRLSEnabled": false

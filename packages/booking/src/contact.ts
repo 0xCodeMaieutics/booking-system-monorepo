@@ -3,8 +3,13 @@ import { maskPhone, normalizePhone } from "./phone";
 
 export type ContactChannel = "sms" | "email";
 
-/** Where a Patient is verified and notified: a Georgian mobile, or an email without one (ADR 0009). */
-export type Contact = { channel: "sms"; phone: string } | { channel: "email"; email: string };
+/**
+ * Where a Patient is verified and notified: a Georgian mobile, or an email without one (ADR 0009).
+ * An SMS Patient's optional email is used while SMS is switched off (ADR 0010).
+ */
+export type Contact =
+  | { channel: "sms"; phone: string; fallbackEmail?: string | null }
+  | { channel: "email"; email: string };
 
 export function normalizeEmail(input: string): string {
   const email = input.trim().toLowerCase();
@@ -27,7 +32,7 @@ export function contactDestination(contact: Contact): string {
 /** The Contact a Patient is notified on. The database guarantees it is set for their channel. */
 export function patientContact(p: { channel: ContactChannel; phone: string | null; email: string | null }) {
   return p.channel === "sms"
-    ? ({ channel: "sms", phone: p.phone! } as const)
+    ? ({ channel: "sms", phone: p.phone!, fallbackEmail: p.email } as const)
     : ({ channel: "email", email: p.email! } as const);
 }
 
