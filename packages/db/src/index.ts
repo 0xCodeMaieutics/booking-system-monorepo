@@ -26,7 +26,7 @@ export function getDb(): Db {
 }
 
 /** Postgres error code for an exclusion constraint violation. */
-export const EXCLUSION_VIOLATION = "23P01";
+const EXCLUSION_VIOLATION = "23P01";
 
 export function isExclusionViolation(error: unknown, constraint: string): boolean {
   let current: unknown = error;

@@ -7,7 +7,9 @@ import type { BookingRouter } from "@tsami/api/booking";
 import { type ReactNode, useState } from "react";
 import superjson from "superjson";
 
-export const { TRPCProvider, useTRPC } = createTRPCContext<BookingRouter>();
+const trpcContext = createTRPCContext<BookingRouter>();
+const { TRPCProvider } = trpcContext;
+export const { useTRPC } = trpcContext;
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
