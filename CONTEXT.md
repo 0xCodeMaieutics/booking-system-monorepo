@@ -7,14 +7,26 @@ Tsami, an Appointment Booking product for clinics in Georgia, and the Landing Pa
 ### The product
 
 **Tsami**:
-The Appointment Booking product (წამი): the Booking Site and Admin Dashboard. It has its own name and styling, separate from any Clinic's brand, and serves clinics in Georgia only. Patients meet the Clinic's name first (on the Booking Site and in every SMS), with Tsami in the background; Admins meet Tsami first.
+The Appointment Booking product (წამი): the Booking Site and Admin Dashboard. It has its own name and styling, separate from any Clinic's brand, and serves clinics in Georgia only. Patients meet the Clinic's name first (heading the Booking Site and opening every SMS, which is sent under Tsami's name), with Tsami in the background; Admins meet Tsami first.
 _Avoid_: The booking system, the platform, the app
 
 ### The Clinic and its people
 
 **Clinic**:
-Face Aesthetic Centre (ესთეტიკის ცენტრი ფეისი) — the business and physical location at Tamar Mepe #38, Kutaisi. The Clinic's brand is what Patients recognise; it is Tsami's first customer.
-_Avoid_: Salon, studio, centre (on its own), practice
+One physical place in Georgia that uses Tsami to take Appointments; its brand is what Patients recognise. Its name is set by Tsami, not by its Admins. Each branch of a business is a separate Clinic. Face Aesthetic Centre (ესთეტიკის ცენტრი ფეისი), Tamar Mepe #38, Kutaisi, is the first.
+_Avoid_: Salon, studio, centre (on its own), practice, tenant, customer, location, branch
+
+**Onboarding**:
+Tsami setting up a new Clinic: its name, Handle, details and first Admin. Every later Admin is invited by an existing one.
+_Avoid_: Signup, registration, provisioning
+
+**Closed**:
+A Clinic that has left Tsami. Its Booking Site takes no new Bookings, but its Manage Links still work and its Admins can still sign in; its data and Handle are kept.
+_Avoid_: Deleted, offboarded, suspended, inactive
+
+**Handle**:
+The short name that gives a Clinic its own Booking Site address, such as `face-kutaisi`. Tsami sets it when the Clinic is onboarded, and it never changes.
+_Avoid_: Slug, URL name, subdomain, ID
 
 **Practitioner**:
 A qualified person who performs one or more Treatments at the Clinic, according to a Weekly Schedule. Dr. Khatuna Robakidze is the lead Practitioner.
@@ -25,11 +37,11 @@ An optional square portrait of a Practitioner, set by an Admin and shown as a ci
 _Avoid_: Avatar, profile picture, image
 
 **Patient**:
-A person who receives, or wants to receive, Treatments at the Clinic. A Patient has no account and is identified by their mobile number.
+A person who receives, or wants to receive, Treatments at one Clinic. A Patient has no account and is identified by their mobile number within that Clinic; the same person at two Clinics is two Patients.
 _Avoid_: Client, customer, user, guest
 
 **Admin**:
-A person who signs in to manage the Clinic's Practitioners, Treatments and Appointments. Admins are invited by other Admins and are deactivated, never deleted. Practitioners are not Admins and have no sign-in.
+A person who signs in to manage one Clinic's Practitioners, Treatments and Appointments. Each Admin belongs to exactly one Clinic; a Clinic may have several Admins, invited by its other Admins and deactivated, never deleted. Practitioners are not Admins and have no sign-in.
 _Avoid_: User, staff, manager
 
 ### What the Clinic offers
@@ -97,7 +109,7 @@ Tsami's public website, in Tsami's styling, that introduces Tsami to Clinics in 
 _Avoid_: Landing page (for Tsami's site), homepage, B2B site
 
 **Booking Site**:
-Tsami's public site where Patients make and manage Appointments with a Clinic, at booking.example.com. It is in Tsami's styling but headed by the Clinic's name. No sign-in.
+Tsami's public site where Patients make and manage Appointments with a Clinic. Each Clinic has its own Booking Site at its own address under booking.example.com, and every Manage Link sits under it. It is in Tsami's styling but headed by the Clinic's name. No sign-in.
 _Avoid_: User booking interface, booking app, portal
 
 **Admin Dashboard**:
