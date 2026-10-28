@@ -51,16 +51,9 @@ export function PractitionerForm({
     sortOrder: p.sortOrder,
     treatmentIds: p.treatmentIds,
   });
-  const [photo, setPhoto] = useState<PhotoValue>({ key: p.photoKey, previewUrl: p.photoUrl });
-  const [savedPhotoKey, setSavedPhotoKey] = useState(p.photoKey);
-  const update = useRefreshingMutation(
-    trpc.practitioners.update.mutationOptions({
-      onSuccess: ({ photoKey }) => {
-        setPhoto((current) => ({ ...current, key: photoKey }));
-        setSavedPhotoKey(photoKey);
-      },
-    }),
-  );
+  const [photoUrl, setPhotoUrl] = useState(p.photoUrl);
+  const update = useRefreshingMutation(trpc.practitioners.update.mutationOptions());
+  const setPhotoKey = useRefreshingMutation(trpc.practitioners.setPhoto.mutationOptions());
   const archive = useRefreshingMutation(trpc.practitioners.setArchived.mutationOptions());
 
   function onSubmit(e: FormEvent) {
@@ -70,8 +63,12 @@ export function PractitionerForm({
       ...form,
       titleKa: form.titleKa || null,
       titleEn: form.titleEn || null,
-      photoKey: photo.key,
     });
+  }
+
+  async function savePhoto(photo: PhotoValue) {
+    await setPhotoKey.mutateAsync({ id: p.id, photoKey: photo.key });
+    setPhotoUrl(photo.previewUrl);
   }
 
   const toggle = (id: string) =>
@@ -84,10 +81,7 @@ export function PractitionerForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      <PractitionerPhotoField name={form.nameKa} value={photo} onChange={setPhoto} />
-      {photo.key !== savedPhotoKey && (
-        <p className="text-sm text-ink-soft">ფოტოს ცვლილება შეინახება „შენახვის“ დაჭერის შემდეგ.</p>
-      )}
+      <PractitionerPhotoField name={form.nameKa} photoUrl={photoUrl} onSave={savePhoto} />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field>
           <FieldLabel htmlFor={`${fieldId}-1`}>სახელი (ქართულად)</FieldLabel>
@@ -219,18 +213,15 @@ async function upload(blob: Blob) {
   return key;
 }
 
-/**
- * Picks, crops and uploads a Practitioner Photo. The upload is only a candidate:
- * it becomes the Practitioner's photo when the surrounding form is saved.
- */
+/** Picks, crops and uploads a Practitioner Photo, saving it as soon as the crop is applied. */
 function PractitionerPhotoField({
   name,
-  value,
-  onChange,
+  photoUrl,
+  onSave,
 }: {
   name: string;
-  value: PhotoValue;
-  onChange: (value: PhotoValue) => void;
+  photoUrl: string | null;
+  onSave: (value: PhotoValue) => Promise<void>;
 }) {
   const fileInput = useRef<HTMLInputElement>(null);
   const [source, setSource] = useState<string | null>(null);
@@ -238,6 +229,7 @@ function PractitionerPhotoField({
   const [zoom, setZoom] = useState(1);
   const [area, setArea] = useState<Area | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => () => void (source && URL.revokeObjectURL(source)), [source]);
@@ -257,7 +249,7 @@ function PractitionerPhotoField({
     try {
       const blob = await cropToBlob(source, area);
       const key = await upload(blob);
-      onChange({ key, previewUrl: URL.createObjectURL(blob) });
+      await onSave({ key, previewUrl: URL.createObjectURL(blob) });
       setSource(null);
     } catch {
       setError("ფოტოს ატვირთვა ვერ მოხერხდა. სცადეთ ხელახლა.");
@@ -266,18 +258,35 @@ function PractitionerPhotoField({
     }
   }
 
+  async function remove() {
+    setRemoving(true);
+    setError(null);
+    try {
+      await onSave({ key: null, previewUrl: null });
+    } catch {
+      setError("ფოტოს წაშლა ვერ მოხერხდა. სცადეთ ხელახლა.");
+    } finally {
+      setRemoving(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <span className="text-sm font-medium">ფოტო</span>
       <div className="flex items-center gap-4">
-        <Avatar src={value.previewUrl} name={name} className="size-24 text-2xl" />
+        <Avatar src={photoUrl} name={name} className="size-24 text-2xl" />
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" onClick={() => fileInput.current?.click()}>
-            {value.key ? "შეცვლა" : "ფოტოს ატვირთვა"}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => fileInput.current?.click()}
+            disabled={removing}
+          >
+            {photoUrl ? "შეცვლა" : "ფოტოს ატვირთვა"}
           </Button>
-          {value.key && (
-            <Button type="button" variant="ghost" onClick={() => onChange({ key: null, previewUrl: null })}>
-              წაშლა
+          {photoUrl && (
+            <Button type="button" variant="ghost" onClick={remove} disabled={removing}>
+              {removing ? "იშლება…" : "წაშლა"}
             </Button>
           )}
         </div>

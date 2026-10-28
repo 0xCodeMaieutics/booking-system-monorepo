@@ -154,20 +154,36 @@ export const practitionersRouter = router({
     });
   }),
 
-  /**
-   * `photoKey` is the current key to keep it, a `pending/` key from an upload to replace it,
-   * or null to remove it. Replaced and removed photos are deleted from storage.
-   */
   update: adminProcedure
-    .input(practitionerInput.extend({ id: z.uuid(), photoKey: z.string().max(200).nullable() }))
+    .input(practitionerInput.extend({ id: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
-      const { id, treatmentIds, photoKey: requestedPhotoKey, ...values } = input;
+      const { id, treatmentIds, ...values } = input;
+      await assertOwnPractitioner(ctx.db, ctx.admin.clinicId, id);
+      await assertOwnTreatments(ctx.db, ctx.admin.clinicId, treatmentIds);
+      await ctx.db.transaction(async (tx) => {
+        await tx.update(practitioner).set(values).where(eq(practitioner.id, id));
+        await tx.delete(practitionerTreatment).where(eq(practitionerTreatment.practitionerId, id));
+        if (treatmentIds.length > 0) {
+          await tx
+            .insert(practitionerTreatment)
+            .values(treatmentIds.map((treatmentId) => ({ practitionerId: id, treatmentId })));
+        }
+      });
+    }),
+
+  /**
+   * `photoKey` is a `pending/` key from an upload to replace the photo, or null to remove it.
+   * Replaced and removed photos are deleted from storage.
+   */
+  setPhoto: adminProcedure
+    .input(z.object({ id: z.uuid(), photoKey: z.string().max(200).nullable() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id, photoKey: requestedPhotoKey } = input;
       const [current] = await ctx.db
         .select({ photoKey: practitioner.photoKey })
         .from(practitioner)
         .where(and(eq(practitioner.id, id), eq(practitioner.clinicId, ctx.admin.clinicId)));
       if (!current) throw new TRPCError({ code: "NOT_FOUND" });
-      await assertOwnTreatments(ctx.db, ctx.admin.clinicId, treatmentIds);
 
       let photoKey = requestedPhotoKey;
       if (photoKey && photoKey !== current.photoKey) {
@@ -178,18 +194,7 @@ export const practitionersRouter = router({
         await ctx.photos.copy(requestedPhotoKey!, photoKey);
       }
 
-      await ctx.db.transaction(async (tx) => {
-        await tx
-          .update(practitioner)
-          .set({ ...values, photoKey })
-          .where(eq(practitioner.id, id));
-        await tx.delete(practitionerTreatment).where(eq(practitionerTreatment.practitionerId, id));
-        if (treatmentIds.length > 0) {
-          await tx
-            .insert(practitionerTreatment)
-            .values(treatmentIds.map((treatmentId) => ({ practitionerId: id, treatmentId })));
-        }
-      });
+      await ctx.db.update(practitioner).set({ photoKey }).where(eq(practitioner.id, id));
 
       const unused = [
         photoKey !== requestedPhotoKey ? requestedPhotoKey : null,
