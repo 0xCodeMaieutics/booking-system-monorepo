@@ -75,7 +75,7 @@ const ka = {
     another: "კიდევ ერთი ვიზიტის დაჯავშნა",
   },
   errors: {
-    INVALID_PHONE: "გთხოვთ, შეიყვანოთ სწორი მობილურის ნომერი.",
+    INVALID_PHONE: "გთხოვთ, შეიყვანოთ სწორი ქართული მობილურის ნომერი.",
     INVALID_CODE: "კოდი არასწორია ან ვადაგასულია.",
     RATE_LIMITED: "ძალიან ბევრი მცდელობა. სცადეთ მოგვიანებით.",
     SLOT_UNAVAILABLE: "ეს დრო უკვე დაკავებულია. გთხოვთ, აირჩიოთ სხვა.",
@@ -147,7 +147,7 @@ const en: Dictionary = {
     another: "Book another appointment",
   },
   errors: {
-    INVALID_PHONE: "Please enter a valid mobile number.",
+    INVALID_PHONE: "Please enter a valid Georgian mobile number.",
     INVALID_CODE: "That code is wrong or has expired.",
     RATE_LIMITED: "Too many attempts. Please try again later.",
     SLOT_UNAVAILABLE: "That time is no longer available. Please pick another.",

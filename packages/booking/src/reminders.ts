@@ -1,5 +1,6 @@
 import { type Db, and, eq, gt, inArray, isNull, lte, schema, sql } from "@tsami/db";
 
+import { type OpsAlerts, errorMessage } from "./alerts";
 import { appointmentSummary } from "./appointments";
 import { type SmsSender, smsText } from "./sms";
 
@@ -10,9 +11,15 @@ const REMINDER_HOURS = 24;
 /**
  * Sends an SMS reminder for Booked Appointments starting within 24 hours.
  * Appointments booked less than 24 hours ahead are skipped: their
- * confirmation is recent enough. Safe to run concurrently.
+ * confirmation is recent enough. Safe to run concurrently. Failures are sent
+ * as one alert per run, so a provider outage doesn't flood the chat.
  */
-export async function sendDueReminders(db: Db, sms: SmsSender, now: Date): Promise<number> {
+export async function sendDueReminders(
+  db: Db,
+  sms: SmsSender,
+  alerts: OpsAlerts,
+  now: Date,
+): Promise<number> {
   const horizon = new Date(now.getTime() + REMINDER_HOURS * 3_600_000);
 
   const claimed = await db
@@ -44,6 +51,7 @@ export async function sendDueReminders(db: Db, sms: SmsSender, now: Date): Promi
       ),
     );
 
+  const failed: string[] = [];
   for (const row of rows) {
     const locale = row.appointment.locale;
     const summary = appointmentSummary(row, locale);
@@ -52,7 +60,13 @@ export async function sendDueReminders(db: Db, sms: SmsSender, now: Date): Promi
       await sms.send(row.patient.phone, smsText.reminder(summary, row.clinic.phone, locale));
     } catch (error) {
       console.error(`Reminder for appointment ${row.appointment.id} failed`, error);
+      failed.push(`${row.clinic.nameEn}, appointment ${row.appointment.id}: ${errorMessage(error)}`);
     }
+  }
+  if (failed.length > 0) {
+    await alerts.send(
+      [`SMS failed: ${failed.length} of ${rows.length} reminders`, ...failed.slice(0, 10)].join("\n"),
+    );
   }
   return rows.length;
 }

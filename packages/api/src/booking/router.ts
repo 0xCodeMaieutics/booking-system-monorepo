@@ -11,6 +11,7 @@ import {
   getAppointmentDetails,
   manageUrl,
   practitionersForTreatment,
+  reportSmsFailure,
   requestVerificationCode,
   smsText,
   toLocalDate,
@@ -109,10 +110,13 @@ export const bookingRouter = router({
         ipAddress: ctx.ipAddress,
         now: ctx.now(),
       });
-      await ctx.sms.send(
-        phone,
-        smsText.verificationCode(clinicName(ctx.clinic, input.locale), code, input.locale),
-      );
+      const name = clinicName(ctx.clinic, input.locale);
+      try {
+        await ctx.sms.send(phone, smsText.verificationCode(name, code, input.locale));
+      } catch (error) {
+        await reportSmsFailure(ctx.alerts, { message: "verificationCode", clinicName: name, phone, error });
+        throw error;
+      }
       return { verificationId };
     }),
 
@@ -159,7 +163,13 @@ export const bookingRouter = router({
         await ctx.sms.send(details.patient.phone, smsText.confirmation(summary, url, input.locale));
       } catch (error) {
         // The Appointment exists; a failed SMS must not make the Patient book twice.
-        console.error(`Confirmation SMS for appointment ${appointment.id} failed`, error);
+        await reportSmsFailure(ctx.alerts, {
+          message: "confirmation",
+          clinicName: summary.clinicName,
+          appointmentId: appointment.id,
+          phone: details.patient.phone,
+          error,
+        });
       }
       return { manageToken, ...summary };
     }),

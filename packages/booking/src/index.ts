@@ -1,3 +1,4 @@
+export * from "./alerts";
 export * from "./appointments";
 export * from "./attention";
 export * from "./availability";

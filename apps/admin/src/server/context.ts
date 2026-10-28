@@ -1,20 +1,23 @@
 import "server-only";
 import type { AdminContext } from "@tsami/api/admin";
-import { createSmsSender } from "@tsami/booking";
+import { createOpsAlerts, createSmsSender } from "@tsami/booking";
 import { getDb } from "@tsami/db";
 
 import { adminAccounts, auth } from "./auth";
 import { photoStore } from "./photos";
 
 let sms: ReturnType<typeof createSmsSender> | undefined;
+let alerts: ReturnType<typeof createOpsAlerts> | undefined;
 
 export async function createAdminContext(headers: Headers): Promise<AdminContext> {
   sms ??= createSmsSender();
+  alerts ??= createOpsAlerts();
   const session = await auth.api.getSession({ headers });
   const user = session?.user;
   return {
     db: getDb(),
     sms,
+    alerts,
     admin:
       user && !user.deactivatedAt
         ? { id: user.id, clinicId: user.clinicId, name: user.name, email: user.email }
