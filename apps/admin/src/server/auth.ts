@@ -10,7 +10,7 @@ import { nextCookies } from "better-auth/next-js";
 import { sendEmail } from "./email";
 
 const db = getDb();
-const baseURL = process.env.BETTER_AUTH_URL ?? "http://localhost:3001";
+const baseURL = process.env.BETTER_AUTH_URL ?? "http://localhost:3002";
 
 const escape = (s: string) => s.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 
