@@ -6,7 +6,7 @@ export type PhotoContentType = keyof typeof extensions;
 
 const pendingKeyPattern = /^pending\/[0-9a-f-]{36}\.(webp|jpg)$/;
 
-/** Uploads land under `pending/` and only move to `practitioners/` when the Practitioner is saved. */
+/** Uploads land under `pending/` and only move to `practitioners/` when set as the Practitioner's photo. */
 export function pendingPhotoKey(contentType: PhotoContentType) {
   return `pending/${crypto.randomUUID()}.${extensions[contentType]}`;
 }
