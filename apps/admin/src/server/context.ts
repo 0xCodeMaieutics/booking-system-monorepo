@@ -21,7 +21,7 @@ export async function createAdminContext(headers: Headers): Promise<AdminContext
         : null,
     accounts: adminAccounts,
     photos: photoStore,
-    bookingSiteUrl: process.env.BOOKING_SITE_URL ?? "http://localhost:3000",
+    bookingSiteUrl: process.env.BOOKING_BASE_URL ?? "http://localhost:3000",
     now: () => new Date(),
   };
 }

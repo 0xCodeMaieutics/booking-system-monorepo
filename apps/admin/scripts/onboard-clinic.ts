@@ -55,7 +55,7 @@ try {
   await db.delete(schema.clinic).where(eq(schema.clinic.id, clinic.id));
   throw error;
 }
-const siteUrl = process.env.BOOKING_SITE_URL ?? "http://localhost:3000";
+const siteUrl = process.env.BOOKING_BASE_URL ?? "http://localhost:3000";
 console.log(`Onboarded ${nameEn}: ${siteUrl}/${handle}`);
 console.log(`Invited ${adminName} <${adminEmail}> as its first Admin.`);
 process.exit(0);
