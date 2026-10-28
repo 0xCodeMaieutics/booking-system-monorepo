@@ -7,3 +7,4 @@ Patients book without signing in. Their mobile number is the Patient's identity:
 - Requires an SMS provider, with per-message cost, for verification codes, confirmations, reminders and Clinic cancellations.
 - Two people sharing one phone number share one Patient record; Admins correct names by hand.
 - Appointments created by Admins skip SMS verification.
+- Once Tsami served more than one Clinic, a Patient became per Clinic: a returning number links to the existing Patient at that Clinic only. Clinics are independent businesses, so one Clinic never sees another's Patients, names or history.

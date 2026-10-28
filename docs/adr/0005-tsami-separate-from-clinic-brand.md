@@ -7,3 +7,7 @@ The Booking Site and Admin Dashboard are Tsami, a booking product for clinics in
 - **Keep one Face brand across all surfaces.** Rejected: the booking system is meant to serve other Georgian clinics.
 - **Tsami leads on the Booking Site too.** Rejected: it makes the jump from the Clinic's Landing Page jarring and weakens Patient trust.
 - **Rename only user-facing text, keep `@face/*` packages.** Rejected: every import would keep implying the product belongs to Face.
+
+## Consequences
+
+- Once Tsami served more than one Clinic, every SMS is sent under a single Tsami sender name and opens with the Clinic's name, e.g. "Face Aesthetic Centre: your code is 4821". This avoids registering and waiting for a sender name per Clinic, at the cost of a less familiar sender; per-Clinic sender names can be added later.
