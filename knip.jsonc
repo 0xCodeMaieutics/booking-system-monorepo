@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  // Exported types are part of our contracts even before they have consumers.
+  "rules": { "types": "off", "nsTypes": "off" },
+  // packages/ui/src/theme.css loads Tailwind through `@import "tailwindcss"`, resolved from each app.
+  "ignoreDependencies": ["tailwindcss"],
+  "workspaces": {
+    "packages/*": {
+      // These workspace packages are private to this monorepo, so an export no app imports is dead.
+      "includeEntryExports": true,
+    },
+    "packages/ui": {
+      "includeEntryExports": true,
+      // shadcn components are copied in as cohesive sets. Keep their named subcomponents
+      // before they have callers; knip still reports a component file nothing imports.
+      "ignoreIssues": { "src/components/*.tsx": ["exports"], "src/index.ts": ["exports"] },
+    },
+  },
+}
