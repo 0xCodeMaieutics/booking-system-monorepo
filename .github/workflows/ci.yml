@@ -20,6 +20,7 @@ jobs:
           - { name: Lint, script: lint }
           - { name: Format, script: format:check }
           - { name: Typecheck, script: typecheck }
+          - { name: Knip, script: knip }
     steps:
       - uses: actions/checkout@v4
 

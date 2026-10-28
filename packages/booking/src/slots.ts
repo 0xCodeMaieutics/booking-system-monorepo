@@ -1,7 +1,7 @@
 import { type IsoWeekday, type LocalDate, localInstant, toLocalDate, toLocalMinute, weekdayOf } from "./time";
 
 /** Available Slots start on this Clinic-wide grid, counted from local midnight. */
-export const SLOT_STEP_MINUTES = 15;
+const SLOT_STEP_MINUTES = 15;
 
 export type Interval = { startsAt: Date; endsAt: Date };
 

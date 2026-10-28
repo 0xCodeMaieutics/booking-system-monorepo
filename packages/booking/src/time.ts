@@ -1,6 +1,6 @@
 import { TZDate } from "@date-fns/tz";
 
-export const CLINIC_TIME_ZONE = "Asia/Tbilisi";
+const CLINIC_TIME_ZONE = "Asia/Tbilisi";
 
 /** A Clinic-local calendar date, `YYYY-MM-DD`. */
 export type LocalDate = string;

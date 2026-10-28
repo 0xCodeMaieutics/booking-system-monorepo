@@ -7,7 +7,9 @@ import type { AdminRouter } from "@tsami/api/admin";
 import { type ReactNode, useState } from "react";
 import superjson from "superjson";
 
-export const { TRPCProvider, useTRPC, useTRPCClient } = createTRPCContext<AdminRouter>();
+const trpcContext = createTRPCContext<AdminRouter>();
+const { TRPCProvider } = trpcContext;
+export const { useTRPC, useTRPCClient } = trpcContext;
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());

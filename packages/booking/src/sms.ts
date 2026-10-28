@@ -6,7 +6,7 @@ export interface SmsSender {
   send(to: string, body: string): Promise<void>;
 }
 
-export const consoleSmsSender: SmsSender = {
+const consoleSmsSender: SmsSender = {
   async send(to, body) {
     console.info(`[sms] to ${to}: ${body}`);
   },
